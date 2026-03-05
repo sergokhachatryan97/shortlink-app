@@ -60,9 +60,11 @@
         }
         .input-group-quantity .btn:first-child {
             border-radius: var(--radius-sm) 0 0 var(--radius-sm);
+            border-color: gainsboro !important;
         }
         .input-group-quantity .btn:last-child {
             border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+            border-color: gainsboro !important;
         }
         .input-group-quantity .btn {
             font-weight: 600;
