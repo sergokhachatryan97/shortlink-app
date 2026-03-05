@@ -4,45 +4,99 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Payment Required - Shortlink Generator</title>
-    <link rel="preconnect" href="https://fonts.bunny.net">
-    <link href="https://fonts.bunny.net/css?family=instrument-sans:400,500,600" rel="stylesheet" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --brand: #6366f1;
+            --brand-hover: #4f46e5;
+            --accent: #8b5cf6;
+            --radius: 12px;
+            --radius-sm: 8px;
+        }
+        body {
+            font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 50%, #e2e8f0 100%);
+            min-height: 100vh;
+        }
+        .payment-card {
+            background: white;
+            border-radius: var(--radius);
+            box-shadow: 0 10px 15px -3px rgba(0,0,0,.05), 0 4px 6px -4px rgba(0,0,0,.04);
+            border: none;
+        }
+        .details-box {
+            background: linear-gradient(145deg, #faf5ff 0%, #f5f3ff 100%);
+            border: 1px solid #e9d5ff;
+            border-radius: var(--radius-sm);
+        }
+        .amount-display {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: var(--brand);
+        }
+        .btn-pay {
+            background: linear-gradient(135deg, #eab308 0%, #ca8a04 100%);
+            border: none;
+            color: #1e293b;
+            font-weight: 600;
+            padding: 14px 24px;
+            border-radius: var(--radius-sm);
+            box-shadow: 0 4px 14px rgba(234, 179, 8, 0.4);
+            transition: transform .2s, box-shadow .2s;
+        }
+        .btn-pay:hover {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            color: #1e293b;
+            box-shadow: 0 6px 20px rgba(245, 158, 11, 0.45);
+            transform: translateY(-1px);
+        }
+        .footer-link { font-size: 0.875rem; color: #64748b; }
+    </style>
 </head>
-<body class="bg-light min-vh-100 d-flex align-items-center justify-content-center p-4">
-    <div class="container" style="max-width: 420px;">
-        <a href="{{ route('shortlink.index') }}" class="small text-primary text-decoration-none mb-4 d-inline-block">← Back</a>
+<body class="min-vh-100 d-flex align-items-center justify-content-center p-4">
+    <div class="container" style="max-width: 460px;">
+        <a href="{{ route('shortlink.index') }}" class="btn btn-outline-secondary d-inline-flex align-items-center gap-2 mb-4" style="border-radius: var(--radius-sm);">
+            <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+            </svg>
+            Back
+        </a>
 
-        <h1 class="h4 fw-semibold mb-2">Payment Required</h1>
-        <p class="text-muted mb-4 small">
-            @if($freeTrialExhausted ?? false)
-                You have already used your free trial. Generating <strong>{{ $count }}</strong> links requires payment.
-            @else
-                Generating <strong>{{ $count }}</strong> links ({{ $count - $freeLimit }} over free limit of {{ $freeLimit }}) requires payment.
+        <div class="payment-card p-5 mb-4">
+            <h1 class="fw-bold mb-3" style="font-size: 1.5rem; color: #1e293b;">Payment Required</h1>
+            <p class="text-muted mb-4" style="font-size: 1rem;">
+                @if($freeTrialExhausted ?? false)
+                    You have already used your free trial. Generating <strong class="text-dark">{{ $count }}</strong> links requires payment.
+                @else
+                    Generating <strong class="text-dark">{{ $count }}</strong> links ({{ $count - $freeLimit }} over free limit of {{ $freeLimit }}) requires payment.
+                @endif
+            </p>
+
+            @if (session('error'))
+                <div class="alert alert-danger py-3 mb-4">
+                    {{ session('error') }}
+                </div>
             @endif
-        </p>
 
-        @if (session('error'))
-            <div class="alert alert-danger mb-4 py-3 small">
-                {{ session('error') }}
+            <div class="details-box p-4 mb-4">
+                <p class="text-muted mb-1 small">URL</p>
+                <p class="mb-3 text-break" style="font-size: 0.9375rem; color: #334155;">{{ $url }}</p>
+                <p class="text-muted mb-1 small">Amount</p>
+                <p class="amount-display mb-0">${{ number_format($amount, 2) }} <span class="fs-6 fw-normal text-muted">USD</span></p>
             </div>
-        @endif
 
-        <div class="card mb-4">
-            <div class="card-body">
-                <p class="small text-muted mb-0">URL: <span class="text-dark text-break">{{ $url }}</span></p>
-                <p class="mb-0 mt-2 h5">Amount: ${{ number_format($amount, 2) }} USD</p>
-            </div>
+            <form method="POST" action="{{ route('shortlink.payment.initiate') }}">
+                @csrf
+                <button type="submit" class="btn btn-pay w-100 btn-lg">
+                    Pay with Crypto (Heleket)
+                </button>
+            </form>
         </div>
 
-        <form method="POST" action="{{ route('shortlink.payment.initiate') }}">
-            @csrf
-            <button type="submit" class="btn btn-warning w-100">
-                Pay with Crypto (Heleket)
-            </button>
-        </form>
-
-        <p class="mt-4 small text-muted text-center">
-            Powered by <a href="https://doc.heleket.com/" target="_blank" class="underline">Heleket</a> – Bitcoin, ETH, USDT & more.
+        <p class="footer-link text-center mb-0">
+            Powered by <a href="https://doc.heleket.com/" target="_blank" rel="noopener" style="color: var(--brand);">Heleket</a> – Bitcoin, ETH, USDT & more
         </p>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>

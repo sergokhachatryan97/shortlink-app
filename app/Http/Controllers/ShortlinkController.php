@@ -85,7 +85,9 @@ class ShortlinkController extends Controller
         return response()->json([
             'success' => true,
             'count' => count($links),
+            'links' => $links,
             'download_url' => route('shortlink.download'),
+            'remaining' => 0,
         ]);
     }
 
