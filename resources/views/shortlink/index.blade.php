@@ -42,7 +42,7 @@
         }
         .card-style .form-control { font-size: 1rem; }
         .card-style .form-label { font-size: 0.9375rem; }
-        .card-style .form-text { font-size: 0.875rem; }
+        .card-style .form-text { font-size: 0.75rem; }
         .card-style .input-group-text { font-size: 1rem; }
         .form-control, .input-group-text {
             border-radius: var(--radius-sm) !important;
