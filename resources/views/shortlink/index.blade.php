@@ -166,11 +166,6 @@
                     <div class="input-group">
                         <input type="url" id="url" name="url" required placeholder="https://example.com"
                                class="form-control">
-                        <span class="input-group-text bg-white">
-                            <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.172-1.172m4.828-4.828a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.172 1.172"/>
-                            </svg>
-                        </span>
                     </div>
                 </div>
 
