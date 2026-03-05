@@ -82,7 +82,7 @@
             border: none;
             border-radius: var(--radius-sm);
             font-weight: 600;
-            padding: 12px 20px;
+            padding: 9px 20px;
             font-size: 1.0625rem;
             box-shadow: 0 3px 10px rgba(99, 102, 241, 0.35);
             transition: transform .2s, box-shadow .2s;
