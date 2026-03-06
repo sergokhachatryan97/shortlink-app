@@ -52,6 +52,22 @@
             box-shadow: 0 6px 20px rgba(245, 158, 11, 0.45);
             transform: translateY(-1px);
         }
+        .btn-tron {
+            background: linear-gradient(135deg, #ff3d71 0%, #c41e3a 100%);
+            border: none;
+            color: white;
+            font-weight: 600;
+            padding: 14px 24px;
+            border-radius: var(--radius-sm);
+            box-shadow: 0 4px 14px rgba(255, 61, 113, 0.4);
+            transition: transform .2s, box-shadow .2s;
+        }
+        .btn-tron:hover {
+            background: linear-gradient(135deg, #ff6b8a 0%, #e63950 100%);
+            color: white;
+            box-shadow: 0 6px 20px rgba(255, 61, 113, 0.45);
+            transform: translateY(-1px);
+        }
         .footer-link { font-size: 0.875rem; color: #64748b; }
     </style>
 </head>
@@ -87,18 +103,127 @@
                 <p class="amount-display mb-0">${{ number_format($amount, 2) }} <span class="fs-6 fw-normal text-muted">USD</span></p>
             </div>
 
-            <form method="POST" action="{{ route('shortlink.payment.initiate') }}">
-                @csrf
-                <button type="submit" class="btn btn-pay w-100 btn-lg">
-                    Pay with Crypto (Heleket)
-                </button>
-            </form>
+            <div class="mb-3">
+                <label class="form-label fw-medium mb-2">Payment method</label>
+                <div class="btn-group w-100" role="group" aria-label="Payment gateway">
+                    <input type="radio" class="btn-check" name="gateway" id="gw-heleket" autocomplete="off" checked>
+                    <label class="btn btn-outline-secondary" for="gw-heleket" style="border-radius: var(--radius-sm) 0 0 var(--radius-sm);">Heleket</label>
+
+                    @php($tronAvailable = !empty($coinrushStoreKey ?? null))
+                    <input type="radio" class="btn-check" name="gateway" id="gw-tron" autocomplete="off" {{ $tronAvailable ? '' : 'disabled' }}>
+                    <label class="btn btn-outline-secondary d-flex align-items-center justify-content-center gap-2"
+                           for="gw-tron"
+                           style="border-radius: 0 var(--radius-sm) var(--radius-sm) 0; {{ $tronAvailable ? '' : 'opacity:.6; cursor:not-allowed;' }}">
+                        Tron (CoinRush)
+                        @if(!$tronAvailable)
+                            <span class="badge text-bg-light border">Not configured</span>
+                        @endif
+                    </label>
+                </div>
+                <div class="small text-muted mt-2">
+                    Choose a gateway, then click Pay.
+                    @if(!$tronAvailable)
+                        <div class="mt-1">
+                            To enable Tron, set <code>COINRUSH_STORE_KEY</code> in <code>.env</code>.
+                        </div>
+                    @endif
+                </div>
+            </div>
+
+            <div class="d-flex flex-column gap-2">
+                <div id="pay-heleket">
+                    <form method="POST" action="{{ route('shortlink.payment.initiate') }}">
+                        @csrf
+                        <button type="submit" class="btn btn-pay w-100 btn-lg">
+                            Pay with Crypto (Heleket)
+                        </button>
+                    </form>
+                </div>
+
+                <div id="pay-tron" style="display: none;">
+                    @if($tronAvailable)
+                        <button type="button" id="btn-tron" class="btn btn-tron w-100 btn-lg">
+                            Pay with Tron (USDT)
+                        </button>
+                    @else
+                        <button type="button" class="btn btn-tron w-100 btn-lg" disabled style="opacity:.6;">
+                            Pay with Tron (USDT)
+                        </button>
+                    @endif
+                </div>
+            </div>
         </div>
 
         <p class="footer-link text-center mb-0">
-            Powered by <a href="https://doc.heleket.com/" target="_blank" rel="noopener" style="color: var(--brand);">Heleket</a> – Bitcoin, ETH, USDT & more
+            Powered by <a href="https://doc.heleket.com/" target="_blank" rel="noopener" style="color: var(--brand);">Heleket</a> & <a href="https://coinrush.link" target="_blank" rel="noopener" style="color: var(--brand);">CoinRush</a> – Bitcoin, ETH, USDT, TRX & more
         </p>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const tronAvailable = @json($tronAvailable ?? false);
+
+        function setGateway(gateway) {
+            const heleket = document.getElementById('pay-heleket');
+            const tron = document.getElementById('pay-tron');
+
+            if (gateway === 'tron') {
+                if (!tronAvailable) {
+                    setGateway('heleket');
+                    return;
+                }
+                if (heleket) heleket.style.display = 'none';
+                if (tron) tron.style.display = '';
+            } else {
+                if (heleket) heleket.style.display = '';
+                if (tron) tron.style.display = 'none';
+            }
+        }
+
+        document.getElementById('gw-heleket')?.addEventListener('change', function() {
+            if (this.checked) setGateway('heleket');
+        });
+        document.getElementById('gw-tron')?.addEventListener('change', function() {
+            if (this.checked) setGateway('tron');
+        });
+
+        setGateway(document.getElementById('gw-tron')?.checked ? 'tron' : 'heleket');
+    </script>
+    @if($tronAvailable)
+    <script src="{{ asset('js/tron-payment.js') }}"></script>
+    <script>
+        document.getElementById('btn-tron')?.addEventListener('click', function() {
+            const storeKey = @json($coinrushStoreKey);
+            const apiUrl = @json($coinrushApiUrl ?? 'https://coinrush.link/store');
+            const amount = {{ $amount }};
+            const successUrl = @json(route('shortlink.payment-tron-success'));
+            const orderId = 'sl-' + Date.now() + '-' + Math.random().toString(36).slice(2, 10);
+
+            if (!window.TronPayment) {
+                alert('Payment widget failed to load. Please refresh and try again.');
+                return;
+            }
+
+            TronPayment.init({ storeKey: storeKey, apiUrl: apiUrl });
+
+            TronPayment.openPayment({
+                transactionId: orderId,
+                amount: amount,
+                asset: 'USDT',
+                onSuccess: function(payment) {
+                    const params = new URLSearchParams({
+                        order_id: orderId,
+                        amount_usd: payment.amount_usd ?? amount,
+                        transaction_id: payment.transaction_id ?? '',
+                    });
+                    window.location.href = successUrl + '?' + params.toString();
+                },
+                onError: function(error) {
+                    alert(error?.message || 'Payment failed. Please try again.');
+                },
+                onCancel: function() {}
+            });
+        });
+    </script>
+    @endif
 </body>
 </html>

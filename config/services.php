@@ -41,6 +41,11 @@ return [
         'payment_key' => env('HELEKET_PAYMENT_KEY'),
     ],
 
+    'coinrush' => [
+        'store_key' => env('COINRUSH_STORE_KEY'),
+        'api_url' => env('COINRUSH_API_URL', 'https://coinrush.link/store'),
+    ],
+
     'admin' => [
         'password' => env('ADMIN_PASSWORD'),
     ],

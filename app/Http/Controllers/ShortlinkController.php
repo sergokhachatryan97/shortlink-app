@@ -143,6 +143,8 @@ class ShortlinkController extends Controller
             'freeLimit' => self::FREE_TRIAL_LIMIT,
             'freeTrialExhausted' => $freeTrialExhausted,
             'reason' => $reason,
+            'coinrushStoreKey' => config('services.coinrush.store_key'),
+            'coinrushApiUrl' => config('services.coinrush.api_url', 'https://coinrush.link/store'),
         ]);
     }
 
@@ -232,6 +234,61 @@ class ShortlinkController extends Controller
 
         // In production: verify payment via webhook/DB before generating
         // For now we trust the redirect (user came from Heleket success URL)
+        $links = $this->shortenService->shorten($pending['url'], $pending['count']);
+        $request->session()->forget(['shortlink_pending', 'shortlink_order_id']);
+        $request->session()->put('shortlink_result', $links);
+
+        return redirect()->route('shortlink.index')
+            ->with('success', count($links) . ' links generated! Download your file below.')
+            ->with('download_ready', true);
+    }
+
+    public function paymentTronSuccess(Request $request)
+    {
+        $orderId = $request->query('order_id');
+        $pending = $request->session()->get('shortlink_pending');
+
+        if (!$pending || !$orderId) {
+            return redirect()->route('shortlink.index')
+                ->with('error', 'Invalid session. Please try again.');
+        }
+
+        // Idempotent: if we already processed this order, redirect with download
+        $existing = ShortlinkTransaction::where('order_id', $orderId)->where('status', 'paid')->first();
+        if ($existing) {
+            $links = $request->session()->get('shortlink_result', []);
+            if (!empty($links)) {
+                return redirect()->route('shortlink.index')
+                    ->with('success', count($links) . ' links generated! Download your file below.')
+                    ->with('download_ready', true);
+            }
+            return redirect()->route('shortlink.index')->with('error', 'Session expired. Please try again.');
+        }
+
+        $amount = $request->query('amount_usd');
+        $amount = is_numeric($amount) ? (float) $amount : null;
+
+        if (!$amount) {
+            $pricePerLink = (float) ShortlinkSetting::get('price_per_link', '0.01');
+            $minAmount = (float) ShortlinkSetting::get('min_amount', '0.10');
+            $count = (int) $pending['count'];
+            $freeTrialExhausted = (bool) ($pending['free_trial_exhausted'] ?? false);
+            $amount = $freeTrialExhausted
+                ? max($minAmount, round($count * $pricePerLink, 2))
+                : max($minAmount, round(($count - self::FREE_TRIAL_LIMIT) * $pricePerLink, 2));
+        }
+
+        ShortlinkTransaction::create([
+            'order_id' => $orderId,
+            'amount' => $amount,
+            'currency' => 'USD',
+            'status' => 'paid',
+            'identifier' => $pending['identifier'] ?? null,
+            'count' => (int) $pending['count'],
+            'url' => $pending['url'] ?? null,
+            'provider_ref' => 'tron' . ($request->query('transaction_id') ? ':' . $request->query('transaction_id') : ''),
+        ]);
+
         $links = $this->shortenService->shorten($pending['url'], $pending['count']);
         $request->session()->forget(['shortlink_pending', 'shortlink_order_id']);
         $request->session()->put('shortlink_result', $links);
