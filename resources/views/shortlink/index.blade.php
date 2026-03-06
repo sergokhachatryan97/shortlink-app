@@ -151,7 +151,6 @@
     <div class="container" style="max-width: 560px;">
         <header class="mb-5 text-center">
             <h1 class="hero-title mb-2">Shortlink Generator</h1>
-            <p class="hero-sub mb-0">Generate up to 50 short links free. No sign-up required.</p>
         </header>
 
         @if (session('error'))
