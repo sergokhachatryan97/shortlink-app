@@ -43,7 +43,7 @@
         }
         .card-style .form-control { font-size: 1rem; }
         .card-style .form-label { font-size: 0.9375rem; }
-        .card-style .form-text { font-size: 0.75rem; }
+        .card-style .form-text { font-size: 0.875rem; }
         .card-style .input-group-text { font-size: 1rem; }
         .form-control, .input-group-text {
             border-radius: var(--radius-sm) !important;
@@ -61,11 +61,9 @@
         }
         .input-group-quantity .btn:first-child {
             border-radius: var(--radius-sm) 0 0 var(--radius-sm);
-            border-color: gainsboro !important;
         }
         .input-group-quantity .btn:last-child {
             border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
-            border-color: gainsboro !important;
         }
         .input-group-quantity .btn {
             font-weight: 600;
@@ -85,7 +83,7 @@
             border: none;
             border-radius: var(--radius-sm);
             font-weight: 600;
-            padding: 9px 20px;
+            padding: 12px 20px;
             font-size: 1.0625rem;
             box-shadow: 0 3px 10px rgba(99, 102, 241, 0.35);
             transition: transform .2s, box-shadow .2s;
@@ -152,6 +150,7 @@
     <div class="container" style="max-width: 560px;">
         <header class="mb-5 text-center">
             <h1 class="hero-title mb-2">Shortlink Generator</h1>
+            <p class="hero-sub mb-0">Generate up to 50 short links free. No sign-up required.</p>
         </header>
 
         @if (session('error'))
@@ -168,6 +167,11 @@
                     <div class="input-group">
                         <input type="url" id="url" name="url" required placeholder="https://example.com"
                                class="form-control">
+                        <span class="input-group-text bg-white">
+                            <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.172-1.172m4.828-4.828a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.172 1.172"/>
+                            </svg>
+                        </span>
                     </div>
                 </div>
 
@@ -188,9 +192,9 @@
             </form>
 
             <div class="plan-status">
-                <p class="mb-1 fw-medium">Your plan: Free trial (remaining: <span id="remaining">50</span> / 50)</p>
+                <p class="mb-1 fw-medium">Your plan: Free trial (remaining: <span id="remaining">{{ $remaining ?? 50 }}</span> / 50)</p>
                 <div class="progress-bar-custom mb-1">
-                    <div class="progress-fill" id="progress-fill" style="width: 100%;"></div>
+                    <div class="progress-fill" id="progress-fill" style="width: {{ (($remaining ?? 50) / 50) * 100 }}%;"></div>
                 </div>
                 <a href="#" class="text-decoration-none" style="color: var(--brand);" data-bs-toggle="modal" data-bs-target="#pricingModal">View pricing</a>
             </div>
@@ -199,7 +203,7 @@
         <div id="links-section" class="links-box mb-4" style="display: none;">
             <div class="d-flex align-items-center gap-2 mb-3">
                 <input type="radio" checked class="form-check-input" id="plan-radio">
-                <label for="plan-radio" class="form-check-label fw-medium mb-0">Your plan: Free trial (remaining: <span id="remaining-2">0</span> / 50)</label>
+                <label for="plan-radio" class="form-check-label fw-medium mb-0">Your plan: Free trial (remaining: <span id="remaining-2">{{ $remaining ?? 0 }}</span> / 50)</label>
             </div>
             <div id="links-list"></div>
             <nav id="links-pagination" class="mt-3 d-flex justify-content-center align-items-center gap-2 flex-wrap" style="display: none;"></nav>
@@ -215,6 +219,12 @@
             </div>
         @endif
 
+        <footer class="text-center footer-note">
+            <svg width="14" height="14" fill="currentColor" viewBox="0 0 20 20" class="me-1 align-text-bottom">
+                <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd"/>
+            </svg>
+            Links are generated instantly. No sign-up.
+        </footer>
     </div>
 
     <div class="modal fade" id="pricingModal" tabindex="-1">
@@ -251,6 +261,8 @@
             return 'device_' + hash.toString(36);
         }
         document.getElementById('fingerprint').value = simpleFingerprint();
+
+        updateProgress({{ $remaining ?? 50 }});
 
         document.getElementById('qty-minus').addEventListener('click', () => {
             const el = document.getElementById('count');

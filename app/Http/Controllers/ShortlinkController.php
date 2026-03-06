@@ -17,9 +17,14 @@ class ShortlinkController extends Controller
         private ShortenService $shortenService
     ) {}
 
-    public function index()
+    public function index(Request $request)
     {
-        return view('shortlink.index');
+        $freeTrialUsed = DB::table('shortlink_free_trial_uses')
+            ->where('ip_address', $request->ip())
+            ->exists();
+        $remaining = $freeTrialUsed ? 0 : self::FREE_TRIAL_LIMIT;
+
+        return view('shortlink.index', ['remaining' => $remaining]);
     }
 
     private function getIdentifier(Request $request): string

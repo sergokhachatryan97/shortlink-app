@@ -198,7 +198,6 @@
             const successUrl = @json(route('shortlink.payment-tron-success'));
             const prepareUrl = @json(route('shortlink.payment-tron-prepare'));
             const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || document.querySelector('input[name="_token"]')?.value;
-
             if (!window.TronPayment) {
                 alert('Payment widget failed to load. Please refresh and try again.');
                 return;
