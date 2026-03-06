@@ -10,6 +10,7 @@ Route::get('/download', [ShortlinkController::class, 'download'])->name('shortli
 Route::get('/payment', [ShortlinkController::class, 'payment'])->name('shortlink.payment');
 Route::post('/payment/initiate', [ShortlinkController::class, 'initiatePayment'])->name('shortlink.payment.initiate');
 Route::get('/payment/success', [ShortlinkController::class, 'paymentSuccess'])->name('shortlink.payment-success');
+Route::post('/payment/tron/prepare', [ShortlinkController::class, 'prepareTronPayment'])->name('shortlink.payment-tron-prepare');
 Route::get('/payment/tron/success', [ShortlinkController::class, 'paymentTronSuccess'])->name('shortlink.payment-tron-success');
 
 Route::prefix('admin')->name('admin.')->group(function () {

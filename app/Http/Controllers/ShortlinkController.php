@@ -243,6 +243,39 @@ class ShortlinkController extends Controller
             ->with('download_ready', true);
     }
 
+    public function prepareTronPayment(Request $request): \Illuminate\Http\JsonResponse
+    {
+        $pending = $request->session()->get('shortlink_pending');
+        if (!$pending) {
+            return response()->json(['error' => 'Session expired'], 400);
+        }
+
+        $count = (int) $pending['count'];
+        $freeTrialExhausted = (bool) ($pending['free_trial_exhausted'] ?? false);
+        $pricePerLink = (float) ShortlinkSetting::get('price_per_link', '0.01');
+        $minAmount = (float) ShortlinkSetting::get('min_amount', '0.10');
+        $amount = $freeTrialExhausted
+            ? max($minAmount, round($count * $pricePerLink, 2))
+            : max($minAmount, round(($count - self::FREE_TRIAL_LIMIT) * $pricePerLink, 2));
+
+        $orderId = 'sl-' . uniqid();
+
+        ShortlinkTransaction::create([
+            'order_id' => $orderId,
+            'amount' => $amount,
+            'currency' => 'USD',
+            'status' => 'pending',
+            'identifier' => $pending['identifier'] ?? null,
+            'count' => $count,
+            'url' => $pending['url'] ?? null,
+            'provider_ref' => 'tron',
+        ]);
+
+        $request->session()->put('shortlink_order_id', $orderId);
+
+        return response()->json(['order_id' => $orderId, 'amount' => $amount]);
+    }
+
     public function paymentTronSuccess(Request $request)
     {
         $orderId = $request->query('order_id');
@@ -253,41 +286,26 @@ class ShortlinkController extends Controller
                 ->with('error', 'Invalid session. Please try again.');
         }
 
-        // Idempotent: if we already processed this order, redirect with download
-        $existing = ShortlinkTransaction::where('order_id', $orderId)->where('status', 'paid')->first();
-        if ($existing) {
+        $transaction = ShortlinkTransaction::where('order_id', $orderId)->first();
+
+        // Idempotent: if already processed (paid + links in session), redirect with download
+        if ($transaction?->status === 'paid') {
             $links = $request->session()->get('shortlink_result', []);
             if (!empty($links)) {
                 return redirect()->route('shortlink.index')
                     ->with('success', count($links) . ' links generated! Download your file below.')
                     ->with('download_ready', true);
             }
-            return redirect()->route('shortlink.index')->with('error', 'Session expired. Please try again.');
         }
 
-        $amount = $request->query('amount_usd');
-        $amount = is_numeric($amount) ? (float) $amount : null;
-
-        if (!$amount) {
-            $pricePerLink = (float) ShortlinkSetting::get('price_per_link', '0.01');
-            $minAmount = (float) ShortlinkSetting::get('min_amount', '0.10');
-            $count = (int) $pending['count'];
-            $freeTrialExhausted = (bool) ($pending['free_trial_exhausted'] ?? false);
-            $amount = $freeTrialExhausted
-                ? max($minAmount, round($count * $pricePerLink, 2))
-                : max($minAmount, round(($count - self::FREE_TRIAL_LIMIT) * $pricePerLink, 2));
+        // Mark as paid if still pending (webhook may have already done this)
+        if ($transaction && $transaction->status === 'pending') {
+            $txRef = $request->query('transaction_id');
+            $transaction->update([
+                'status' => 'paid',
+                'provider_ref' => 'tron' . ($txRef ? ':' . $txRef : ''),
+            ]);
         }
-
-        ShortlinkTransaction::create([
-            'order_id' => $orderId,
-            'amount' => $amount,
-            'currency' => 'USD',
-            'status' => 'paid',
-            'identifier' => $pending['identifier'] ?? null,
-            'count' => (int) $pending['count'],
-            'url' => $pending['url'] ?? null,
-            'provider_ref' => 'tron' . ($request->query('transaction_id') ? ':' . $request->query('transaction_id') : ''),
-        ]);
 
         $links = $this->shortenService->shorten($pending['url'], $pending['count']);
         $request->session()->forget(['shortlink_pending', 'shortlink_order_id']);

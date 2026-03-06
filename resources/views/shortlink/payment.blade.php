@@ -191,17 +191,43 @@
     @if($tronAvailable)
     <script src="{{ asset('js/tron-payment.js') }}"></script>
     <script>
-        document.getElementById('btn-tron')?.addEventListener('click', function() {
+        document.getElementById('btn-tron')?.addEventListener('click', async function() {
+            const btn = this;
             const storeKey = @json($coinrushStoreKey);
             const apiUrl = @json($coinrushApiUrl ?? 'https://coinrush.link/store');
-            const amount = {{ $amount }};
             const successUrl = @json(route('shortlink.payment-tron-success'));
-            const orderId = 'sl-' + Date.now() + '-' + Math.random().toString(36).slice(2, 10);
+            const prepareUrl = @json(route('shortlink.payment-tron-prepare'));
+            const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || document.querySelector('input[name="_token"]')?.value;
 
             if (!window.TronPayment) {
                 alert('Payment widget failed to load. Please refresh and try again.');
                 return;
             }
+
+            btn.disabled = true;
+            btn.textContent = 'Preparing...';
+
+            let orderId, amount;
+            try {
+                const res = await fetch(prepareUrl, {
+                    method: 'POST',
+                    headers: { 'X-CSRF-TOKEN': csrf, 'Accept': 'application/json', 'Content-Type': 'application/json' },
+                    body: JSON.stringify({}),
+                    credentials: 'same-origin'
+                });
+                const data = await res.json();
+                if (!res.ok || !data.order_id) throw new Error(data.error || 'Failed to prepare payment');
+                orderId = data.order_id;
+                amount = data.amount;
+            } catch (e) {
+                btn.disabled = false;
+                btn.textContent = 'Pay with Tron (USDT)';
+                alert(e.message || 'Failed to prepare payment.');
+                return;
+            }
+
+            btn.disabled = false;
+            btn.textContent = 'Pay with Tron (USDT)';
 
             TronPayment.init({ storeKey: storeKey, apiUrl: apiUrl });
 
@@ -212,7 +238,7 @@
                 onSuccess: function(payment) {
                     const params = new URLSearchParams({
                         order_id: orderId,
-                        amount_usd: payment.amount_usd ?? amount,
+                        amount_usd: payment.amount_usd ?? amount ?? {{ $amount }},
                         transaction_id: payment.transaction_id ?? '',
                     });
                     window.location.href = successUrl + '?' + params.toString();
