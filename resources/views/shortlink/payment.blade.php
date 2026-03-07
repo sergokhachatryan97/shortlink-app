@@ -3,6 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Payment Required - Shortlink Generator</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&display=swap" rel="stylesheet">
@@ -103,45 +104,15 @@
                 <p class="amount-display mb-0">${{ number_format($amount, 2) }} <span class="fs-6 fw-normal text-muted">USD</span></p>
             </div>
 
-{{--            <div class="mb-3">--}}
-{{--                <label class="form-label fw-medium mb-2">Payment method</label>--}}
-{{--                <div class="btn-group w-100" role="group" aria-label="Payment gateway">--}}
-{{--                    <input type="radio" class="btn-check" name="gateway" id="gw-heleket" autocomplete="off" checked>--}}
-{{--                    <label class="btn btn-outline-secondary" for="gw-heleket" style="border-radius: var(--radius-sm) 0 0 var(--radius-sm);">Heleket</label>--}}
-
-                    @php($tronAvailable = !empty($coinrushStoreKey ?? null))
-
-            {{--                    <input type="radio" class="btn-check" name="gateway" id="gw-tron" autocomplete="off" {{ $tronAvailable ? '' : 'disabled' }}>--}}
-{{--                    <label class="btn btn-outline-secondary d-flex align-items-center justify-content-center gap-2"--}}
-{{--                           for="gw-tron"--}}
-{{--                           style="border-radius: 0 var(--radius-sm) var(--radius-sm) 0; {{ $tronAvailable ? '' : 'opacity:.6; cursor:not-allowed;' }}">--}}
-{{--                        Tron (CoinRush)--}}
-{{--                        @if(!$tronAvailable)--}}
-{{--                            <span class="badge text-bg-light border">Not configured</span>--}}
-{{--                        @endif--}}
-{{--                    </label>--}}
-{{--                </div>--}}
-{{--                <div class="small text-muted mt-2">--}}
-{{--                    Choose a gateway, then click Pay.--}}
-{{--                    @if(!$tronAvailable)--}}
-{{--                        <div class="mt-1">--}}
-{{--                            To enable Tron, set <code>COINRUSH_STORE_KEY</code> in <code>.env</code>.--}}
-{{--                        </div>--}}
-{{--                    @endif--}}
-{{--                </div>--}}
-{{--            </div>--}}
+            @php($tronAvailable = !empty($coinrushStoreKey ?? null))
+            @if(!$tronAvailable)
+            <div class="small text-muted mb-3">
+                Set <code>COINRUSH_STORE_KEY</code> in <code>.env</code> to enable payments.
+            </div>
+            @endif
 
             <div class="d-flex flex-column gap-2">
-{{--                <div id="pay-heleket">--}}
-{{--                    <form method="POST" action="{{ route('shortlink.payment.initiate') }}">--}}
-{{--                        @csrf--}}
-{{--                        <button type="submit" class="btn btn-pay w-100 btn-lg">--}}
-{{--                            Pay with Crypto (Heleket)--}}
-{{--                        </button>--}}
-{{--                    </form>--}}
-{{--                </div>--}}
-
-                <div id="pay-tron" style="display: block">
+                <div id="pay-tron">
                     @if($tronAvailable)
                         <button type="button" id="btn-tron" class="btn btn-tron w-100 btn-lg">
                             Pay with Tron (USDT)
@@ -156,38 +127,12 @@
         </div>
 
         <p class="footer-link text-center mb-0">
-            Powered by <a href="https://doc.heleket.com/" target="_blank" rel="noopener" style="color: var(--brand);">Heleket</a> & <a href="https://coinrush.link" target="_blank" rel="noopener" style="color: var(--brand);">CoinRush</a> – Bitcoin, ETH, USDT, TRX & more
+            Powered by <a href="https://coinrush.link" target="_blank" rel="noopener" style="color: var(--brand);">CoinRush</a> – USDT, TRX & more
         </p>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         const tronAvailable = @json($tronAvailable ?? false);
-
-        // function setGateway(gateway) {
-        //     const heleket = document.getElementById('pay-heleket');
-        //     const tron = document.getElementById('pay-tron');
-        //
-        //     if (gateway === 'tron') {
-        //         if (!tronAvailable) {
-        //             setGateway('heleket');
-        //             return;
-        //         }
-        //         if (heleket) heleket.style.display = 'none';
-        //         if (tron) tron.style.display = '';
-        //     } else {
-        //         if (heleket) heleket.style.display = '';
-        //         if (tron) tron.style.display = 'none';
-        //     }
-        // }
-
-        // document.getElementById('gw-heleket')?.addEventListener('change', function() {
-        //     if (this.checked) setGateway('heleket');
-        // });
-        // document.getElementById('gw-tron')?.addEventListener('change', function() {
-        //     if (this.checked) setGateway('tron');
-        // });
-        //
-        // setGateway(document.getElementById('gw-tron')?.checked ? 'tron' : 'heleket');
     </script>
     @if($tronAvailable)
     <script src="{{ asset('js/tron-payment.js') }}"></script>
@@ -199,6 +144,7 @@
             const successUrl = @json(route('shortlink.payment-tron-success'));
             const prepareUrl = @json(route('shortlink.payment-tron-prepare'));
             const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || document.querySelector('input[name="_token"]')?.value;
+
             if (!window.TronPayment) {
                 alert('Payment widget failed to load. Please refresh and try again.');
                 return;
@@ -211,12 +157,19 @@
             try {
                 const res = await fetch(prepareUrl, {
                     method: 'POST',
-                    headers: { 'X-CSRF-TOKEN': csrf, 'Accept': 'application/json', 'Content-Type': 'application/json' },
+                    headers: {
+                        'X-CSRF-TOKEN': csrf || '',
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
                     body: JSON.stringify({}),
                     credentials: 'same-origin'
                 });
-                const data = await res.json();
-                if (!res.ok || !data.order_id) throw new Error(data.error || 'Failed to prepare payment');
+                const text = await res.text();
+                let data;
+                try { data = JSON.parse(text); } catch (_) { throw new Error('Invalid response from server'); }
+                if (!res.ok || !data.order_id) throw new Error(data.error || data.message || 'Failed to prepare payment');
                 orderId = data.order_id;
                 amount = data.amount;
             } catch (e) {
