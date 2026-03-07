@@ -175,7 +175,7 @@
                     <label for="count" class="form-label fw-medium">Quantity</label>
                     <div class="input-group input-group-quantity">
                         <button type="button" class="btn btn-outline-secondary" id="qty-minus">−</button>
-                        <input type="number" id="count" name="count" required min="1" max="1000" value="50"
+                        <input type="number" id="count" name="count" required min="1"  value="50"
                                class="form-control">
                         <button type="button" class="btn btn-outline-secondary" id="qty-plus">+</button>
                     </div>
