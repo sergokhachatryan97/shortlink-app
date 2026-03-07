@@ -103,44 +103,45 @@
                 <p class="amount-display mb-0">${{ number_format($amount, 2) }} <span class="fs-6 fw-normal text-muted">USD</span></p>
             </div>
 
-            <div class="mb-3">
-                <label class="form-label fw-medium mb-2">Payment method</label>
-                <div class="btn-group w-100" role="group" aria-label="Payment gateway">
-                    <input type="radio" class="btn-check" name="gateway" id="gw-heleket" autocomplete="off" checked>
-                    <label class="btn btn-outline-secondary" for="gw-heleket" style="border-radius: var(--radius-sm) 0 0 var(--radius-sm);">Heleket</label>
+{{--            <div class="mb-3">--}}
+{{--                <label class="form-label fw-medium mb-2">Payment method</label>--}}
+{{--                <div class="btn-group w-100" role="group" aria-label="Payment gateway">--}}
+{{--                    <input type="radio" class="btn-check" name="gateway" id="gw-heleket" autocomplete="off" checked>--}}
+{{--                    <label class="btn btn-outline-secondary" for="gw-heleket" style="border-radius: var(--radius-sm) 0 0 var(--radius-sm);">Heleket</label>--}}
 
                     @php($tronAvailable = !empty($coinrushStoreKey ?? null))
-                    <input type="radio" class="btn-check" name="gateway" id="gw-tron" autocomplete="off" {{ $tronAvailable ? '' : 'disabled' }}>
-                    <label class="btn btn-outline-secondary d-flex align-items-center justify-content-center gap-2"
-                           for="gw-tron"
-                           style="border-radius: 0 var(--radius-sm) var(--radius-sm) 0; {{ $tronAvailable ? '' : 'opacity:.6; cursor:not-allowed;' }}">
-                        Tron (CoinRush)
-                        @if(!$tronAvailable)
-                            <span class="badge text-bg-light border">Not configured</span>
-                        @endif
-                    </label>
-                </div>
-                <div class="small text-muted mt-2">
-                    Choose a gateway, then click Pay.
-                    @if(!$tronAvailable)
-                        <div class="mt-1">
-                            To enable Tron, set <code>COINRUSH_STORE_KEY</code> in <code>.env</code>.
-                        </div>
-                    @endif
-                </div>
-            </div>
+
+            {{--                    <input type="radio" class="btn-check" name="gateway" id="gw-tron" autocomplete="off" {{ $tronAvailable ? '' : 'disabled' }}>--}}
+{{--                    <label class="btn btn-outline-secondary d-flex align-items-center justify-content-center gap-2"--}}
+{{--                           for="gw-tron"--}}
+{{--                           style="border-radius: 0 var(--radius-sm) var(--radius-sm) 0; {{ $tronAvailable ? '' : 'opacity:.6; cursor:not-allowed;' }}">--}}
+{{--                        Tron (CoinRush)--}}
+{{--                        @if(!$tronAvailable)--}}
+{{--                            <span class="badge text-bg-light border">Not configured</span>--}}
+{{--                        @endif--}}
+{{--                    </label>--}}
+{{--                </div>--}}
+{{--                <div class="small text-muted mt-2">--}}
+{{--                    Choose a gateway, then click Pay.--}}
+{{--                    @if(!$tronAvailable)--}}
+{{--                        <div class="mt-1">--}}
+{{--                            To enable Tron, set <code>COINRUSH_STORE_KEY</code> in <code>.env</code>.--}}
+{{--                        </div>--}}
+{{--                    @endif--}}
+{{--                </div>--}}
+{{--            </div>--}}
 
             <div class="d-flex flex-column gap-2">
-                <div id="pay-heleket">
-                    <form method="POST" action="{{ route('shortlink.payment.initiate') }}">
-                        @csrf
-                        <button type="submit" class="btn btn-pay w-100 btn-lg">
-                            Pay with Crypto (Heleket)
-                        </button>
-                    </form>
-                </div>
+{{--                <div id="pay-heleket">--}}
+{{--                    <form method="POST" action="{{ route('shortlink.payment.initiate') }}">--}}
+{{--                        @csrf--}}
+{{--                        <button type="submit" class="btn btn-pay w-100 btn-lg">--}}
+{{--                            Pay with Crypto (Heleket)--}}
+{{--                        </button>--}}
+{{--                    </form>--}}
+{{--                </div>--}}
 
-                <div id="pay-tron" style="display: none;">
+                <div id="pay-tron" style="display: block">
                     @if($tronAvailable)
                         <button type="button" id="btn-tron" class="btn btn-tron w-100 btn-lg">
                             Pay with Tron (USDT)
@@ -162,31 +163,31 @@
     <script>
         const tronAvailable = @json($tronAvailable ?? false);
 
-        function setGateway(gateway) {
-            const heleket = document.getElementById('pay-heleket');
-            const tron = document.getElementById('pay-tron');
+        // function setGateway(gateway) {
+        //     const heleket = document.getElementById('pay-heleket');
+        //     const tron = document.getElementById('pay-tron');
+        //
+        //     if (gateway === 'tron') {
+        //         if (!tronAvailable) {
+        //             setGateway('heleket');
+        //             return;
+        //         }
+        //         if (heleket) heleket.style.display = 'none';
+        //         if (tron) tron.style.display = '';
+        //     } else {
+        //         if (heleket) heleket.style.display = '';
+        //         if (tron) tron.style.display = 'none';
+        //     }
+        // }
 
-            if (gateway === 'tron') {
-                if (!tronAvailable) {
-                    setGateway('heleket');
-                    return;
-                }
-                if (heleket) heleket.style.display = 'none';
-                if (tron) tron.style.display = '';
-            } else {
-                if (heleket) heleket.style.display = '';
-                if (tron) tron.style.display = 'none';
-            }
-        }
-
-        document.getElementById('gw-heleket')?.addEventListener('change', function() {
-            if (this.checked) setGateway('heleket');
-        });
-        document.getElementById('gw-tron')?.addEventListener('change', function() {
-            if (this.checked) setGateway('tron');
-        });
-
-        setGateway(document.getElementById('gw-tron')?.checked ? 'tron' : 'heleket');
+        // document.getElementById('gw-heleket')?.addEventListener('change', function() {
+        //     if (this.checked) setGateway('heleket');
+        // });
+        // document.getElementById('gw-tron')?.addEventListener('change', function() {
+        //     if (this.checked) setGateway('tron');
+        // });
+        //
+        // setGateway(document.getElementById('gw-tron')?.checked ? 'tron' : 'heleket');
     </script>
     @if($tronAvailable)
     <script src="{{ asset('js/tron-payment.js') }}"></script>
