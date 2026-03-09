@@ -31,10 +31,10 @@ class SubscriptionPlanSeeder extends Seeder
             [
                 'name' => 'Unlimited',
                 'slug' => 'unlimited',
-                'description' => 'Unlimited links per month',
+                'description' => 'Unlimited links per year',
                 'price_usd' => 200,
                 'links_limit' => 0,
-                'duration_days' => 30,
+                'duration_days' => 365,
                 'sort_order' => 3,
             ],
         ];

@@ -95,7 +95,7 @@
                             {{ $plan->description }}
                         @endif
                     </p>
-                    <p class="mb-3 fw-bold plan-price {{ $isRecommended ? 'plan-price-recommended' : '' }}">${{ number_format($plan->price_usd, 2) }}/mo</p>
+                    <p class="mb-3 fw-bold plan-price {{ $isRecommended ? 'plan-price-recommended' : '' }}">${{ number_format($plan->price_usd, 2) }}{{ strtolower($plan->slug ?? '') === 'unlimited' ? '/yr' : '/mo' }}</p>
 
                     @if ($isCurrentPlan)
                         <div class="mt-auto">
