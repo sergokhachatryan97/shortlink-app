@@ -70,11 +70,13 @@ class AdminController extends Controller
     public function updatePlan(Request $request, SubscriptionPlan $plan): RedirectResponse
     {
         $validated = $request->validate([
+            'description' => ['nullable', 'string', 'max:500'],
             'links_limit' => ['required', 'integer', 'min:0'],
             'price_usd' => ['required', 'numeric', 'min:0', 'max:9999.99'],
         ]);
 
         $plan->update([
+            'description' => $validated['description'] ?? '',
             'links_limit' => $validated['links_limit'],
             'price_usd' => $validated['price_usd'],
         ]);

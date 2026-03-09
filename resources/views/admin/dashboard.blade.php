@@ -59,22 +59,23 @@
                         <thead>
                             <tr>
                                 <th>Plan</th>
-                                <th>Links limit · Price (USD)</th>
+                                <th>Description · Links limit · Price (USD)</th>
                             </tr>
                         </thead>
                         <tbody>
                             @foreach ($plans ?? [] as $plan)
                                 <tr>
-                                    <td>
+                                    <td class="align-top pt-3">
                                         <strong>{{ $plan->name }}</strong>
                                         @if ($plan->links_limit == 0)
                                             <span class="badge bg-secondary ms-1">Unlimited</span>
                                         @endif
                                     </td>
-                                    <td>
+                                    <td class="align-top" colspan="2">
                                         <form method="POST" action="{{ route('admin.plans.update', $plan) }}" class="d-flex flex-wrap align-items-center gap-2">
                                             @csrf
-                                            <input type="number" name="links_limit" value="{{ $plan->links_limit }}" min="0" step="1" class="form-control form-control-sm" style="width: 100px;" title="0 = unlimited">
+                                            <input type="text" name="description" value="{{ old('description', $plan->description) }}" class="form-control form-control-sm" placeholder="Plan description" style="min-width: 200px;">
+                                            <input type="number" name="links_limit" value="{{ $plan->links_limit }}" min="0" step="1" class="form-control form-control-sm" style="width: 80px;" title="0 = unlimited">
                                             <input type="number" name="price_usd" value="{{ $plan->price_usd }}" min="0" step="0.01" class="form-control form-control-sm" style="width: 90px;">
                                             <button type="submit" class="btn btn-sm btn-primary">Save</button>
                                         </form>
