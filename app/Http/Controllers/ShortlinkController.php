@@ -31,15 +31,23 @@ class ShortlinkController extends Controller
         }
 
         $atPlanLimit = false;
+        $planName = null;
+        $planLimit = self::FREE_TRIAL_LIMIT;
+        $planUsed = self::FREE_TRIAL_LIMIT - $remaining;
+        $planRemaining = $remaining;
         $pricePerLink = (float) ShortlinkSetting::get('price_per_link', '0.01');
         $user = $request->user();
         if ($user) {
             $sub = $user->activeSubscription();
             if ($sub) {
                 $plan = $sub->plan;
-                if (!$plan->isUnlimited()) {
-                    $currentCount = ShortlinkLink::where('user_subscription_id', $sub->id)->count();
-                    $atPlanLimit = $currentCount >= (int) $plan->links_limit;
+                $planName = $plan->name;
+                $planLimit = (int) $plan->links_limit;
+                $planUsed = ShortlinkLink::where('user_subscription_id', $sub->id)->count();
+                $planRemaining = $plan->isUnlimited() ? null : max(0, $planLimit - $planUsed);
+
+                if ($planLimit > 0 && $planUsed >= $planLimit) {
+                    $atPlanLimit = true;
                 }
             }
         }
@@ -49,11 +57,19 @@ class ShortlinkController extends Controller
             'links' => $links,
             'atPlanLimit' => $atPlanLimit,
             'pricePerLink' => $pricePerLink,
+            'planName' => $planName,
+            'planLimit' => $planLimit,
+            'planUsed' => $planUsed,
+            'planRemaining' => $planRemaining,
         ]);
     }
 
     private function getIdentifier(Request $request): string
     {
+        $user = $request->user();
+        if ($user) {
+            return 'user:' . $user->id;
+        }
         $fingerprint = $request->input('fingerprint');
         if ($fingerprint && strlen($fingerprint) <= 128) {
             return $fingerprint;
@@ -61,14 +77,20 @@ class ShortlinkController extends Controller
         return 'ip:' . $request->ip();
     }
 
-    /** Get total links already used for free trial (identifier or IP). */
+    /** Get total links already used for free trial. */
     private function getFreeTrialUsedCount(string $identifier, string $ip): int
     {
-        return (int) DB::table('shortlink_free_trial_uses')
-            ->where(function ($q) use ($identifier, $ip) {
+        $query = DB::table('shortlink_free_trial_uses');
+
+        if (str_starts_with($identifier, 'user:')) {
+            $query->where('identifier', $identifier);
+        } else {
+            $query->where(function ($q) use ($identifier, $ip) {
                 $q->where('identifier', $identifier)->orWhere('ip_address', $ip);
-            })
-            ->sum('links_count');
+            });
+        }
+
+        return (int) $query->sum('links_count');
     }
 
     /** Remaining free links (0–50) before payment is required. */
@@ -159,13 +181,13 @@ class ShortlinkController extends Controller
                         ]);
                     }
                     $request->session()->put('shortlink_result', $links);
-                    return response()->json([
+                    return response()->json(array_merge([
                         'success' => true,
                         'count' => count($links),
                         'links' => $links,
                         'download_url' => route('shortlink.download'),
                         'remaining' => 0,
-                    ]);
+                    ], $this->userStatusPayload($user)));
                 }
                 $request->session()->put('shortlink_pending', [
                     'url' => $url,
@@ -181,14 +203,26 @@ class ShortlinkController extends Controller
             if ($user->balance >= $amount) {
                 $user->decrement('balance', $amount);
                 $links = $this->shortenService->shorten($url, $count);
+                $batchId = 'batch-' . uniqid();
+                foreach ($links as $i => $link) {
+                    ShortlinkLink::create([
+                        'user_id' => $user->id,
+                        'user_subscription_id' => null,
+                        'original_url' => $url,
+                        'short_url' => $link,
+                        'batch_index' => $i + 1,
+                        'batch_id' => $batchId,
+                        'expires_at' => now()->addDays(30),
+                    ]);
+                }
                 $request->session()->put('shortlink_result', $links);
-                return response()->json([
+                return response()->json(array_merge([
                     'success' => true,
                     'count' => count($links),
                     'links' => $links,
                     'download_url' => route('shortlink.download'),
                     'remaining' => 0,
-                ]);
+                ], $this->userStatusPayload($user)));
             }
         }
 
@@ -197,6 +231,7 @@ class ShortlinkController extends Controller
                 'url' => $url,
                 'count' => $count,
                 'free_trial_exhausted' => $freeTrialExhausted,
+                'remaining' => $remaining,
                 'identifier' => $identifier,
             ]);
             return response()->json([
@@ -205,19 +240,44 @@ class ShortlinkController extends Controller
             ]);
         }
 
-        $links = $this->shortenService->shorten($url, $count);
-        $this->recordFreeTrialUse($identifier, $ip, $count);
+        $freeCount = min($count, $remaining);
+        $links = $this->shortenService->shorten($url, $freeCount);
+        $this->recordFreeTrialUse($identifier, $ip, $freeCount);
         $request->session()->put('shortlink_result', $links);
 
-        $newRemaining = $remaining - $count;
+        $newRemaining = $remaining - $freeCount;
 
-        return response()->json([
+        return response()->json(array_merge([
             'success' => true,
             'count' => count($links),
             'links' => $links,
             'download_url' => route('shortlink.download'),
             'remaining' => $newRemaining,
-        ]);
+        ], $this->userStatusPayload($user)));
+    }
+
+    /** Build balance + plan payload for frontend (no reload). */
+    private function userStatusPayload($user): array
+    {
+        if (! $user) {
+            return [];
+        }
+        $payload = ['balance' => (float) $user->fresh()->balance];
+        $sub = $user->activeSubscription();
+        if ($sub) {
+            $plan = $sub->plan;
+            $currentCount = ShortlinkLink::where('user_subscription_id', $sub->id)->count();
+            $payload['plan_name'] = $plan->name;
+            $payload['plan_limit'] = (int) $plan->links_limit;
+            $payload['plan_used'] = $currentCount;
+            $payload['plan_remaining'] = $plan->isUnlimited() ? null : max(0, (int) $plan->links_limit - $currentCount);
+        } else {
+            $payload['plan_name'] = null;
+            $payload['plan_limit'] = self::FREE_TRIAL_LIMIT;
+            $payload['plan_used'] = self::FREE_TRIAL_LIMIT - $this->getRemainingFreeTrial('user:' . $user->id, request()->ip());
+            $payload['plan_remaining'] = $this->getRemainingFreeTrial('user:' . $user->id, request()->ip());
+        }
+        return $payload;
     }
 
     public function download(Request $request): StreamedResponse
@@ -252,6 +312,7 @@ class ShortlinkController extends Controller
 
         $count = (int) $pending['count'];
         $freeTrialExhausted = (bool) ($pending['free_trial_exhausted'] ?? false);
+        $remaining = (int) ($pending['remaining'] ?? 0);
 
         $pricePerLink = (float) ShortlinkSetting::get('price_per_link', '0.01');
         $minAmount = (float) ShortlinkSetting::get('min_amount', '0.10');
@@ -260,20 +321,25 @@ class ShortlinkController extends Controller
             $amount = max($minAmount, round($count * $pricePerLink, 2));
             $reason = 'free_trial_used';
         } else {
-            $overLimit = $count - self::FREE_TRIAL_LIMIT;
-            $amount = max($minAmount, round($overLimit * $pricePerLink, 2));
+            $paidCount = max(0, $count - $remaining);
+            $amount = max($minAmount, round($paidCount * $pricePerLink, 2));
             $reason = 'over_limit';
         }
+
+        $heleketAvailable = config('services.heleket.merchant') && config('services.heleket.payment_key');
 
         return view('shortlink.payment', [
             'url' => $pending['url'],
             'count' => $count,
             'amount' => $amount,
+            'pricePerLink' => $pricePerLink,
             'freeLimit' => self::FREE_TRIAL_LIMIT,
+            'remaining' => $remaining,
             'freeTrialExhausted' => $freeTrialExhausted,
             'reason' => $reason,
             'coinrushStoreKey' => config('services.coinrush.store_key'),
             'coinrushApiUrl' => config('services.coinrush.api_url', 'https://coinrush.link/store'),
+            'heleketAvailable' => $heleketAvailable,
         ]);
     }
 
@@ -287,11 +353,12 @@ class ShortlinkController extends Controller
 
         $count = (int) $pending['count'];
         $freeTrialExhausted = (bool) ($pending['free_trial_exhausted'] ?? false);
+        $remaining = (int) ($pending['remaining'] ?? 0);
         $pricePerLink = (float) ShortlinkSetting::get('price_per_link', '0.01');
         $minAmount = (float) ShortlinkSetting::get('min_amount', '0.10');
         $amount = $freeTrialExhausted
             ? max($minAmount, round($count * $pricePerLink, 2))
-            : max($minAmount, round(($count - self::FREE_TRIAL_LIMIT) * $pricePerLink, 2));
+            : max($minAmount, round(max(0, $count - $remaining) * $pricePerLink, 2));
 
         $merchant = config('services.heleket.merchant');
         $paymentKey = config('services.heleket.payment_key');
@@ -346,30 +413,43 @@ class ShortlinkController extends Controller
             'identifier' => $pending['identifier'] ?? null,
             'count' => $count,
             'url' => $pending['url'] ?? null,
+            'provider_ref' => 'heleket',
         ]);
 
         return redirect()->away($payUrl);
     }
 
+    /**
+     * UI-only. Never mutates payment state. Reads transaction status from DB (webhook is source of truth).
+     */
     public function paymentSuccess(Request $request)
     {
         $orderId = $request->query('order_id');
-        $pending = $request->session()->get('shortlink_pending');
-
-        if (!$pending || !$orderId) {
-            return redirect()->route('shortlink.index')
-                ->with('error', 'Invalid session. Please try again.');
+        if (! $orderId) {
+            return redirect()->route('shortlink.index')->with('error', 'Invalid request.');
         }
 
-        // In production: verify payment via webhook/DB before generating
-        // For now we trust the redirect (user came from Heleket success URL)
-        $links = $this->shortenService->shorten($pending['url'], $pending['count']);
+        $tx = ShortlinkTransaction::where('order_id', $orderId)->first();
+        if (! $tx) {
+            return redirect()->route('shortlink.index')->with('error', 'Transaction not found.');
+        }
+        if ($tx->status === 'failed') {
+            return redirect()->route('shortlink.index')->with('error', 'Payment failed.');
+        }
+        if ($tx->status !== 'paid' || empty($tx->result_links)) {
+            return view('shortlink.payment-pending', [
+                'orderId' => $orderId,
+                'pollUrl' => route('shortlink.payment-status', ['order_id' => $orderId]),
+            ]);
+        }
+
+        $request->session()->put('shortlink_result', $tx->result_links);
         $request->session()->forget(['shortlink_pending', 'shortlink_order_id']);
-        $request->session()->put('shortlink_result', $links);
 
         return redirect()->route('shortlink.index')
-            ->with('success', count($links) . ' links generated! Download your file below.')
-            ->with('download_ready', true);
+            ->with('success', count($tx->result_links) . ' links generated! Download your file below.')
+            ->with('download_ready', true)
+            ->with('payment_provider', 'heleket');
     }
 
     public function prepareTronPayment(Request $request): \Illuminate\Http\JsonResponse
@@ -381,11 +461,12 @@ class ShortlinkController extends Controller
 
         $count = (int) $pending['count'];
         $freeTrialExhausted = (bool) ($pending['free_trial_exhausted'] ?? false);
+        $remaining = (int) ($pending['remaining'] ?? 0);
         $pricePerLink = (float) ShortlinkSetting::get('price_per_link', '0.01');
         $minAmount = (float) ShortlinkSetting::get('min_amount', '0.10');
         $amount = $freeTrialExhausted
             ? max($minAmount, round($count * $pricePerLink, 2))
-            : max($minAmount, round(($count - self::FREE_TRIAL_LIMIT) * $pricePerLink, 2));
+            : max($minAmount, round(max(0, $count - $remaining) * $pricePerLink, 2));
 
         $orderId = 'sl-' . uniqid();
 
@@ -405,43 +486,83 @@ class ShortlinkController extends Controller
         return response()->json(['order_id' => $orderId, 'amount' => $amount]);
     }
 
+    /**
+     * UI-only. Never mutates payment state. Reads transaction status from DB (webhook is source of truth).
+     */
     public function paymentTronSuccess(Request $request)
     {
         $orderId = $request->query('order_id');
-        $pending = $request->session()->get('shortlink_pending');
-
-        if (!$pending || !$orderId) {
-            return redirect()->route('shortlink.index')
-                ->with('error', 'Invalid session. Please try again.');
+        if (! $orderId) {
+            return redirect()->route('shortlink.index')->with('error', 'Invalid request.');
         }
 
-        $transaction = ShortlinkTransaction::where('order_id', $orderId)->first();
-
-        // Idempotent: if already processed (paid + links in session), redirect with download
-        if ($transaction?->status === 'paid') {
-            $links = $request->session()->get('shortlink_result', []);
-            if (!empty($links)) {
-                return redirect()->route('shortlink.index')
-                    ->with('success', count($links) . ' links generated! Download your file below.')
-                    ->with('download_ready', true);
-            }
+        $tx = ShortlinkTransaction::where('order_id', $orderId)->first();
+        if (! $tx) {
+            return redirect()->route('shortlink.index')->with('error', 'Transaction not found.');
         }
-
-        // Mark as paid if still pending (webhook may have already done this)
-        if ($transaction && $transaction->status === 'pending') {
-            $txRef = $request->query('transaction_id');
-            $transaction->update([
-                'status' => 'paid',
-                'provider_ref' => 'tron' . ($txRef ? ':' . $txRef : ''),
+        if ($tx->status === 'failed') {
+            return redirect()->route('shortlink.index')->with('error', 'Payment failed.');
+        }
+        if ($tx->status !== 'paid' || empty($tx->result_links)) {
+            return view('shortlink.payment-pending', [
+                'orderId' => $orderId,
+                'pollUrl' => route('shortlink.payment-status', ['order_id' => $orderId]),
             ]);
         }
 
-        $links = $this->shortenService->shorten($pending['url'], $pending['count']);
+        $request->session()->put('shortlink_result', $tx->result_links);
         $request->session()->forget(['shortlink_pending', 'shortlink_order_id']);
-        $request->session()->put('shortlink_result', $links);
 
         return redirect()->route('shortlink.index')
-            ->with('success', count($links) . ' links generated! Download your file below.')
-            ->with('download_ready', true);
+            ->with('success', count($tx->result_links) . ' links generated! Download your file below.')
+            ->with('download_ready', true)
+            ->with('payment_provider', 'tron');
+    }
+
+    /**
+     * Poll endpoint for payment-pending page. Returns JSON status.
+     */
+    public function paymentStatus(Request $request): \Illuminate\Http\JsonResponse
+    {
+        $orderId = $request->query('order_id');
+        if (! $orderId) {
+            return response()->json(['error' => 'Missing order_id'], 400);
+        }
+
+        $tx = ShortlinkTransaction::where('order_id', $orderId)->first();
+        if (! $tx) {
+            return response()->json(['status' => 'not_found']);
+        }
+        if ($tx->status === 'failed') {
+            return response()->json(['status' => 'failed']);
+        }
+        if ($tx->status === 'paid' && ! empty($tx->result_links)) {
+            return response()->json(['status' => 'paid', 'links' => $tx->result_links]);
+        }
+
+        return response()->json(['status' => 'pending']);
+    }
+
+    /**
+     * Dev-only: simulate successful payment to test the links UI in browser.
+     * Only available when APP_ENV=local.
+     */
+    public function paymentTestSuccess(Request $request)
+    {
+        if (! app()->environment('local')) {
+            abort(404);
+        }
+
+        $count = min(max((int) $request->query('count', 10), 1), 100);
+        $links = [];
+        for ($i = 1; $i <= $count; $i++) {
+            $links[] = 'https://short.example/' . $i;
+        }
+
+        return redirect()->route('shortlink.index')
+            ->with('success', $count . ' links generated! Download your file below.')
+            ->with('download_ready', true)
+            ->with('payment_provider', 'tron')
+            ->with('shortlink_result', $links);
     }
 }

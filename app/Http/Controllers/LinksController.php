@@ -12,12 +12,13 @@ class LinksController extends Controller
     {
         $user = Auth::user();
         $links = $user->generatedLinks()
+            ->notExpired()
             ->orderByDesc('created_at')
             ->paginate(25);
 
         $activeSubscription = $user->activeSubscription();
         $planLimit = $activeSubscription ? (int) $activeSubscription->plan->links_limit : 0;
-        $totalCount = $user->generatedLinks()->count();
+        $totalCount = $user->generatedLinks()->notExpired()->count();
 
         return view('links.index', [
             'links' => $links,
@@ -30,6 +31,7 @@ class LinksController extends Controller
     {
         $user = Auth::user();
         $links = $user->generatedLinks()
+            ->notExpired()
             ->orderBy('created_at')
             ->get(['short_url', 'original_url', 'created_at']);
 

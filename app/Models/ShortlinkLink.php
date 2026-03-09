@@ -16,7 +16,19 @@ class ShortlinkLink extends Model
         'short_url',
         'batch_index',
         'batch_id',
+        'expires_at',
     ];
+
+    protected $casts = [
+        'expires_at' => 'datetime',
+    ];
+
+    public function scopeNotExpired($query)
+    {
+        return $query->where(function ($q) {
+            $q->whereNull('expires_at')->orWhere('expires_at', '>', now());
+        });
+    }
 
     public function user(): BelongsTo
     {

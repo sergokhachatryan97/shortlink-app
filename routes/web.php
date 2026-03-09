@@ -10,11 +10,17 @@ use App\Http\Controllers\SubscriptionController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [ShortlinkController::class, 'index'])->name('shortlink.index');
+
+if (in_array(app()->environment(), ['local', 'testing'])) {
+    Route::get('/_test/payment-success', [ShortlinkController::class, 'paymentTestSuccess'])->name('payment.test-success');
+    Route::middleware('auth')->get('/_test/add-balance', [BalanceController::class, 'testAddBalance'])->name('balance.test-add');
+}
 Route::post('/generate', [ShortlinkController::class, 'generate'])->name('shortlink.generate');
 Route::get('/download', [ShortlinkController::class, 'download'])->name('shortlink.download');
 Route::get('/payment', [ShortlinkController::class, 'payment'])->name('shortlink.payment');
 Route::post('/payment/initiate', [ShortlinkController::class, 'initiatePayment'])->name('shortlink.payment.initiate');
 Route::get('/payment/success', [ShortlinkController::class, 'paymentSuccess'])->name('shortlink.payment-success');
+Route::get('/payment/status', [ShortlinkController::class, 'paymentStatus'])->name('shortlink.payment-status');
 Route::post('/payment/tron/prepare', [ShortlinkController::class, 'prepareTronPayment'])->name('shortlink.payment-tron-prepare');
 Route::get('/payment/tron/success', [ShortlinkController::class, 'paymentTronSuccess'])->name('shortlink.payment-tron-success');
 
@@ -34,6 +40,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/links/download', [LinksController::class, 'download'])->name('links.download');
     Route::get('/balance', [BalanceController::class, 'index'])->name('balance.index');
     Route::post('/balance/topup/prepare', [BalanceController::class, 'prepareTopup'])->name('balance.topup.prepare');
+    Route::post('/balance/heleket/initiate', [BalanceController::class, 'initiateHeleketTopup'])->name('balance.heleket.initiate');
+    Route::get('/balance/heleket/success', [BalanceController::class, 'heleketTopupSuccess'])->name('balance.heleket.success');
     Route::get('/balance/tron/success', [BalanceController::class, 'tronTopupSuccess'])->name('balance.tron.success');
     Route::get('/subscription', [SubscriptionController::class, 'index'])->name('subscription.index');
     Route::post('/subscription/purchase', [SubscriptionController::class, 'purchase'])->name('subscription.purchase');

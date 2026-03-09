@@ -24,7 +24,12 @@ return new class extends Migration
         }
 
         Schema::table('shortlink_free_trial_uses', function (Blueprint $table) {
+            $table->dropIndex(['ip_address']);
+        });
+        Schema::table('shortlink_free_trial_uses', function (Blueprint $table) {
             $table->dropColumn('ip_address');
+        });
+        Schema::table('shortlink_free_trial_uses', function (Blueprint $table) {
             $table->string('identifier', 128)->nullable(false)->change();
             $table->index('identifier');
         });

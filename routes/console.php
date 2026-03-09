@@ -1,5 +1,6 @@
 <?php
 
+use App\Jobs\ExpireShortlinkLinksJob;
 use App\Jobs\ExpireSubscriptionsJob;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
@@ -10,3 +11,4 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote');
 
 Schedule::job(new ExpireSubscriptionsJob)->daily();
+Schedule::job(new ExpireShortlinkLinksJob)->daily();
