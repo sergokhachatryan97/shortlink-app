@@ -51,6 +51,45 @@
             </div>
         </div>
 
+        <div class="card mb-4">
+            <div class="card-header fw-semibold">Subscription plans</div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>Plan</th>
+                                <th>Links limit · Price (USD)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach ($plans ?? [] as $plan)
+                                <tr>
+                                    <td>
+                                        <strong>{{ $plan->name }}</strong>
+                                        @if ($plan->links_limit == 0)
+                                            <span class="badge bg-secondary ms-1">Unlimited</span>
+                                        @endif
+                                    </td>
+                                    <td>
+                                        <form method="POST" action="{{ route('admin.plans.update', $plan) }}" class="d-flex flex-wrap align-items-center gap-2">
+                                            @csrf
+                                            <input type="number" name="links_limit" value="{{ $plan->links_limit }}" min="0" step="1" class="form-control form-control-sm" style="width: 100px;" title="0 = unlimited">
+                                            <input type="number" name="price_usd" value="{{ $plan->price_usd }}" min="0" step="0.01" class="form-control form-control-sm" style="width: 90px;">
+                                            <button type="submit" class="btn btn-sm btn-primary">Save</button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+                @if (empty($plans) || $plans->isEmpty())
+                    <p class="text-muted text-center py-3 mb-0">No subscription plans. Run SubscriptionPlanSeeder.</p>
+                @endif
+            </div>
+        </div>
+
         <div class="card">
             <div class="card-header fw-semibold">Transactions</div>
             <div class="card-body p-0">

@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\ShortlinkSetting;
 use App\Models\ShortlinkTransaction;
+use App\Models\SubscriptionPlan;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 
 class AdminController extends Controller
@@ -41,12 +43,14 @@ class AdminController extends Controller
     {
         $transactions = ShortlinkTransaction::orderByDesc('created_at')->paginate(20);
         $totalPaid = ShortlinkTransaction::where('status', 'paid')->sum('amount');
+        $plans = SubscriptionPlan::orderBy('sort_order')->get();
 
         return view('admin.dashboard', [
             'transactions' => $transactions,
             'totalPaid' => $totalPaid,
             'pricePerLink' => ShortlinkSetting::get('price_per_link', '0.01'),
             'minAmount' => ShortlinkSetting::get('min_amount', '0.10'),
+            'plans' => $plans,
         ]);
     }
 
@@ -61,5 +65,20 @@ class AdminController extends Controller
         ShortlinkSetting::set('min_amount', $validated['min_amount']);
 
         return back()->with('success', 'Settings updated.');
+    }
+
+    public function updatePlan(Request $request, SubscriptionPlan $plan): RedirectResponse
+    {
+        $validated = $request->validate([
+            'links_limit' => ['required', 'integer', 'min:0'],
+            'price_usd' => ['required', 'numeric', 'min:0', 'max:9999.99'],
+        ]);
+
+        $plan->update([
+            'links_limit' => $validated['links_limit'],
+            'price_usd' => $validated['price_usd'],
+        ]);
+
+        return back()->with('success', 'Plan "' . $plan->name . '" updated.');
     }
 }

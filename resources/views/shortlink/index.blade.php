@@ -3,7 +3,6 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="heleket" content="89c70a02" />
     <title>Shortlink Generator</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&display=swap" rel="stylesheet">
@@ -61,11 +60,9 @@
         }
         .input-group-quantity .btn:first-child {
             border-radius: var(--radius-sm) 0 0 var(--radius-sm);
-            border-color: gainsboro !important;
         }
         .input-group-quantity .btn:last-child {
             border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
-            border-color: gainsboro !important;
         }
         .input-group-quantity .btn {
             font-weight: 600;
@@ -146,16 +143,33 @@
             font-size: 0.875rem;
             border-radius: 6px;
         }
+        :root { --navbar-height: 72px; }
+        @media (max-width: 991.98px) { :root { --navbar-height: 80px; } }
+        body { padding-top: var(--navbar-height) !important; padding-bottom: 2rem; }
     </style>
 </head>
-<body class="min-vh-100 py-5">
+<body class="min-vh-100">
+    @include('components.navbar')
     <div class="container" style="max-width: 560px;">
-        <header class="mb-5 text-center">
+        <header class="mb-5 text-center mt-4">
             <h1 class="hero-title mb-2">Shortlink Generator</h1>
         </header>
 
+        @if (session('success'))
+            <div class="alert alert-success mb-4 py-3">{{ session('success') }}</div>
+        @endif
         @if (session('error'))
             <div class="alert alert-danger mb-4 py-3">{{ session('error') }}</div>
+        @endif
+
+        @if ($atPlanLimit ?? false)
+            <div class="alert alert-warning mb-4 py-3 d-flex align-items-center">
+                <span class="me-2">⚠️</span>
+                <div>
+                    <strong>Plan limit reached.</strong> Generated links will be deducted from your balance.
+                    <span class="d-block mt-1 text-muted small">${{ number_format($pricePerLink ?? 0.01, 2) }} per link</span>
+                </div>
+            </div>
         @endif
 
         <div class="card-style p-5 mb-4">
@@ -175,7 +189,7 @@
                     <label for="count" class="form-label fw-medium">Quantity</label>
                     <div class="input-group input-group-quantity">
                         <button type="button" class="btn btn-outline-secondary" id="qty-minus">−</button>
-                        <input type="number" id="count" name="count" required min="1"  value="50"
+                        <input type="number" id="count" name="count" required min="1" value="50"
                                class="form-control">
                         <button type="button" class="btn btn-outline-secondary" id="qty-plus">+</button>
                     </div>
@@ -208,11 +222,34 @@
             </div>
         </div>
 
-        @if (session('download_ready'))
+        @if (session('download_ready') && !empty($links))
             <div class="links-box mb-4 p-5">
-                <p class="mb-2 fw-medium">Your links are ready!</p>
-                <a href="{{ route('shortlink.download') }}" class="btn btn-success">Download as CSV</a>
+                <p class="mb-3 fw-medium">Your links are ready! Download your CSV below.</p>
+                <a href="{{ route('shortlink.download') }}" class="btn btn-success mb-3" style="background: #059669; border: none;">Download as CSV</a>
+                <div class="mt-3 pt-3 border-top border-success border-opacity-25">
+                    <p class="small text-muted mb-2">{{ count($links) }} links generated:</p>
+                    <div class="overflow-auto small" style="max-height: 240px;">
+                        @foreach(array_slice($links, 0, 20) as $i => $link)
+                            <div class="d-flex align-items-center py-1 border-bottom border-success border-opacity-10">
+                                <span class="text-truncate flex-grow-1 me-2" title="{{ $link }}">{{ $link }}</span>
+                                <button type="button" class="btn btn-sm btn-outline-secondary copy-link-btn" data-link="{{ e($link) }}">Copy</button>
+                            </div>
+                        @endforeach
+                        @if (count($links) > 20)
+                            <p class="text-muted small mt-2 mb-0">... and {{ count($links) - 20 }} more. Download CSV for full list.</p>
+                        @endif
+                    </div>
+                </div>
             </div>
+            <script>
+                document.querySelectorAll('.copy-link-btn').forEach(function(btn) {
+                    btn.addEventListener('click', function() {
+                        navigator.clipboard.writeText(this.dataset.link);
+                        var t = btn.textContent; btn.textContent = 'Copied!';
+                        setTimeout(function() { btn.textContent = t; }, 1500);
+                    });
+                });
+            </script>
         @endif
     </div>
 
@@ -276,8 +313,15 @@
         }
 
         const LINKS_PER_PAGE = 20;
-        let allLinks = [];
+        let allLinks = @json($links ?? []);
         let currentPage = 1;
+        const fromPaymentRedirect = @json(session('download_ready', false));
+
+        if (allLinks.length > 0 && !fromPaymentRedirect) {
+            document.getElementById('links-section').style.display = 'block';
+            document.getElementById('download-csv').href = '{{ route('shortlink.download') }}';
+            renderLinksPage(1);
+        }
 
         function renderLinksPage(page) {
             currentPage = page;

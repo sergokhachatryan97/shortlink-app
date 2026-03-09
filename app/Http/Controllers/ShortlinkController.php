@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\ShortlinkLink;
 use App\Models\ShortlinkSetting;
 use App\Models\ShortlinkTransaction;
+use App\Models\UserSubscription;
 use App\Services\ShortenService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -19,12 +21,35 @@ class ShortlinkController extends Controller
 
     public function index(Request $request)
     {
-        $freeTrialUsed = DB::table('shortlink_free_trial_uses')
-            ->where('ip_address', $request->ip())
-            ->exists();
-        $remaining = $freeTrialUsed ? 0 : self::FREE_TRIAL_LIMIT;
+        $identifier = $this->getIdentifier($request);
+        $ip = $request->ip();
+        $remaining = $this->getRemainingFreeTrial($identifier, $ip);
 
-        return view('shortlink.index', ['remaining' => $remaining]);
+        $links = [];
+        if (session('download_ready')) {
+            $links = $request->session()->get('shortlink_result', []);
+        }
+
+        $atPlanLimit = false;
+        $pricePerLink = (float) ShortlinkSetting::get('price_per_link', '0.01');
+        $user = $request->user();
+        if ($user) {
+            $sub = $user->activeSubscription();
+            if ($sub) {
+                $plan = $sub->plan;
+                if (!$plan->isUnlimited()) {
+                    $currentCount = ShortlinkLink::where('user_subscription_id', $sub->id)->count();
+                    $atPlanLimit = $currentCount >= (int) $plan->links_limit;
+                }
+            }
+        }
+
+        return view('shortlink.index', [
+            'remaining' => $remaining,
+            'links' => $links,
+            'atPlanLimit' => $atPlanLimit,
+            'pricePerLink' => $pricePerLink,
+        ]);
     }
 
     private function getIdentifier(Request $request): string
@@ -36,19 +61,34 @@ class ShortlinkController extends Controller
         return 'ip:' . $request->ip();
     }
 
-    private function hasUsedFreeTrial(string $identifier, string $ip): bool
+    /** Get total links already used for free trial (identifier or IP). */
+    private function getFreeTrialUsedCount(string $identifier, string $ip): int
     {
-        return DB::table('shortlink_free_trial_uses')
-            ->where('identifier', $identifier)
-            ->orWhere('ip_address', $ip)
-            ->exists();
+        return (int) DB::table('shortlink_free_trial_uses')
+            ->where(function ($q) use ($identifier, $ip) {
+                $q->where('identifier', $identifier)->orWhere('ip_address', $ip);
+            })
+            ->sum('links_count');
     }
 
-    private function recordFreeTrialUse(string $identifier, string $ip): void
+    /** Remaining free links (0–50) before payment is required. */
+    private function getRemainingFreeTrial(string $identifier, string $ip): int
+    {
+        $used = $this->getFreeTrialUsedCount($identifier, $ip);
+        return max(0, self::FREE_TRIAL_LIMIT - $used);
+    }
+
+    private function hasUsedFreeTrial(string $identifier, string $ip): bool
+    {
+        return $this->getFreeTrialUsedCount($identifier, $ip) >= self::FREE_TRIAL_LIMIT;
+    }
+
+    private function recordFreeTrialUse(string $identifier, string $ip, int $count): void
     {
         DB::table('shortlink_free_trial_uses')->insert([
             'identifier' => $identifier,
             'ip_address' => $ip,
+            'links_count' => $count,
             'created_at' => now(),
             'updated_at' => now(),
         ]);
@@ -67,14 +107,96 @@ class ShortlinkController extends Controller
         $identifier = $this->getIdentifier($request);
         $ip = $request->ip();
 
-        $freeTrialUsed = $this->hasUsedFreeTrial($identifier, $ip);
-        $withinFreeLimit = $count <= self::FREE_TRIAL_LIMIT;
+        $remaining = $this->getRemainingFreeTrial($identifier, $ip);
+        $freeTrialExhausted = $remaining <= 0;
+        $withinFreeLimit = $count <= $remaining;
+        $requiresPayment = $freeTrialExhausted || !$withinFreeLimit;
 
-        if ($freeTrialUsed || !$withinFreeLimit) {
+        $user = $request->user();
+        $amount = 0;
+        if ($requiresPayment) {
+            $pricePerLink = (float) ShortlinkSetting::get('price_per_link', '0.01');
+            $minAmount = (float) ShortlinkSetting::get('min_amount', '0.10');
+            $amount = $freeTrialExhausted
+                ? max($minAmount, round($count * $pricePerLink, 2))
+                : max($minAmount, round(($count - $remaining) * $pricePerLink, 2));
+        }
+
+        if ($requiresPayment && $user) {
+            $sub = $user->activeSubscription();
+            if ($sub) {
+                $plan = $sub->plan;
+                $currentCount = ShortlinkLink::where('user_subscription_id', $sub->id)->count();
+                $freeInPlan = $plan->isUnlimited() ? $count : max(0, (int) $plan->links_limit - $currentCount);
+                $effectiveCount = $plan->isUnlimited()
+                    ? $count
+                    : min($count, (int) $plan->links_limit - $currentCount);
+                if ($effectiveCount <= 0) {
+                    $paidCount = $count;
+                    $effectiveCount = $count;
+                    $freeInPlan = 0;
+                } else {
+                    $paidCount = $effectiveCount - min($effectiveCount, $freeInPlan);
+                }
+                $planAmount = $paidCount > 0
+                    ? max((float) ShortlinkSetting::get('min_amount', '0.10'), round($paidCount * (float) ShortlinkSetting::get('price_per_link', '0.01'), 2))
+                    : 0;
+
+                if ($planAmount === 0 || $user->balance >= $planAmount) {
+                    if ($planAmount > 0) {
+                        $user->decrement('balance', $planAmount);
+                    }
+                    $links = $this->shortenService->shorten($url, $effectiveCount);
+                    $batchId = 'batch-' . uniqid();
+                    foreach ($links as $i => $link) {
+                        ShortlinkLink::create([
+                            'user_id' => $user->id,
+                            'user_subscription_id' => $sub->id,
+                            'original_url' => $url,
+                            'short_url' => $link,
+                            'batch_index' => $i + 1,
+                            'batch_id' => $batchId,
+                        ]);
+                    }
+                    $request->session()->put('shortlink_result', $links);
+                    return response()->json([
+                        'success' => true,
+                        'count' => count($links),
+                        'links' => $links,
+                        'download_url' => route('shortlink.download'),
+                        'remaining' => 0,
+                    ]);
+                }
+                $request->session()->put('shortlink_pending', [
+                    'url' => $url,
+                    'count' => $effectiveCount,
+                    'free_trial_exhausted' => true,
+                    'identifier' => 'user:' . $user->id,
+                ]);
+                return response()->json([
+                    'redirect' => route('shortlink.payment'),
+                    'requires_payment' => true,
+                ]);
+            }
+            if ($user->balance >= $amount) {
+                $user->decrement('balance', $amount);
+                $links = $this->shortenService->shorten($url, $count);
+                $request->session()->put('shortlink_result', $links);
+                return response()->json([
+                    'success' => true,
+                    'count' => count($links),
+                    'links' => $links,
+                    'download_url' => route('shortlink.download'),
+                    'remaining' => 0,
+                ]);
+            }
+        }
+
+        if ($requiresPayment) {
             $request->session()->put('shortlink_pending', [
                 'url' => $url,
                 'count' => $count,
-                'free_trial_exhausted' => $freeTrialUsed,
+                'free_trial_exhausted' => $freeTrialExhausted,
                 'identifier' => $identifier,
             ]);
             return response()->json([
@@ -84,15 +206,17 @@ class ShortlinkController extends Controller
         }
 
         $links = $this->shortenService->shorten($url, $count);
-        $this->recordFreeTrialUse($identifier, $ip);
+        $this->recordFreeTrialUse($identifier, $ip, $count);
         $request->session()->put('shortlink_result', $links);
+
+        $newRemaining = $remaining - $count;
 
         return response()->json([
             'success' => true,
             'count' => count($links),
             'links' => $links,
             'download_url' => route('shortlink.download'),
-            'remaining' => 0,
+            'remaining' => $newRemaining,
         ]);
     }
 

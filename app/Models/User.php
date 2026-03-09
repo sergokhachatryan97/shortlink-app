@@ -4,6 +4,7 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
@@ -12,22 +13,16 @@ class User extends Authenticatable
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable;
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var list<string>
-     */
     protected $fillable = [
         'name',
         'email',
         'password',
+        'google_id',
+        'telegram_id',
+        'avatar',
+        'balance',
     ];
 
-    /**
-     * The attributes that should be hidden for serialization.
-     *
-     * @var list<string>
-     */
     protected $hidden = [
         'password',
         'remember_token',
@@ -43,6 +38,37 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'balance' => 'decimal:2',
         ];
+    }
+
+    public function subscriptions(): HasMany
+    {
+        return $this->hasMany(UserSubscription::class);
+    }
+
+    public function activeSubscription(): ?UserSubscription
+    {
+        return $this->subscriptions()
+            ->where('status', 'active')
+            ->where('ends_at', '>', now())
+            ->orderByDesc('ends_at')
+            ->first();
+    }
+
+    public function lastExpiredSubscription(): ?UserSubscription
+    {
+        return $this->subscriptions()
+            ->where(function ($q) {
+                $q->where('status', '!=', 'active')
+                    ->orWhere('ends_at', '<=', now());
+            })
+            ->orderByDesc('ends_at')
+            ->first();
+    }
+
+    public function generatedLinks(): HasMany
+    {
+        return $this->hasMany(ShortlinkLink::class, 'user_id');
     }
 }
