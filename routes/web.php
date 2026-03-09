@@ -4,6 +4,7 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BalanceController;
 use App\Http\Controllers\LinksController;
+use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ShortlinkController;
 use App\Http\Controllers\SubscriptionController;
 use Illuminate\Support\Facades\Route;
@@ -27,6 +28,8 @@ Route::get('/auth/telegram', [AuthController::class, 'telegram'])->name('auth.te
 Route::post('/auth/logout', [AuthController::class, 'logout'])->name('auth.logout');
 
 Route::middleware('auth')->group(function () {
+    Route::get('/profile', [ProfileController::class, 'index'])->name('profile.index');
+    Route::post('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::get('/links', [LinksController::class, 'index'])->name('links.index');
     Route::get('/links/download', [LinksController::class, 'download'])->name('links.download');
     Route::get('/balance', [BalanceController::class, 'index'])->name('balance.index');

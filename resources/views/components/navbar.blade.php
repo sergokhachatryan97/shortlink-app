@@ -16,6 +16,9 @@
                 <li class="nav-item">
                     <a class="nav-link {{ request()->routeIs('subscription.*') ? 'active fw-600' : '' }}" href="{{ route('subscription.index') }}">Subscription</a>
                 </li>
+                <li class="nav-item">
+                    <a class="nav-link {{ request()->routeIs('profile.*') ? 'active fw-600' : '' }}" href="{{ route('profile.index') }}">Profile</a>
+                </li>
                 @endauth
             </ul>
             <ul class="navbar-nav align-items-center gap-2">
