@@ -46,11 +46,10 @@
                     @forelse($links as $link)
                     <tr class="link-row" data-original="{{ Str::lower($link->original_url) }}" data-short="{{ Str::lower($link->short_url) }}">
                         <td class="py-3 px-4">
-                            <a href="{{ $link->short_url }}" target="_blank" rel="noopener" class="text-decoration-none text-dark">{{ Str::limit($link->short_url, 40) }}</a>
                             <div class="text-muted small text-truncate mt-0" style="max-width: 280px;">{{ Str::limit($link->original_url, 50) }}</div>
                         </td>
                         <td class="py-3 px-4">
-                            <code class="small">{{ Str::limit($link->short_url, 35) }}</code>
+                            <code class="small">{{ Str::limit($link->short_url) }}</code>
                         </td>
                         <td class="py-3 px-4 text-end">
                             <button type="button" class="btn btn-sm btn-outline-secondary btn-copy" data-url="{{ e($link->short_url) }}" title="Copy link">Copy</button>
