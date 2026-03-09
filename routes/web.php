@@ -38,6 +38,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::get('/links', [LinksController::class, 'index'])->name('links.index');
     Route::get('/links/download', [LinksController::class, 'download'])->name('links.download');
+    Route::get('/links/copy', [LinksController::class, 'copyAll'])->name('links.copy');
     Route::get('/balance', [BalanceController::class, 'index'])->name('balance.index');
     Route::post('/balance/topup/prepare', [BalanceController::class, 'prepareTopup'])->name('balance.topup.prepare');
     Route::post('/balance/heleket/initiate', [BalanceController::class, 'initiateHeleketTopup'])->name('balance.heleket.initiate');

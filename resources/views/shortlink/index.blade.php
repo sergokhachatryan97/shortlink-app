@@ -189,11 +189,11 @@
                     <label for="count" class="form-label fw-medium">Quantity</label>
                     <div class="input-group input-group-quantity">
                         <button type="button" class="btn btn-outline-secondary" id="qty-minus">−</button>
-                        <input type="number" id="count" name="count" required min="1" value="50"
+                        <input type="number" id="count" name="count" required min="1" max="1000" value="50"
                                class="form-control">
                         <button type="button" class="btn btn-outline-secondary" id="qty-plus">+</button>
                     </div>
-                    <p class="form-text text-muted mt-1 small">Max 50 for free trial. Above requires payment.</p>
+                    <p class="form-text text-muted mt-1 small">Max 50 for free trial. Above requires payment. <strong>$<span id="form-price-per-link">{{ number_format($pricePerLink ?? 0.01, 2) }}</span> per link</strong></p>
                 </div>
 
                 <button type="submit" id="generate-btn" class="btn btn-primary btn-lg w-100 mb-4">
@@ -236,7 +236,8 @@
             </div>
             <div id="links-list"></div>
             <nav id="links-pagination" class="mt-3 d-flex justify-content-center align-items-center gap-2 flex-wrap" style="display: none;"></nav>
-            <div class="mt-3 pt-3 border-top border-success border-opacity-25">
+            <div class="mt-3 pt-3 border-top border-success border-opacity-25 d-flex flex-wrap gap-2">
+                <button type="button" id="copy-all-links" class="btn btn-outline-secondary" style="border-radius: 8px;">Copy all links</button>
                 <a href="#" id="download-csv" class="btn" style="background: #059669; color: white; border-radius: 8px;">Download all as CSV</a>
             </div>
         </div>
@@ -349,6 +350,15 @@
         let currentPage = 1;
         const fromPaymentRedirect = @json(session('download_ready', false));
         const paymentProvider = @json(session('payment_provider', ''));
+
+        document.getElementById('copy-all-links').addEventListener('click', () => {
+            if (allLinks.length === 0) return;
+            copyToClipboard(allLinks.join('\n'));
+            const btn = document.getElementById('copy-all-links');
+            const orig = btn.textContent;
+            btn.textContent = 'Copied!';
+            setTimeout(() => { btn.textContent = orig; }, 1500);
+        });
 
         if (allLinks.length > 0) {
             document.getElementById('links-section').style.display = 'block';

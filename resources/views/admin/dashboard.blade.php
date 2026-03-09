@@ -126,7 +126,7 @@
                     </table>
                 </div>
                 <div class="p-2">
-                    {{ $transactions->links() }}
+                    {{ $transactions->links('pagination::bootstrap-5') }}
                 </div>
             </div>
         </div>

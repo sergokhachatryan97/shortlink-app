@@ -120,7 +120,7 @@ class ShortlinkController extends Controller
     {
         $validated = $request->validate([
             'url' => ['required', 'url'],
-            'count' => ['required', 'integer', 'min:1'],
+            'count' => ['required', 'integer', 'min:1', 'max:1000'],
             'fingerprint' => ['nullable', 'string', 'max:128'],
         ]);
 

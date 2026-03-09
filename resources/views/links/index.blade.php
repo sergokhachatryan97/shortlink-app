@@ -9,11 +9,13 @@
             <h1 class="page-title mb-1">My Links</h1>
             <p class="page-subtitle mb-0">All links you generated. Download before your subscription ends.</p>
         </div>
-        <div class="d-flex align-items-center gap-2 flex-shrink-0">
+        <div class="d-flex align-items-center gap-2 flex-shrink-0 flex-wrap">
             <input type="search" id="search-links" class="form-control" placeholder="Search links..." style="width: 200px; min-width: 160px; border-radius: 10px;">
             @if ($totalCount > 0)
+                <button type="button" id="copy-all-links" class="btn btn-outline-secondary px-4 text-nowrap" style="border-radius: 10px;">Copy all links</button>
                 <a href="{{ route('links.download') }}" class="btn btn-primary-gradient px-4 text-nowrap">Export CSV</a>
             @else
+                <button type="button" class="btn btn-secondary px-4 text-nowrap" disabled style="border-radius: 10px;">Copy all links</button>
                 <button type="button" class="btn btn-secondary px-4 text-nowrap" disabled style="border-radius: 10px;">Export CSV</button>
             @endif
         </div>
@@ -91,6 +93,25 @@
                 const match = !q || row.dataset.original.includes(q) || row.dataset.short.includes(q);
                 row.style.display = match ? '' : 'none';
             });
+        });
+    }
+    const copyAllBtn = document.getElementById('copy-all-links');
+    if (copyAllBtn) {
+        copyAllBtn.addEventListener('click', function() {
+            const btn = copyAllBtn;
+            btn.disabled = true;
+            fetch('{{ route("links.copy") }}', { credentials: 'same-origin' })
+                .then(function(r) { return r.text(); })
+                .then(function(text) {
+                    const t = text.trim();
+                    if (!t) { btn.disabled = false; return; }
+                    navigator.clipboard.writeText(t).then(function() {
+                        const orig = btn.textContent;
+                        btn.textContent = 'Copied!';
+                        setTimeout(function() { btn.textContent = orig; btn.disabled = false; }, 1500);
+                    }).catch(function() { btn.disabled = false; });
+                })
+                .catch(function() { btn.disabled = false; });
         });
     }
     document.querySelectorAll('.btn-copy').forEach(function(btn) {

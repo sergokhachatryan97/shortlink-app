@@ -60,10 +60,10 @@
             $upgradePriceDiff = $canUpgrade ? (float) $plan->price_usd - (float) $activeSubscription->plan->price_usd : 0;
             $canAffordUpgrade = $canUpgrade && ($balance ?? 0) >= $upgradePriceDiff;
             $canBuyWithBalance = !$hasActivePlan && ($balance ?? 0) >= (float) $plan->price_usd;
-            $isRecommended = $plan->sort_order === $maxSortOrder && $maxSortOrder > 1;
+            $isRecommended = strtolower($plan->slug ?? '') === 'pro';
             $iconClass = match(strtolower($plan->slug ?? '')) {
                 'starter' => 'icon-lightning',
-                'unlimited' => 'icon-star',
+                'vip' => 'icon-star',
                 default => 'icon-check',
             };
         @endphp
@@ -95,7 +95,7 @@
                             {{ $plan->description }}
                         @endif
                     </p>
-                    <p class="mb-3 fw-bold plan-price {{ $isRecommended ? 'plan-price-recommended' : '' }}">${{ number_format($plan->price_usd, 2) }}{{ strtolower($plan->slug ?? '') === 'unlimited' ? '/yr' : '/mo' }}</p>
+                    <p class="mb-3 fw-bold plan-price {{ $isRecommended ? 'plan-price-recommended' : '' }}">${{ number_format($plan->price_usd, 2) }}{{ strtolower($plan->slug ?? '') === 'vip' ? '/yr' : '/mo' }}</p>
 
                     @if ($isCurrentPlan)
                         <div class="mt-auto">

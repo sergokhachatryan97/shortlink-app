@@ -54,4 +54,17 @@ class LinksController extends Controller
             'Content-Disposition' => "attachment; filename=\"{$filename}\"",
         ]);
     }
+
+    public function copyAll(Request $request)
+    {
+        $user = Auth::user();
+        $links = $user->generatedLinks()
+            ->notExpired()
+            ->orderBy('created_at')
+            ->pluck('short_url');
+
+        return response($links->implode("\n"), 200, [
+            'Content-Type' => 'text/plain',
+        ]);
+    }
 }
