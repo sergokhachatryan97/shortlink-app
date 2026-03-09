@@ -138,10 +138,9 @@ class ShortlinkController extends Controller
         $amount = 0;
         if ($requiresPayment) {
             $pricePerLink = (float) ShortlinkSetting::get('price_per_link', '0.01');
-            $minAmount = (float) ShortlinkSetting::get('min_amount', '0.10');
             $amount = $freeTrialExhausted
-                ? max($minAmount, round($count * $pricePerLink, 2))
-                : max($minAmount, round(($count - $remaining) * $pricePerLink, 2));
+                ? max($pricePerLink, round($count * $pricePerLink, 2))
+                : max($pricePerLink, round(($count - $remaining) * $pricePerLink, 2));
         }
 
         if ($requiresPayment && $user) {
@@ -161,7 +160,7 @@ class ShortlinkController extends Controller
                     $paidCount = $effectiveCount - min($effectiveCount, $freeInPlan);
                 }
                 $planAmount = $paidCount > 0
-                    ? max((float) ShortlinkSetting::get('min_amount', '0.10'), round($paidCount * (float) ShortlinkSetting::get('price_per_link', '0.01'), 2))
+                    ? max((float) ShortlinkSetting::get('price_per_link', '0.01'), round($paidCount * (float) ShortlinkSetting::get('price_per_link', '0.01'), 2))
                     : 0;
 
                 if ($planAmount === 0 || $user->balance >= $planAmount) {
@@ -315,14 +314,13 @@ class ShortlinkController extends Controller
         $remaining = (int) ($pending['remaining'] ?? 0);
 
         $pricePerLink = (float) ShortlinkSetting::get('price_per_link', '0.01');
-        $minAmount = (float) ShortlinkSetting::get('min_amount', '0.10');
 
         if ($freeTrialExhausted) {
-            $amount = max($minAmount, round($count * $pricePerLink, 2));
+            $amount = max($pricePerLink, round($count * $pricePerLink, 2));
             $reason = 'free_trial_used';
         } else {
             $paidCount = max(0, $count - $remaining);
-            $amount = max($minAmount, round($paidCount * $pricePerLink, 2));
+            $amount = max($pricePerLink, round($paidCount * $pricePerLink, 2));
             $reason = 'over_limit';
         }
 
@@ -355,10 +353,9 @@ class ShortlinkController extends Controller
         $freeTrialExhausted = (bool) ($pending['free_trial_exhausted'] ?? false);
         $remaining = (int) ($pending['remaining'] ?? 0);
         $pricePerLink = (float) ShortlinkSetting::get('price_per_link', '0.01');
-        $minAmount = (float) ShortlinkSetting::get('min_amount', '0.10');
         $amount = $freeTrialExhausted
-            ? max($minAmount, round($count * $pricePerLink, 2))
-            : max($minAmount, round(max(0, $count - $remaining) * $pricePerLink, 2));
+            ? max($pricePerLink, round($count * $pricePerLink, 2))
+            : max($pricePerLink, round(max(0, $count - $remaining) * $pricePerLink, 2));
 
         $merchant = config('services.heleket.merchant');
         $paymentKey = config('services.heleket.payment_key');
@@ -463,10 +460,9 @@ class ShortlinkController extends Controller
         $freeTrialExhausted = (bool) ($pending['free_trial_exhausted'] ?? false);
         $remaining = (int) ($pending['remaining'] ?? 0);
         $pricePerLink = (float) ShortlinkSetting::get('price_per_link', '0.01');
-        $minAmount = (float) ShortlinkSetting::get('min_amount', '0.10');
         $amount = $freeTrialExhausted
-            ? max($minAmount, round($count * $pricePerLink, 2))
-            : max($minAmount, round(max(0, $count - $remaining) * $pricePerLink, 2));
+            ? max($pricePerLink, round($count * $pricePerLink, 2))
+            : max($pricePerLink, round(max(0, $count - $remaining) * $pricePerLink, 2));
 
         $orderId = 'sl-' . uniqid();
 

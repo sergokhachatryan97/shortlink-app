@@ -30,11 +30,6 @@
                                 <input type="number" name="price_per_link" step="0.001" min="0.001"
                                        value="{{ $pricePerLink }}" class="form-control" required>
                             </div>
-                            <div class="mb-3">
-                                <label class="form-label small">Minimum amount (USD)</label>
-                                <input type="number" name="min_amount" step="0.01" min="0.01"
-                                       value="{{ $minAmount }}" class="form-control" required>
-                            </div>
                             <button type="submit" class="btn btn-primary">Save</button>
                         </form>
                     </div>

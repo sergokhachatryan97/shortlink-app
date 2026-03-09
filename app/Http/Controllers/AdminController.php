@@ -49,7 +49,6 @@ class AdminController extends Controller
             'transactions' => $transactions,
             'totalPaid' => $totalPaid,
             'pricePerLink' => ShortlinkSetting::get('price_per_link', '0.01'),
-            'minAmount' => ShortlinkSetting::get('min_amount', '0.10'),
             'plans' => $plans,
         ]);
     }
@@ -58,11 +57,9 @@ class AdminController extends Controller
     {
         $validated = $request->validate([
             'price_per_link' => ['required', 'numeric', 'min:0.001', 'max:10'],
-            'min_amount' => ['required', 'numeric', 'min:0.01', 'max:1000'],
         ]);
 
         ShortlinkSetting::set('price_per_link', $validated['price_per_link']);
-        ShortlinkSetting::set('min_amount', $validated['min_amount']);
 
         return back()->with('success', 'Settings updated.');
     }
