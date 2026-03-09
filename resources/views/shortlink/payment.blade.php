@@ -76,7 +76,7 @@
                         <p class="mb-1 small text-muted">Quantity</p>
                         <p class="mb-3" style="color: #334155;">{{ $count }} links</p>
                         <p class="mb-1 small text-muted">Price per link</p>
-                        <p class="mb-3" style="color: #334155;">${{ number_format($pricePerLink ?? 0.01, 2) }} per link</p>
+                        <p class="mb-3" style="color: #334155;">${{ number_format($pricePerLink ?? 0.001, 3) }} per link</p>
                         <p class="total-amount mb-0">${{ number_format($amount, 2) }}</p>
                         <p class="small text-muted mt-3 mb-0">After payment, your links will be generated automatically.</p>
                     </div>

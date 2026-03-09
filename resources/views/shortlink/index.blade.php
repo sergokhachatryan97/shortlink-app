@@ -193,7 +193,7 @@
                                class="form-control">
                         <button type="button" class="btn btn-outline-secondary" id="qty-plus">+</button>
                     </div>
-                    <p class="form-text text-muted mt-1 small">Max 50 for free trial. Above requires payment. <strong>$<span id="form-price-per-link">{{ number_format($pricePerLink ?? 0.01, 2) }}</span> per link</strong></p>
+                    <p class="form-text text-muted mt-1 small">Max 50 for free trial. Above requires payment. <strong>$<span id="form-price-per-link">{{ number_format($pricePerLink ?? 0.001, 3) }}</span> per link</strong></p>
                 </div>
 
                 <button type="submit" id="generate-btn" class="btn btn-primary btn-lg w-100 mb-4">
