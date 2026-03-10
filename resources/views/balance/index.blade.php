@@ -70,9 +70,9 @@
             </div>
 
             <div class="addfunds-summary mb-4">
-                <div class="d-flex justify-content-between mb-1"><span class="cosmic-text-muted">You will pay:</span> <span id="summary-pay">$0.00</span></div>
-                <div class="d-flex justify-content-between mb-1"><span class="cosmic-text-muted">Network fee:</span> <span>~$0.10</span></div>
-                <div class="d-flex justify-content-between addfunds-total"><span>Total:</span> <span id="summary-total">$0.10</span></div>
+                <div class="d-flex justify-content-between mb-1"><span class="cosmic-text-muted">You will pay:</span> <span class="cosmic-text-muted"  id="summary-pay">$0.00</span></div>
+                <div class="d-flex justify-content-between mb-1"><span class="cosmic-text-muted">Network fee:</span> <span class="cosmic-text-muted">~$0.10</span></div>
+                <div class="d-flex justify-content-between addfunds-total"><span class="cosmic-text-muted">Total:</span> <span id="summary-total" class="cosmic-text-muted">$0.10</span></div>
             </div>
 
             <div class="addfunds-secure mb-4">✓ Secure crypto payment confirmed on the blockchain</div>
