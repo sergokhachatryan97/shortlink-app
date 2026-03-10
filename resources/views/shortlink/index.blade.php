@@ -189,6 +189,9 @@
         .landing-page .navbar .balance-amount { color: #fff !important; }
         .landing-page .navbar .navbar-toggler { border-color: rgba(255,255,255,0.4); }
         .landing-page .navbar .navbar-toggler-icon { filter: invert(1); }
+        .landing-page .navbar .dropdown-menu { background: rgba(30,30,45,0.95) !important; border: 1px solid rgba(255,255,255,0.1) !important; }
+        .landing-page .navbar .dropdown-item { color: rgba(255,255,255,0.9) !important; }
+        .landing-page .navbar .dropdown-item:hover { background: rgba(255,255,255,0.1) !important; color: #fff !important; }
         .footer-contact-landing { border-top: 1px solid rgba(255,255,255,0.1); }
         .pricing-card-landing {
             background: rgba(30, 30, 45, 0.6);

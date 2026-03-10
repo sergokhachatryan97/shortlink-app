@@ -120,6 +120,9 @@ body:not(.cosmic-page-body) .nav-wallet {
 }
 body:not(.cosmic-page-body) .nav-wallet:hover { background: rgba(226,232,240,0.95); }
 body:not(.cosmic-page-body) .nav-wallet-icon { color: #6366f1; }
+body:not(.cosmic-page-body):not(.auth-page-body):not(.landing-page) .navbar .dropdown-menu { background: #fff !important; border: 1px solid rgba(0,0,0,0.1) !important; }
+body:not(.cosmic-page-body):not(.auth-page-body):not(.landing-page) .navbar .dropdown-item { color: #1e293b !important; }
+body:not(.cosmic-page-body):not(.auth-page-body):not(.landing-page) .navbar .dropdown-item:hover { background: #f8fafc !important; color: #0f172a !important; }
 /* Cosmic dark theme for dashboard pages */
 .cosmic-page-body { background: #0a0a12 !important; }
 .cosmic-page-body .navbar { background: rgba(30,30,45,0.95) !important; border-color: rgba(255,255,255,0.06) !important; box-shadow: none !important; }
