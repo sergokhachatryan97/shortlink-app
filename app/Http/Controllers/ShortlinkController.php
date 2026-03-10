@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\ShortlinkLink;
 use App\Models\ShortlinkSetting;
 use App\Models\ShortlinkTransaction;
+use App\Models\SubscriptionPlan;
 use App\Models\UserSubscription;
 use App\Services\ShortenService;
 use Illuminate\Http\Request;
@@ -52,6 +53,8 @@ class ShortlinkController extends Controller
             }
         }
 
+        $plans = SubscriptionPlan::where('is_active', true)->orderBy('sort_order')->get();
+
         return view('shortlink.index', [
             'remaining' => $remaining,
             'links' => $links,
@@ -61,6 +64,7 @@ class ShortlinkController extends Controller
             'planLimit' => $planLimit,
             'planUsed' => $planUsed,
             'planRemaining' => $planRemaining,
+            'plans' => $plans,
         ]);
     }
 

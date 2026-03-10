@@ -47,11 +47,12 @@
     </style>
     @stack('styles')
 </head>
-<body>
+<body class="{{ request()->routeIs('links.*') || request()->routeIs('contact.index') || request()->routeIs('subscription.index') || request()->routeIs('profile.*') || request()->routeIs('balance.*') ? 'cosmic-page-body' : '' }}">
     @include('components.navbar')
-    <main class="main-content">
+    <main class="main-content d-flex flex-column" style="min-height: calc(100vh - var(--navbar-height) - 80px);">
         @yield('content')
     </main>
+    @include('components.footer')
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     @stack('scripts')
 </body>

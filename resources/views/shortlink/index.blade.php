@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="heleket" content="89c70a02" />
-    <title>Shortlink Generator</title>
+    <title>Trastly – Create Trusted Short Links</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -21,37 +21,61 @@
         }
         body {
             font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
-            background: var(--bg);
+            background: #0a0a12 url('{{ asset('images/hero-bg.png') }}') no-repeat center center;
+            background-size: cover;
+            background-attachment: fixed;
             min-height: 100vh;
+            color: #fff;
         }
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background: linear-gradient(180deg, rgba(10,10,18,0.75) 0%, rgba(10,10,18,0.9) 100%);
+            pointer-events: none;
+            z-index: 0;
+        }
+        body > * { position: relative; z-index: 1; }
         .hero-title {
-            font-size: 2rem;
+            font-size: 2.25rem;
             font-weight: 700;
             letter-spacing: -0.02em;
-            color: #1e293b;
+            color: #fff;
         }
         .hero-sub {
-            color: #64748b;
+            color: rgba(255,255,255,0.75);
             font-size: 1.0625rem;
+            text-align: center;
+            width: 85%;
         }
         .card-style {
-            background: var(--surface);
+            background: rgba(30, 30, 45, 0.1);
             border-radius: var(--radius);
-            box-shadow: var(--shadow-lg);
-            border: none;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+            border: 1px solid rgba(255,255,255,0.08);
             font-size: 1rem;
+            color: #e2e8f0;
         }
-        .card-style .form-control { font-size: 1rem; }
-        .card-style .form-label { font-size: 0.9375rem; }
-        .card-style .form-text { font-size: 0.75rem; }
-        .card-style .input-group-text { font-size: 1rem; }
+        .card-style .form-control { font-size: 1rem; background: rgba(15,15,25,0.1); border-color: rgba(255,255,255,0.15); color: #fff; }
+        .card-style .form-control::placeholder { color: rgba(255,255,255,0.4); }
+        .card-style .form-label { font-size: 0.9375rem; color: #e2e8f0; }
+        .card-style .form-text { font-size: 0.75rem; color: rgba(255,255,255,0.6); }
+        .card-style .input-group-text { font-size: 1rem; background: rgba(15,15,25,0.1); border-color: rgba(255,255,255,0.15); color: #94a3b8; }
         .form-control, .input-group-text {
             border-radius: var(--radius-sm) !important;
-            border-color: #e2e8f0;
+            border-color: rgba(255,255,255,0.15);
         }
         .form-control:focus {
             border-color: var(--brand);
-            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.35);
+            background: rgba(15,15,25,0.8);
+            color: #fff;
+        }
+        .card-style .form-control:-webkit-autofill,
+        .card-style .form-control:-webkit-autofill:hover,
+        .card-style .form-control:-webkit-autofill:focus {
+            -webkit-box-shadow: 0 0 0 1000px rgba(15,15,25,0.8) inset !important;
+            -webkit-text-fill-color: #fff !important;
         }
         .input-group-quantity { max-width: 160px; }
         .input-group-quantity .form-control {
@@ -69,6 +93,9 @@
             font-weight: 600;
             padding: 8px 14px;
             font-size: 1rem;
+            background: rgba(30,30,45,0.9);
+            border-color: rgba(255,255,255,0.15);
+            color: #e2e8f0;
         }
         input[type="number"]::-webkit-outer-spin-button,
         input[type="number"]::-webkit-inner-spin-button {
@@ -95,30 +122,31 @@
         }
         .progress-bar-custom {
             height: 10px;
-            background: #e2e8f0;
+            background: rgba(255,255,255,0.15);
             border-radius: 999px;
             overflow: hidden;
         }
         .progress-fill {
             height: 100%;
-            background: linear-gradient(90deg, #22c55e, #10b981);
+            background: linear-gradient(90deg, #4d2bf1, #560f93);
             border-radius: 999px;
             transition: width 0.4s ease;
         }
         .links-box {
-            background: linear-gradient(145deg, #f0fdf4 0%, #ecfdf5 100%);
-            border: 1px solid #a7f3d0;
+            background: rgba(30, 30, 45, 0.1);
+            border: 1px solid rgba(34, 197, 94, 0.3);
             border-radius: var(--radius);
             padding: 24px;
-            box-shadow: 0 1px 3px rgba(0,0,0,.04);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
             font-size: 1rem;
+            color: #e2e8f0;
         }
         .link-row {
             display: flex;
             align-items: center;
             gap: 12px;
             padding: 12px 0;
-            border-bottom: 1px solid rgba(34, 197, 94, 0.2);
+            border-bottom: 1px solid rgba(255,255,255,0.1);
             font-size: 1rem;
         }
         .link-row:last-child { border-bottom: none; }
@@ -126,9 +154,12 @@
             flex: 1;
             overflow: hidden;
             text-overflow: ellipsis;
-            color: #334155;
+            color: #e2e8f0;
         }
-        .plan-status { font-size: 0.9375rem; }
+        .plan-status { font-size: 0.8125rem; color: rgba(255,255,255,0.7); }
+        .plan-status #plan-text { font-weight: 500; color: rgba(255,255,255,0.7); font-size: 0.8125rem; }
+        .plan-status-row { min-height: 24px; }
+        .plan-status-left, .plan-status-right { color: rgba(255,255,255,0.6); font-size: 0.8125rem; font-weight: 500; white-space: nowrap; }
         .btn-copy {
             font-size: 0.875rem;
             padding: 6px 14px;
@@ -147,14 +178,43 @@
         :root { --navbar-height: 72px; }
         @media (max-width: 991.98px) { :root { --navbar-height: 80px; } }
         body { padding-top: var(--navbar-height) !important; padding-bottom: 2rem; }
+        .landing-page .navbar { background: rgba(10,10,18,0.6) !important; border-color: rgba(255,255,255,0.06) !important; }
+        .landing-page .navbar .navbar-brand { color: #fff !important; }
+        .landing-page .navbar .nav-link { color: rgba(255,255,255,0.8) !important; }
+        .landing-page .navbar .nav-link:hover { color: #fff !important; }
+        .landing-page .navbar .nav-link.active { color: #a78bfa !important; }
+        .landing-page .navbar .btn-outline-secondary { border-color: rgba(255,255,255,0.4); color: #fff; }
+        .landing-page .navbar .btn-outline-secondary:hover { background: rgba(255,255,255,0.1); color: #fff; border-color: rgba(255,255,255,0.5); }
+        .landing-page .navbar .dropdown-toggle { background: rgba(255,255,255,0.1) !important; color: #fff !important; }
+        .landing-page .navbar .balance-amount { color: #fff !important; }
+        .landing-page .navbar .navbar-toggler { border-color: rgba(255,255,255,0.4); }
+        .landing-page .navbar .navbar-toggler-icon { filter: invert(1); }
+        .footer-contact-landing { border-top: 1px solid rgba(255,255,255,0.1); }
+        .pricing-card-landing {
+            background: rgba(30, 30, 45, 0.6);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 12px;
+        }
+        .pricing-plan-name { color: rgba(255,255,255,0.6); font-size: 0.875rem; font-weight: 500; }
+        .pricing-plan-price { color: #fff; font-size: 1.5rem; font-weight: 700; }
+        .pricing-view-btn {
+            background: rgba(30, 30, 45, 0.6);
+            border: 1px solid rgba(255,255,255,0.2);
+            color: rgba(255,255,255,0.7);
+            font-size: 0.875rem;
+            font-weight: 500;
+            padding: 10px 24px;
+            border-radius: 10px;
+        }
+        .pricing-view-btn:hover { background: rgba(40,40,60,0.8); color: #fff; border-color: rgba(255,255,255,0.3); }
     </style>
 </head>
-<body class="min-vh-100">
+<body class="min-vh-100 landing-page">
     @include('components.navbar')
     <div class="container" style="max-width: 600px;">
         <header class="mb-4 mt-4">
-            <h1 class="hero-title mb-1">Shortlink Generator</h1>
-            <p class="hero-sub mb-0">Create Short Links — Generate multiple shortened URLs instantly.</p>
+            <h1 class="hero-title mb-1">Create Trusted Short Links Instantly</h1>
+            <p class="hero-sub mb-0">High-trust domain redirects for campaigns, traffic distribution, and link management.</p>
         </header>
 
         @if (session('success'))
@@ -178,7 +238,7 @@
                 <input type="hidden" name="fingerprint" id="fingerprint" value="">
 
                 <div class="mb-4">
-                    <label for="url" class="form-label fw-medium">Link (URL)</label>
+                    <label for="url" class="form-label fw-medium">Destination URL</label>
                     <div class="input-group">
                         <input type="url" id="url" name="url" required placeholder="https://example.com"
                                class="form-control">
@@ -186,51 +246,51 @@
                 </div>
 
                 <div class="mb-4">
-                    <label for="count" class="form-label fw-medium">Quantity</label>
+                    <label for="count" class="form-label fw-medium">Number of links</label>
                     <div class="input-group input-group-quantity">
                         <button type="button" class="btn btn-outline-secondary" id="qty-minus">−</button>
                         <input type="number" id="count" name="count" required min="1" max="1000" value="50"
                                class="form-control">
                         <button type="button" class="btn btn-outline-secondary" id="qty-plus">+</button>
                     </div>
-                    <p class="form-text text-muted mt-1 small">Max 50 for free trial. Above requires payment. <strong>$<span id="form-price-per-link">{{ number_format($pricePerLink ?? 0.001, 3) }}</span> per link</strong></p>
+                    <p class="form-text text-white mt-1 small">Max 50 for free trial. Above requires payment. <strong>$<span id="form-price-per-link">{{ number_format($pricePerLink ?? 0.001, 3) }}</span> per link</strong></p>
                 </div>
 
                 <button type="submit" id="generate-btn" class="btn btn-primary btn-lg w-100 mb-4">
-                    Generate Links
+                    Generate Trust Links
                 </button>
             </form>
 
             <div class="plan-status" id="plan-status">
-                <p class="mb-1 fw-medium" id="plan-text">
-                    @if ($planName ?? null)
-                        Plan: {{ $planName }} —
-                        @if (($planLimit ?? 0) > 0)
-                            {{ $planUsed ?? 0 }} / {{ $planLimit }} used
-                        @else
-                            Unlimited
-                        @endif
-                    @else
-                        Free trial (remaining: <span id="remaining">{{ $remaining ?? 50 }}</span> / 50)
-                    @endif
-                </p>
-                @if (($planLimit ?? 50) > 0)
+                @if ($planName ?? null)
+                <p class="mb-1" id="plan-text">Plan: {{ $planName }} — @if (($planLimit ?? 0) > 0){{ $planUsed ?? 0 }} / {{ $planLimit }} used @else Unlimited @endif</p>
+                @if (($planLimit ?? 0) > 0)
                 <div class="progress-bar-custom mb-1">
-                    <div class="progress-fill" id="progress-fill" style="width: {{ $planName ? min(100, (($planUsed ?? 0) / max(1, $planLimit ?? 1)) * 100) : (($remaining ?? 50) / 50) * 100 }}%;"></div>
+                    <div class="progress-fill" id="progress-fill" style="width: {{ min(100, (($planUsed ?? 0) / max(1, $planLimit ?? 1)) * 100) }}%;"></div>
                 </div>
                 @endif
-                <a href="#" class="text-decoration-none" style="color: var(--brand);" data-bs-toggle="modal" data-bs-target="#pricingModal">View pricing</a>
+                @else
+                <div style="display: flex; justify-content: space-between">
+                    <span class="plan-status-left">Free trial remaining</span>
+                    <span class="plan-status-right"><span id="remaining">{{ $remaining ?? 50 }}</span> / 50 links</span>
+                </div>
+                <div class="plan-status-row d-flex align-items-center gap-2 mb-1">
+                    <div class="progress-bar-custom flex-grow-1">
+                        <div class="progress-fill" id="progress-fill" style="width: {{ (($remaining ?? 50) / 50) * 100 }}%;"></div>
+                    </div>
+                </div>
+                @endif
             </div>
         </div>
 
         <div id="links-section" class="links-box mb-4" style="display: none;">
             <div class="d-flex align-items-center gap-2 mb-3">
                 <input type="radio" checked class="form-check-input" id="plan-radio">
-                <label for="plan-radio" class="form-check-label fw-medium mb-0" id="links-label">
+                <label for="plan-radio" class="form-check-label mb-0" id="links-label" style="font-size: 0.8125rem; color: rgba(255,255,255,0.7);">
                     @if ($planName ?? null)
                         Plan: {{ $planName }} ({{ $planUsed ?? 0 }}{{ ($planLimit ?? 0) > 0 ? ' / ' . $planLimit : '' }})
                     @else
-                        Free trial (remaining: <span id="remaining-2">{{ $remaining ?? 0 }}</span> / 50)
+                        Free trial remaining — <span id="remaining-2">{{ $remaining ?? 0 }}</span> / 50 links
                     @endif
                 </label>
             </div>
@@ -242,6 +302,58 @@
             </div>
         </div>
     </div>
+
+    <div class="container mt-5 pt-4" style="max-width: 960px;">
+        <div class="row g-4 mb-5">
+            <div class="col-md-6">
+                <h5 class="text-white fw-bold mb-3">Use cases</h5>
+                <ul class="list-unstyled mb-0">
+                    <li class="d-flex align-items-center gap-2 mb-2" style="color: rgba(255,255,255,0.85);"><span class="text-success">✓</span> Affiliate campaigns</li>
+                    <li class="d-flex align-items-center gap-2 mb-2" style="color: rgba(255,255,255,0.85);"><span class="text-success">✓</span> Traffic distribution</li>
+                    <li class="d-flex align-items-center gap-2 mb-2" style="color: rgba(255,255,255,0.85);"><span class="text-success">✓</span> Media buying teams</li>
+                    <li class="d-flex align-items-center gap-2" style="color: rgba(255,255,255,0.85);"><span class="text-success">✓</span> Telegram marketers</li>
+                </ul>
+            </div>
+        </div>
+
+        @if ($plans ?? null)
+        <h5 class="text-center mb-4" style="color: rgba(255,255,255,0.6); font-size: 1rem; font-weight: 500;">Pricing</h5>
+        <div class="row g-3 mb-4 justify-content-center card-style" style="padding: 15px 0 25px 0">
+            @foreach($plans as $plan)
+            <div class="col-6 col-md-4 col-lg-3">
+                <div class="pricing-card-landing text-center py-4 px-3">
+                    <p class="mb-1 pricing-plan-name">{{ $plan->name }}</p>
+                    <p class="mb-0 pricing-plan-price">${{ $plan->price_usd == (int) $plan->price_usd ? number_format($plan->price_usd, 0) : number_format($plan->price_usd, 2) }}</p>
+                </div>
+            </div>
+            @endforeach
+        </div>
+        <div class="text-center">
+            <a href="{{ route('subscription.index') }}" class="btn pricing-view-btn">View Pricing</a>
+        </div>
+        @endif
+    </div>
+
+    <footer class="footer-contact-landing py-4 mt-5">
+        <div class="container">
+            <div class="d-flex flex-wrap align-items-center justify-content-center justify-content-md-between gap-3">
+                <span class="small" style="color: rgba(255,255,255,0.5);">&copy; {{ date('Y') }} {{ config('app.name') }}</span>
+                <div class="d-flex align-items-center gap-4 flex-wrap">
+                    <a href="{{ route('contact.index') }}" class="small text-decoration-none d-inline-flex align-items-center gap-1" style="color: #a78bfa;">Contact</a>
+                    <a href="mailto:{{ config('app.support_email') }}" class="small text-decoration-none d-inline-flex align-items-center gap-1" style="color: rgba(255,255,255,0.6);">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                        {{ config('app.support_email') }}
+                    </a>
+                    @if(config('app.support_telegram'))
+                    <a href="{{ config('app.support_telegram') }}" target="_blank" rel="noopener" class="small text-decoration-none d-inline-flex align-items-center gap-1" style="color: rgba(255,255,255,0.6);">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/></svg>
+                        Telegram
+                    </a>
+                    @endif
+                </div>
+            </div>
+        </div>
+    </footer>
 
     <div class="modal fade" id="pricingModal" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered">
@@ -315,11 +427,14 @@
 
             if (planName) {
                 const usedText = planLimit > 0 ? planUsed + ' / ' + planLimit + ' used' : 'Unlimited';
-                planText.innerHTML = 'Plan: ' + escapeHtml(planName) + ' — ' + usedText;
-                linksLabel.innerHTML = 'Plan: ' + escapeHtml(planName) + ' (' + planUsed + (planLimit > 0 ? ' / ' + planLimit : '') + ')';
+                if (planText) planText.innerHTML = 'Plan: ' + escapeHtml(planName) + ' — ' + usedText;
+                if (linksLabel) linksLabel.innerHTML = 'Plan: ' + escapeHtml(planName) + ' (' + planUsed + (planLimit > 0 ? ' / ' + planLimit : '') + ')';
             } else {
-                planText.innerHTML = 'Free trial (remaining: <span id="remaining">' + remaining + '</span> / 50)';
-                linksLabel.innerHTML = 'Free trial (remaining: <span id="remaining-2">' + remaining + '</span> / 50)';
+                const remEl = document.getElementById('remaining');
+                const rem2El = document.getElementById('remaining-2');
+                if (remEl) remEl.textContent = remaining;
+                if (rem2El) rem2El.textContent = remaining;
+                if (linksLabel) linksLabel.innerHTML = 'Free trial remaining — <span id="remaining-2">' + remaining + '</span> / 50 links';
             }
 
             if (progressBar && progressFill) {

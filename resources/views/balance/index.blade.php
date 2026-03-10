@@ -3,108 +3,103 @@
 @section('title', 'Add Funds')
 
 @section('content')
-<div class="container balance-page" style="max-width: 900px;">
-    <div class="page-header mb-4">
-        <h1 class="page-title">Add Funds</h1>
-        <p class="page-subtitle">Top up your balance to pay for link generation and subscriptions.</p>
-    </div>
-
-    @if (session('success'))
-        <div class="alert alert-success border-0 mb-4" style="border-radius: 12px;">{{ session('success') }}</div>
-    @endif
-    @if (session('info'))
-        <div class="alert alert-info border-0 mb-4" style="border-radius: 12px;">{{ session('info') }}</div>
-    @endif
-    @if (session('error'))
-        <div class="alert alert-danger border-0 mb-4" style="border-radius: 12px;">{{ session('error') }}</div>
-    @endif
-
-    <div class="row g-4 mb-4">
-        <div class="col-md-4">
-            <div class="card balance-summary-card border-0 shadow-sm" style="border-radius: 12px;">
-                <div class="card-body p-4">
-                    <h5 class="fw-bold mb-3" style="color: #1e293b;">
-                        <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" class="me-1 d-inline"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                        Top Up Summary
-                    </h5>
-                    <p class="text-muted small mb-2">Current balance</p>
-                    <p class="h4 fw-bold mb-3" style="color: #1e293b;">${{ number_format($balance, 2) }} USD</p>
-                    <label for="amount" class="form-label text-muted small">Amount to add (USD)</label>
-                    <input type="number" step="0.01" min="0.10" max="10000" class="form-control form-control-lg mb-0" id="amount" value="10" required style="border-radius: 10px;">
-                </div>
-            </div>
+<div class="cosmic-page-section">
+    <div class="container cosmic-container" style="max-width: 900px;">
+        <div class="cosmic-page-header mb-4">
+            <h1 class="cosmic-page-title">Add Funds</h1>
+            <p class="cosmic-page-subtitle mb-0">Top up your balance to pay for link generation and subscriptions.</p>
         </div>
 
-        <div class="col-md-4">
-            <div class="card payment-option-card border-0 shadow-sm" style="border-radius: 12px; height: 100%;">
-                <div class="card-body p-4 d-flex flex-column">
-                    <h5 class="fw-bold mb-2" style="color: #1e293b;">Pay with Tron (USDT / TRX)</h5>
-                    <div class="payment-icon payment-icon-tron mb-3"><img src="{{ asset('images/tron-logo.png') }}" alt="Tron" width="32" height="32" class="payment-icon-img"></div>
-                    <p class="small text-muted mb-3">Fast USDT or TRX payment on Tron network</p>
-                    <div class="check-item mb-1"><span class="check-icon text-primary">✓</span> Secure and quick on-chain</div>
-                    <div class="check-item text-muted mb-3"><span class="check-icon">✓</span> Low fees</div>
+        @if (session('success'))
+            <div class="cosmic-alert cosmic-alert-success mb-4">{{ session('success') }}</div>
+        @endif
+        @if (session('info'))
+            <div class="cosmic-alert cosmic-alert-info mb-4">{{ session('info') }}</div>
+        @endif
+        @if (session('error'))
+            <div class="cosmic-alert cosmic-alert-danger mb-4">{{ session('error') }}</div>
+        @endif
+
+        <div class="row g-4 mb-4">
+            <div class="col-md-4">
+                <div class="cosmic-card p-4 h-100">
+                    <h5 class="cosmic-card-title mb-3">Top Up Summary</h5>
+                    <p class="cosmic-text-muted small mb-2">Current balance</p>
+                    <p class="cosmic-balance-amount mb-3">${{ number_format($balance, 2) }} USD</p>
+                    <label for="amount" class="cosmic-label small">Amount to add (USD)</label>
+                    <input type="number" step="0.01" min="0.10" max="10000" class="cosmic-input form-control form-control-lg mb-0" id="amount" value="10" required>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="cosmic-card p-4 h-100 d-flex flex-column">
+                    <h5 class="cosmic-card-title mb-2">Pay with Tron (USDT / TRX)</h5>
+                    <div class="cosmic-payment-icon cosmic-payment-tron mb-3">
+                        <img src="{{ asset('images/tron-logo.png') }}" alt="Tron" width="32" height="32" class="payment-icon-img">
+                    </div>
+                    <p class="cosmic-text-muted small mb-3">Fast USDT or TRX payment on Tron network</p>
+                    <div class="cosmic-check-item mb-1">✓ Secure and quick on-chain</div>
+                    <div class="cosmic-check-item cosmic-text-muted mb-3">✓ Low fees</div>
                     <div class="mt-auto">
                         @if(config('services.coinrush.store_key'))
-                            <button type="button" class="btn btn-tron-balance w-100" id="topup-btn">Continue with Tron</button>
+                            <button type="button" class="btn cosmic-btn-primary w-100" id="topup-btn">Continue with Tron</button>
                         @else
-                            <button type="button" class="btn btn-tron-balance w-100" disabled style="opacity: 0.6;">Continue with Tron</button>
+                            <button type="button" class="btn cosmic-btn-disabled w-100" disabled>Continue with Tron</button>
                         @endif
                     </div>
                 </div>
             </div>
-        </div>
 
-        <div class="col-md-4">
-            <div class="card payment-option-card border-0 shadow-sm" style="border-radius: 12px; height: 100%;">
-                <div class="card-body p-4 d-flex flex-column">
-                    <h5 class="fw-bold mb-2" style="color: #1e293b;">Pay with Heleket (Crypto)</h5>
-                    <div class="payment-icon payment-icon-heleket mb-3">H</div>
-                    <p class="small text-muted mb-3">Pay via crypto checkout</p>
-                    <div class="check-item mb-1"><span class="check-icon text-primary">✓</span> Bitcoin, Ethereum, and more</div>
-                    <div class="check-item text-muted mb-3"><span class="check-icon">✓</span> Secure checkout</div>
+            <div class="col-md-4">
+                <div class="cosmic-card p-4 h-100 d-flex flex-column">
+                    <h5 class="cosmic-card-title mb-2">Pay with Heleket (Crypto)</h5>
+                    <div class="cosmic-payment-icon cosmic-payment-heleket mb-3">H</div>
+                    <p class="cosmic-text-muted small mb-3">Pay via crypto checkout</p>
+                    <div class="cosmic-check-item mb-1">✓ Bitcoin, Ethereum, and more</div>
+                    <div class="cosmic-check-item cosmic-text-muted mb-3">✓ Secure checkout</div>
                     <div class="mt-auto">
                         @if ($heleketAvailable ?? false)
                             <form method="POST" action="{{ route('balance.heleket.initiate') }}" id="heleket-form">
                                 @csrf
                                 <input type="hidden" name="amount" id="heleket-amount">
-                                <button type="submit" class="btn btn-heleket-balance w-100">Continue with Heleket</button>
+                                <button type="submit" class="btn cosmic-btn-heleket w-100">Continue with Heleket</button>
                             </form>
                         @else
-                            <button type="button" class="btn btn-heleket-balance w-100" disabled style="opacity: 0.6;">Continue with Heleket</button>
+                            <button type="button" class="btn cosmic-btn-disabled w-100" disabled>Continue with Heleket</button>
                         @endif
                     </div>
                 </div>
             </div>
         </div>
-    </div>
 
-    <div class="secure-footer-balance card border-0 shadow-sm mb-4" style="border-radius: 12px;">
-        <div class="card-body p-4 d-flex flex-wrap align-items-center justify-content-between gap-3">
-            <div class="d-flex align-items-center gap-2">
-                <span class="text-success">✓</span>
-                <span class="fw-medium" style="color: #1e293b;">Secure payment via CoinRush (Tron) and Heleket</span>
-            </div>
-            <p class="small text-muted mb-0">You will return here after payment.</p>
-            <div class="d-flex align-items-center gap-2">
-                <span class="logo-box logo-cr">CR</span>
-                <span class="logo-box logo-heleket">H</span>
-            </div>
+        <div class="cosmic-card p-4 mb-4">
+            <h5 class="cosmic-card-title d-flex align-items-center gap-2 mb-3">
+                <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+                Contact Support
+            </h5>
+            <p class="cosmic-text-muted mb-2">For any questions or assistance, please contact us:</p>
+            <p class="mb-2">
+                <a href="mailto:{{ config('app.support_email') }}" class="cosmic-email">{{ config('app.support_email') }}</a>
+            </p>
+            @if(config('app.support_telegram'))
+            <p class="mb-0">
+                <a href="{{ config('app.support_telegram') }}" target="_blank" rel="noopener" class="cosmic-email">Telegram</a>
+            </p>
+            @endif
         </div>
-    </div>
 
-    <div class="card card-dashboard">
-        <div class="card-body p-4">
-            <h5 class="card-title fw-bold mb-3" style="color: #1e293b;">Recent transactions</h5>
+        <div class="cosmic-card p-4">
+            <h5 class="cosmic-card-title mb-3">Recent transactions</h5>
             @forelse($transactions as $tx)
-                <div class="d-flex justify-content-between align-items-center py-3 border-bottom" style="border-color: #f1f5f9 !important;">
+                <div class="cosmic-tx-row d-flex justify-content-between align-items-center py-3">
                     <div>
-                        <span class="fw-medium">${{ number_format($tx->amount, 2) }}</span>
-                        <span class="text-muted small ms-1">— {{ $tx->provider_ref ?? 'Payment' }}</span>
+                        <span class="cosmic-tx-amount">${{ number_format($tx->amount, 2) }}</span>
+                        <span class="cosmic-text-muted small ms-1">— {{ $tx->provider_ref ?? 'Payment' }}</span>
                     </div>
-                    <span class="badge rounded-pill {{ $tx->status === 'paid' ? 'bg-success' : ($tx->status === 'failed' ? 'bg-danger' : 'bg-secondary') }}">{{ ucfirst($tx->status) }}</span>
+                    <span class="cosmic-badge-status cosmic-badge-{{ $tx->status }}">{{ ucfirst($tx->status) }}</span>
                 </div>
             @empty
-                <p class="text-muted mb-0 py-2">No transactions yet.</p>
+                <p class="cosmic-text-muted mb-0 py-2">No transactions yet.</p>
             @endforelse
         </div>
     </div>
@@ -112,20 +107,100 @@
 
 @push('styles')
 <style>
-.payment-icon { width: 48px; height: 48px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 1.25rem; }
-.payment-icon-tron { background: linear-gradient(135deg, #ede9fe, #e9d5ff); color: #7c3aed; }
-.payment-icon-tron .payment-icon-img { object-fit: contain; }
-.payment-icon-heleket { background: linear-gradient(135deg, #fee2e2, #fecaca); color: #dc2626; }
-.check-item { display: flex; align-items: center; gap: 8px; font-size: 0.875rem; }
-.check-item .check-icon { color: #6366f1; }
-.check-item.text-muted .check-icon { color: #94a3b8; }
-.btn-tron-balance { background: linear-gradient(90deg, #6d28d9, #8b5cf6); color: white !important; border: none; border-radius: 10px; font-weight: 600; padding: 10px 20px; }
-.btn-tron-balance:hover { color: white !important; opacity: 0.95; }
-.btn-heleket-balance { background: linear-gradient(90deg, #dc2626, #ef4444); color: white !important; border: none; border-radius: 10px; font-weight: 600; padding: 10px 20px; }
-.btn-heleket-balance:hover { color: white !important; opacity: 0.95; }
-.logo-box { width: 32px; height: 32px; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.75rem; }
-.logo-cr { background: linear-gradient(135deg, #6366f1, #8b5cf6); color: white; }
-.logo-heleket { background: linear-gradient(135deg, #dc2626, #ef4444); color: white; }
+.cosmic-page-section {
+    min-height: calc(100vh - var(--navbar-height, 64px) - 80px);
+    background: #0a0a12 url('{{ asset('images/hero-bg.png') }}') no-repeat center center;
+    background-size: cover;
+    margin: -1.5rem 0 0;
+    padding: 2rem 1rem 3rem;
+    position: relative;
+}
+.cosmic-page-section::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(10,10,18,0.75) 0%, rgba(10,10,18,0.9) 100%);
+    pointer-events: none;
+}
+.cosmic-container { position: relative; z-index: 1; }
+.cosmic-page-title { font-size: 1.75rem; font-weight: 700; color: #fff; }
+.cosmic-page-subtitle { color: rgba(255,255,255,0.7); font-size: 0.9375rem; }
+.cosmic-card {
+    background: rgba(30, 30, 45, 0.7);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+}
+.cosmic-card-title { color: #fff; font-weight: 600; }
+.cosmic-text-muted { color: rgba(255,255,255,0.65); }
+.cosmic-label { color: rgba(255,255,255,0.8); }
+.cosmic-balance-amount { font-size: 1.5rem; font-weight: 700; color: #fff; }
+.cosmic-input {
+    background: rgba(30,30,45,0.8) !important;
+    border: 1px solid rgba(255,255,255,0.15) !important;
+    color: #fff !important;
+    border-radius: 10px;
+}
+.cosmic-input:focus {
+    background: rgba(30,30,45,0.9) !important;
+    border-color: #a78bfa !important;
+    box-shadow: 0 0 0 3px rgba(167,139,250,0.3);
+    color: #fff !important;
+}
+.cosmic-payment-icon {
+    width: 48px; height: 48px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 1.25rem;
+}
+.cosmic-payment-tron { background: rgba(167,139,250,0.2); }
+.cosmic-payment-tron .payment-icon-img { object-fit: contain; }
+.cosmic-payment-heleket { background: rgba(239,68,68,0.2); color: #fca5a5; }
+.cosmic-check-item { color: rgba(255,255,255,0.85); font-size: 0.875rem; }
+.cosmic-btn-primary {
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    border: none;
+    color: #fff !important;
+    font-weight: 600;
+    padding: 10px 20px;
+    border-radius: 10px;
+}
+.cosmic-btn-primary:hover { opacity: 0.95; color: #fff !important; }
+.cosmic-btn-heleket {
+    background: linear-gradient(135deg, #dc2626, #ef4444);
+    border: none;
+    color: #fff !important;
+    font-weight: 600;
+    padding: 10px 20px;
+    border-radius: 10px;
+}
+.cosmic-btn-heleket:hover { opacity: 0.95; color: #fff !important; }
+.cosmic-btn-disabled {
+    background: rgba(30,30,45,0.5);
+    border: 1px solid rgba(255,255,255,0.1);
+    color: rgba(255,255,255,0.5);
+    border-radius: 10px;
+}
+.cosmic-email { color: #a78bfa; font-weight: 600; text-decoration: none; font-size: 1.1rem; }
+.cosmic-email:hover { color: #c4b5fd; }
+.cosmic-alert { border-radius: 12px; padding: 1rem 1.25rem; }
+.cosmic-alert-success { background: rgba(34,197,94,0.15); border: 1px solid rgba(34,197,94,0.4); color: #86efac; }
+.cosmic-alert-info { background: rgba(59,130,246,0.15); border: 1px solid rgba(59,130,246,0.4); color: #93c5fd; }
+.cosmic-alert-danger { background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.4); color: #fca5a5; }
+.cosmic-tx-row { border-bottom: 1px solid rgba(255,255,255,0.08); }
+.cosmic-tx-row:last-child { border-bottom: none; }
+.cosmic-tx-amount { color: #fff; font-weight: 500; }
+.cosmic-badge-status {
+    font-size: 0.75rem;
+    padding: 4px 10px;
+    border-radius: 20px;
+}
+.cosmic-badge-paid { background: rgba(34,197,94,0.3); color: #86efac; }
+.cosmic-badge-failed { background: rgba(239,68,68,0.3); color: #fca5a5; }
+.cosmic-badge-pending { background: rgba(255,255,255,0.2); color: rgba(255,255,255,0.8); }
 </style>
 @endpush
 

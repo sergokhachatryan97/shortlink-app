@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Trastly Logo Asset Preview</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: system-ui, -apple-system, sans-serif; margin: 0; padding: 2rem; background: #f8fafc; }
+    h1 { font-size: 1.5rem; margin: 0 0 2rem; color: #0f172a; }
+    h2 { font-size: 1rem; font-weight: 600; margin: 2rem 0 1rem; color: #475569; text-transform: uppercase; letter-spacing: 0.05em; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.5rem; }
+    .card { background: white; border-radius: 12px; padding: 1.5rem; box-shadow: 0 1px 3px rgba(0,0,0,.08); }
+    .card.dark { background: #0a0a12; }
+    .card-label { font-size: 0.75rem; color: #64748b; margin-bottom: 0.75rem; font-weight: 500; }
+    .card.dark .card-label { color: rgba(255,255,255,0.6); }
+    .preview { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; min-height: 80px; }
+    .preview img, .preview object { max-width: 100%; height: auto; }
+    .preview .icon-preview { width: 48px; height: 48px; }
+    .preview .logo-preview { height: 36px; }
+    .preview .compact-preview { height: 28px; }
+    .filename { font-size: 0.7rem; color: #94a3b8; margin-top: 0.5rem; font-family: monospace; }
+    .card.dark .filename { color: rgba(255,255,255,0.5); }
+  </style>
+</head>
+<body>
+  <h1>Trastly Logo Asset Preview</h1>
+
+  <h2>On light background</h2>
+  <div class="grid">
+    <div class="card">
+      <div class="card-label">Main horizontal logo (full color)</div>
+      <div class="preview"><img src="trastly-logo.svg" alt="Trastly" class="logo-preview"></div>
+      <div class="filename">trastly-logo.svg</div>
+    </div>
+    <div class="card">
+      <div class="card-label">Dark version (for light bg)</div>
+      <div class="preview"><img src="trastly-logo-dark.svg" alt="Trastly" class="logo-preview"></div>
+      <div class="filename">trastly-logo-dark.svg</div>
+    </div>
+    <div class="card">
+      <div class="card-label">Compact (navbar)</div>
+      <div class="preview"><img src="trastly-logo-compact.svg" alt="Trastly" class="compact-preview"></div>
+      <div class="filename">trastly-logo-compact.svg</div>
+    </div>
+    <div class="card">
+      <div class="card-label">Icon only</div>
+      <div class="preview"><img src="trastly-icon.svg" alt="Trastly" class="icon-preview"></div>
+      <div class="filename">trastly-icon.svg</div>
+    </div>
+    <div class="card">
+      <div class="card-label">Icon dark</div>
+      <div class="preview"><img src="trastly-icon-dark.svg" alt="Trastly" class="icon-preview"></div>
+      <div class="filename">trastly-icon-dark.svg</div>
+    </div>
+    <div class="card">
+      <div class="card-label">Mono black</div>
+      <div class="preview"><img src="trastly-logo-mono-black.svg" alt="Trastly" class="logo-preview"></div>
+      <div class="filename">trastly-logo-mono-black.svg</div>
+    </div>
+  </div>
+
+  <h2>On dark / cosmic background</h2>
+  <div class="grid">
+    <div class="card dark">
+      <div class="card-label">Light version (for dark bg)</div>
+      <div class="preview"><img src="trastly-logo-light.svg" alt="Trastly" class="logo-preview"></div>
+      <div class="filename">trastly-logo-light.svg</div>
+    </div>
+    <div class="card dark">
+      <div class="card-label">Icon light</div>
+      <div class="preview"><img src="trastly-icon-light.svg" alt="Trastly" class="icon-preview"></div>
+      <div class="filename">trastly-icon-light.svg</div>
+    </div>
+    <div class="card dark">
+      <div class="card-label">Mono white</div>
+      <div class="preview"><img src="trastly-logo-mono-white.svg" alt="Trastly" class="logo-preview"></div>
+      <div class="filename">trastly-logo-mono-white.svg</div>
+    </div>
+    <div class="card dark">
+      <div class="card-label">Icon mono white</div>
+      <div class="preview"><img src="trastly-icon-mono-white.svg" alt="Trastly" class="icon-preview"></div>
+      <div class="filename">trastly-icon-mono-white.svg</div>
+    </div>
+  </div>
+
+  <h2>Favicon & app icons</h2>
+  <div class="grid">
+    <div class="card">
+      <div class="card-label">Favicon SVG</div>
+      <div class="preview"><img src="favicon.svg" alt="Favicon" width="32" height="32"></div>
+      <div class="filename">favicon.svg</div>
+    </div>
+    <div class="card">
+      <div class="card-label">16×16 PNG</div>
+      <div class="preview"><img src="favicon-16.png" alt="16" width="16" height="16" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';"><span style="display:none;font-size:0.7rem;color:#94a3b8;">Run export-pngs.js to generate</span></div>
+      <div class="filename">favicon-16.png</div>
+    </div>
+    <div class="card">
+      <div class="card-label">32×32 PNG</div>
+      <div class="preview"><img src="favicon-32.png" alt="32" width="32" height="32" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';"><span style="display:none;font-size:0.7rem;color:#94a3b8;">Run export-pngs.js to generate</span></div>
+      <div class="filename">favicon-32.png</div>
+    </div>
+    <div class="card">
+      <div class="card-label">Apple Touch Icon 180×180</div>
+      <div class="preview"><img src="apple-touch-icon.png" alt="180" width="60" height="60" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';"><span style="display:none;font-size:0.7rem;color:#94a3b8;">Run export-pngs.js to generate</span></div>
+      <div class="filename">apple-touch-icon.png</div>
+    </div>
+    <div class="card">
+      <div class="card-label">Android Chrome 192×192</div>
+      <div class="preview"><img src="android-chrome-192x192.png" alt="192" width="64" height="64" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';"><span style="display:none;font-size:0.7rem;color:#94a3b8;">Run export-pngs.js to generate</span></div>
+      <div class="filename">android-chrome-192x192.png</div>
+    </div>
+  </div>
+
+  <h2>Usage examples</h2>
+  <div class="card" style="margin-top:1rem;">
+    <div class="card-label">Navbar</div>
+    <pre style="font-size:0.8rem; background:#f1f5f9; padding:1rem; border-radius:8px; overflow:auto;"><code>&lt;a href="/" class="navbar-brand"&gt;
+  &lt;img src="/brand/trastly-logo-dark.svg" alt="Trastly" height="32"&gt;
+&lt;/a&gt;</code></pre>
+  </div>
+  <div class="card dark" style="margin-top:1rem;">
+    <div class="card-label">Navbar (cosmic/dark theme)</div>
+    <pre style="font-size:0.8rem; background:rgba(0,0,0,0.3); padding:1rem; border-radius:8px; overflow:auto; color:#e2e8f0;"><code>&lt;a href="/" class="navbar-brand"&gt;
+  &lt;img src="/brand/trastly-logo-light.svg" alt="Trastly" height="32"&gt;
+&lt;/a&gt;</code></pre>
+  </div>
+  <div class="card" style="margin-top:1rem;">
+    <div class="card-label">Favicon (in &lt;head&gt;)</div>
+    <pre style="font-size:0.8rem; background:#f1f5f9; padding:1rem; border-radius:8px; overflow:auto;"><code>&lt;link rel="icon" type="image/svg+xml" href="/brand/favicon.svg"&gt;
+&lt;link rel="icon" type="image/png" sizes="32x32" href="/brand/favicon-32.png"&gt;
+&lt;link rel="apple-touch-icon" sizes="180x180" href="/brand/apple-touch-icon.png"&gt;</code></pre>
+  </div>
+</body>
+</html>

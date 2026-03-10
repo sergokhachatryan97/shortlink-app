@@ -4,57 +4,72 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>Create account – Shortlink</title>
+    <title>Sign up – Trastly</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        :root {
-            --brand: #6366f1;
-            --brand-hover: #4f46e5;
-            --accent: #8b5cf6;
-            --radius: 14px;
-            --radius-sm: 10px;
-        }
+        :root { --brand: #6366f1; --brand-hover: #4f46e5; --accent: #8b5cf6; --radius: 14px; --radius-sm: 10px; --navbar-height: 64px; }
         body {
             font-family: 'DM Sans', sans-serif;
             min-height: 100vh;
-            background: linear-gradient(135deg, #0f172a 0%, #1e293b 40%, #334155 100%);
+            padding-top: var(--navbar-height);
+            background: #0a0a12 url('{{ asset('images/hero-bg.png') }}') no-repeat center center;
+            background-size: cover;
+            background-attachment: fixed;
             display: flex;
             align-items: center;
             justify-content: center;
             padding: 24px;
+            padding-top: calc(var(--navbar-height) + 24px);
+        }
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background: linear-gradient(180deg, rgba(10,10,18,0.7) 0%, rgba(10,10,18,0.9) 100%);
+            pointer-events: none;
+            z-index: 0;
         }
         .auth-card {
-            background: rgba(255,255,255,0.97);
+            position: relative;
+            z-index: 1;
+            background: rgba(30, 30, 45, 0.85);
             backdrop-filter: blur(20px);
+            border: 1px solid rgba(255,255,255,0.1);
             border-radius: var(--radius);
-            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.35), 0 0 0 1px rgba(255,255,255,0.1);
+            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
             padding: 2.5rem;
             width: 100%;
             max-width: 420px;
         }
-        .auth-title {
-            font-size: 1.75rem;
-            font-weight: 700;
-            color: #0f172a;
-            letter-spacing: -0.02em;
-        }
-        .auth-sub {
-            color: #64748b;
-            font-size: 0.9375rem;
+        .auth-logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
             margin-bottom: 1.5rem;
         }
-        .form-control {
+        .auth-logo img, .auth-logo .auth-logo-img { width: 36px; height: 36px; object-fit: contain; flex-shrink: 0; }
+        .auth-logo span { font-weight: 600; font-size: 1.125rem; color: #fff; }
+        .auth-title { font-size: 1.75rem; font-weight: 700; color: #fff; letter-spacing: -0.02em; margin-bottom: 0.25rem; }
+        .auth-sub { color: rgba(255,255,255,0.7); font-size: 0.9375rem; margin-bottom: 1.5rem; }
+        .auth-card .form-label { color: #e2e8f0; }
+        .auth-card .form-control {
+            background: rgba(15,15,25,0.8);
+            border: 1px solid rgba(255,255,255,0.15);
+            color: #fff;
             border-radius: var(--radius-sm);
-            border: 1px solid #e2e8f0;
             padding: 12px 16px;
             font-size: 1rem;
         }
-        .form-control:focus {
+        .auth-card .form-control::placeholder { color: rgba(255,255,255,0.4); }
+        .auth-card .form-control:focus {
+            background: rgba(15,15,25,0.9);
             border-color: var(--brand);
-            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.35);
+            color: #fff;
         }
+        .auth-card .form-text { color: rgba(255,255,255,0.5); }
         .btn-primary {
             background: linear-gradient(135deg, var(--brand) 0%, var(--accent) 100%);
             border: none;
@@ -62,28 +77,20 @@
             font-weight: 600;
             padding: 12px 20px;
             width: 100%;
+            color: #fff;
             box-shadow: 0 4px 14px rgba(99, 102, 241, 0.4);
             transition: transform .15s, box-shadow .15s;
         }
-        .btn-primary:hover {
-            background: linear-gradient(135deg, var(--brand-hover) 0%, #7c3aed 100%);
-            box-shadow: 0 6px 20px rgba(99, 102, 241, 0.45);
-            transform: translateY(-1px);
-        }
+        .btn-primary:hover { background: linear-gradient(135deg, var(--brand-hover) 0%, #7c3aed 100%); color: #fff; box-shadow: 0 6px 20px rgba(99, 102, 241, 0.45); transform: translateY(-1px); }
         .divider {
             display: flex;
             align-items: center;
             gap: 1rem;
             margin: 1.25rem 0;
-            color: #94a3b8;
+            color: rgba(255,255,255,0.5);
             font-size: 0.8125rem;
         }
-        .divider::before, .divider::after {
-            content: '';
-            flex: 1;
-            height: 1px;
-            background: #e2e8f0;
-        }
+        .divider::before, .divider::after { content: ''; flex: 1; height: 1px; background: rgba(255,255,255,0.15); }
         .btn-social {
             display: flex;
             align-items: center;
@@ -93,66 +100,65 @@
             padding: 12px 20px;
             border-radius: var(--radius-sm);
             font-weight: 600;
-            border: 1px solid #e2e8f0;
-            background: #fff;
             transition: all .15s;
         }
-        .btn-social:hover {
-            background: #f8fafc;
-            border-color: #cbd5e1;
+        .btn-google {
+            background: #fff;
+            border: 1px solid rgba(255,255,255,0.3);
+            color: #1f2937;
         }
-        .btn-google { color: #1f2937; }
-        .auth-footer {
-            text-align: center;
-            margin-top: 1.5rem;
-            font-size: 0.9375rem;
-            color: #64748b;
+        .btn-google:hover { background: rgba(255,255,255,0.95); color: #1f2937; border-color: rgba(255,255,255,0.5); }
+        .btn-telegram {
+            background: rgba(30,30,45,0.9);
+            border: 1px solid rgba(255,255,255,0.2);
+            color: #fff;
         }
-        .auth-footer a {
-            color: var(--brand);
-            font-weight: 500;
-            text-decoration: none;
-        }
-        .auth-footer a:hover { text-decoration: underline; }
-        .logo-link {
-            color: var(--brand) !important;
-            font-weight: 600;
-            font-size: 0.9375rem;
-            text-decoration: none !important;
-        }
-        .logo-link:hover { color: var(--brand-hover) !important; }
+        .btn-telegram:hover { background: rgba(40,40,60,0.95); color: #fff; border-color: rgba(255,255,255,0.3); }
+        .auth-footer { text-align: center; margin-top: 1.5rem; font-size: 0.9375rem; color: rgba(255,255,255,0.6); }
+        .auth-footer a { color: #a78bfa; font-weight: 500; text-decoration: none; }
+        .auth-footer a:hover { color: #c4b5fd; text-decoration: underline; }
+        .auth-card .alert-danger { background: rgba(220,38,38,0.2); border-color: rgba(220,38,38,0.5); color: #fca5a5; }
+        .auth-back { display: inline-flex; align-items: center; gap: 6px; color: rgba(255,255,255,0.7); text-decoration: none; font-size: 0.9375rem; margin-bottom: 1rem; }
+        .auth-back:hover { color: #fff; }
+        .auth-back svg { width: 18px; height: 18px; flex-shrink: 0; }
     </style>
 </head>
-<body>
+<body class="auth-page-body">
+    @include('components.navbar')
     <div class="auth-card">
-        <a href="{{ route('shortlink.index') }}" class="logo-link d-inline-block mb-4">← Shortlink</a>
+        <a href="{{ route('shortlink.index') }}" class="auth-back">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+            Back
+        </a>
+        <a href="{{ route('shortlink.index') }}" class="auth-logo text-decoration-none">
+            <img src="{{ asset('brand/trastly-star-icon.svg') }}" alt="" class="auth-logo-img">
+            <span>Trastly</span>
+        </a>
         <h1 class="auth-title">Create account</h1>
-        <p class="auth-sub">Get started with Shortlink</p>
+        <p class="auth-sub">Get started with Trastly</p>
 
         @if ($errors->any())
-            <div class="alert alert-danger py-2 mb-3">
-                {{ $errors->first() }}
-            </div>
+            <div class="alert alert-danger py-2 mb-3">{{ $errors->first() }}</div>
         @endif
 
         <form method="POST" action="{{ route('register') }}">
             @csrf
             <div class="mb-3">
                 <label for="name" class="form-label fw-medium">Name</label>
-                <input type="text" id="name" name="name" class="form-control" value="{{ old('name') }}" required autofocus>
+                <input type="text" id="name" name="name" class="form-control" value="{{ old('name') }}" placeholder="Name" required autofocus>
             </div>
             <div class="mb-3">
                 <label for="email" class="form-label fw-medium">Email</label>
-                <input type="email" id="email" name="email" class="form-control" value="{{ old('email') }}" required>
+                <input type="email" id="email" name="email" class="form-control" value="{{ old('email') }}" placeholder="Email" required>
             </div>
             <div class="mb-3">
                 <label for="password" class="form-label fw-medium">Password</label>
-                <input type="password" id="password" name="password" class="form-control" required>
+                <input type="password" id="password" name="password" class="form-control" placeholder="Password" required>
                 <div class="form-text">At least 8 characters</div>
             </div>
             <div class="mb-3">
                 <label for="password_confirmation" class="form-label fw-medium">Confirm password</label>
-                <input type="password" id="password_confirmation" name="password_confirmation" class="form-control" required>
+                <input type="password" id="password_confirmation" name="password_confirmation" class="form-control" placeholder="Confirm password" required>
             </div>
             <button type="submit" class="btn btn-primary mb-3">Create account</button>
         </form>
@@ -169,24 +175,17 @@
                 <script async src="https://telegram.org/js/telegram-widget.js?22" data-telegram-login="{{ config('services.telegram.bot_username') }}" data-size="large" data-onauth="onTelegramAuth(user)" data-request-access="write"></script>
             </div>
             @else
-            <button type="button" class="btn btn-social btn-telegram" disabled title="Set TELEGRAM_BOT_USERNAME in .env">
+            <a href="#" class="btn btn-social btn-telegram" style="opacity: 0.7; pointer-events: none;" title="Set TELEGRAM_BOT_USERNAME in .env">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/></svg>
                 Continue with Telegram
-            </button>
+            </a>
             @endif
         </div>
 
-        <p class="auth-footer mt-3">
-            Already have an account? <a href="{{ route('auth.login') }}">Sign in</a>
-        </p>
+        <p class="auth-footer mt-3">Already have an account? <a href="{{ route('auth.login') }}">Sign in</a></p>
     </div>
 
-    <script>
-    function onTelegramAuth(user) {
-        const params = new URLSearchParams(user);
-        window.location.href = '{{ route("auth.telegram") }}?' + params.toString();
-    }
-    </script>
+    <script>function onTelegramAuth(user) { const params = new URLSearchParams(user); window.location.href = '{{ route("auth.telegram") }}?' + params.toString(); }</script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

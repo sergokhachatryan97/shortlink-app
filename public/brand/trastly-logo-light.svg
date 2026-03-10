@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 32" fill="none">
+  <!-- Icon - light for dark backgrounds -->
+  <rect x="0" y="0" width="32" height="32" rx="8" fill="rgba(255,255,255,0.15)"/>
+  <circle cx="10" cy="16" r="3.5" stroke="white" stroke-width="2" fill="none"/>
+  <circle cx="22" cy="16" r="3.5" stroke="white" stroke-width="2" fill="none"/>
+  <line x1="13.5" y1="16" x2="18.5" y2="16" stroke="white" stroke-width="2" stroke-linecap="round"/>
+  <!-- Wordmark -->
+  <text x="42" y="22" font-family="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="20" font-weight="700" fill="white">Trastly</text>
+</svg>

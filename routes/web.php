@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\ContactController;
 use App\Http\Controllers\BalanceController;
 use App\Http\Controllers\LinksController;
 use App\Http\Controllers\ProfileController;
@@ -32,6 +33,7 @@ Route::get('/auth/google', [AuthController::class, 'redirectToGoogle'])->name('a
 Route::get('/auth/google/callback', [AuthController::class, 'handleGoogleCallback'])->name('auth.google.callback');
 Route::get('/auth/telegram', [AuthController::class, 'telegram'])->name('auth.telegram');
 Route::post('/auth/logout', [AuthController::class, 'logout'])->name('auth.logout');
+Route::get('/contact', [ContactController::class, 'index'])->name('contact.index');
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'index'])->name('profile.index');

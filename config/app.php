@@ -123,4 +123,7 @@ return [
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
 
+    'support_email' => env('SUPPORT_EMAIL', 'support@example.com'),
+    'support_telegram' => env('SUPPORT_TELEGRAM', 'https://t.me/Just_tg'),
+
 ];

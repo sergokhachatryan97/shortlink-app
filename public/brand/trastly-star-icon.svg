@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none">
+  <defs>
+    <linearGradient id="star-grad" x1="50%" y1="0%" x2="50%" y2="100%">
+      <stop offset="0%" stop-color="#e9d5ff"/>
+      <stop offset="30%" stop-color="#c4b5fd"/>
+      <stop offset="60%" stop-color="#a78bfa"/>
+      <stop offset="85%" stop-color="#8b5cf6"/>
+      <stop offset="100%" stop-color="#6366f1"/>
+    </linearGradient>
+    <linearGradient id="star-outline" x1="50%" y1="0%" x2="50%" y2="100%">
+      <stop offset="0%" stop-color="#a78bfa"/>
+      <stop offset="100%" stop-color="#6366f1"/>
+    </linearGradient>
+  </defs>
+  <!-- Six-pointed star: two overlapping triangles (hexagram) -->
+  <path d="M16 3L27 25H5L16 3z" fill="url(#star-grad)" stroke="url(#star-outline)" stroke-width="0.4" stroke-linejoin="round"/>
+  <path d="M16 29L5 7h22L16 29z" fill="url(#star-grad)" stroke="url(#star-outline)" stroke-width="0.4" stroke-linejoin="round"/>
+  <!-- Diamond sparkle -->
+  <path d="M16 8l1.2 2-1.2 1.5-1.2-1.5L16 8z" fill="white" opacity="0.95"/>
+</svg>
