@@ -47,6 +47,7 @@
             font-size: 1.0625rem;
             text-align: center;
             width: 85%;
+            margin: auto;
         }
         .card-style {
             background: rgba(30, 30, 45, 0.1);
