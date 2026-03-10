@@ -118,7 +118,7 @@
                                     @endif
                                 </form>
                             @else
-                                <a href="{{ route('balance.index', ['amount' => $addFundsAmount]) }}" class="btn cosmic-btn-add-funds w-100">Add funds</a>
+                                <a href="{{ route('balance.index', ['amount' => $addFundsAmount]) }}" class="btn cosmic-btn-add-funds w-100 cursor-pointer">Add funds</a>
                             @endif
                         @elseif ($hasActivePlan)
                             <button type="button" class="btn cosmic-btn-disabled w-100" disabled>Downgrade not available</button>
