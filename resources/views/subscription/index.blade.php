@@ -58,10 +58,19 @@
                 $hasActivePlan = (bool) $activeSubscription;
                 $isCurrentPlan = $hasActivePlan && $activeSubscription->plan->id === $plan->id;
                 $canUpgrade = $hasActivePlan && $plan->sort_order > $activeSubscription->plan->sort_order;
-                $upgradePriceDiff = $canUpgrade ? (float) $plan->price_usd - (float) $activeSubscription->plan->price_usd : 0;
+                $upgradePriceDiff = 0;
+                if ($canUpgrade) {
+                    $currentPlan = $activeSubscription->plan;
+                    $daysRemaining = max(0, now()->diffInDays($activeSubscription->ends_at, false));
+                    $currentDuration = max(1, (int) $currentPlan->duration_days);
+                    $fullDiff = (float) $plan->price_usd - (float) $currentPlan->price_usd;
+                    $upgradePriceDiff = round($fullDiff * ($daysRemaining / $currentDuration), 2);
+                }
                 $canAffordUpgrade = $canUpgrade && ($balance ?? 0) >= $upgradePriceDiff;
                 $canBuyWithBalance = !$hasActivePlan && ($balance ?? 0) >= (float) $plan->price_usd;
                 $isRecommended = strtolower($plan->slug ?? '') === 'pro';
+                $planAmount = $plan->price_usd;
+                $addFundsAmount = max(0.10, round($planAmount - ($balance ?? 0), 2));
                 $iconClass = match(strtolower($plan->slug ?? '')) {
                     'starter' => 'icon-lightning',
                     'vip' => 'icon-star',
@@ -97,28 +106,32 @@
                         <p class="cosmic-plan-price mb-3">${{ number_format($plan->price_usd, 2) }}{{ strtolower($plan->slug ?? '') === 'vip' ? '/yr' : '/mo' }}</p>
 
                         @if ($isCurrentPlan)
-                            <button type="button" class="btn cosmic-btn-plan w-100" disabled>Current Plan</button>
+                            <button type="button" class="btn cosmic-btn-plan w-100" disabled>Active</button>
                         @elseif ($canUpgrade)
-                            <form method="POST" action="{{ route('subscription.upgrade') }}">
-                                @csrf
-                                <input type="hidden" name="plan_id" value="{{ $plan->id }}">
-                                <button type="submit" class="btn w-100 {{ $canAffordUpgrade ? 'cosmic-btn-primary' : 'cosmic-btn-disabled' }}" {{ !$canAffordUpgrade ? 'disabled' : '' }}>
-                                    Upgrade to {{ $plan->name }}
-                                </button>
-                                @if ($canAffordUpgrade && $upgradePriceDiff > 0)
-                                <p class="cosmic-pay-today small mt-2 mb-0 text-center">Pay ${{ number_format($upgradePriceDiff, 2) }} today</p>
-                                @endif
-                            </form>
+                            @if ($canAffordUpgrade)
+                                <form method="POST" action="{{ route('subscription.upgrade') }}">
+                                    @csrf
+                                    <input type="hidden" name="plan_id" value="{{ $plan->id }}">
+                                    <button type="submit" class="btn w-100 cosmic-btn-primary">Upgrade to {{ $plan->name }}</button>
+                                    @if ($upgradePriceDiff > 0)
+                                    <p class="cosmic-pay-today small mt-2 mb-0 text-center">Pay ${{ number_format($upgradePriceDiff, 2) }} today</p>
+                                    @endif
+                                </form>
+                            @else
+                                <a href="{{ route('balance.index', ['amount' => $addFundsAmount]) }}" class="btn cosmic-btn-add-funds w-100">Add funds</a>
+                            @endif
                         @elseif ($hasActivePlan)
                             <button type="button" class="btn cosmic-btn-disabled w-100" disabled>Downgrade not available</button>
                         @else
-                            <form method="POST" action="{{ route('subscription.purchase') }}">
-                                @csrf
-                                <input type="hidden" name="plan_id" value="{{ $plan->id }}">
-                                <button type="submit" class="btn w-100 {{ $canBuyWithBalance ? ($isRecommended ? 'cosmic-btn-primary' : 'cosmic-btn-plan') : 'cosmic-btn-disabled' }}" {{ !$canBuyWithBalance ? 'disabled' : '' }}>
-                                    Choose {{ $plan->name }}
-                                </button>
-                            </form>
+                            @if ($canBuyWithBalance)
+                                <form method="POST" action="{{ route('subscription.purchase') }}">
+                                    @csrf
+                                    <input type="hidden" name="plan_id" value="{{ $plan->id }}">
+                                    <button type="submit" class="btn w-100 {{ $isRecommended ? 'cosmic-btn-primary' : 'cosmic-btn-plan' }}">Buy {{ $plan->name }}</button>
+                                </form>
+                            @else
+                                <a href="{{ route('balance.index', ['amount' => $addFundsAmount]) }}" class="btn cosmic-btn-add-funds w-100">Add funds</a>
+                            @endif
                         @endif
                     </div>
                 </div>
@@ -234,6 +247,18 @@
     padding: 10px 16px;
 }
 .cosmic-btn-plan:hover { background: rgba(40,40,60,0.9); color: #fff; }
+.cosmic-btn-add-funds {
+    background: rgba(30,30,45,0.9);
+    border: 1px solid rgba(167,139,250,0.5);
+    color: #a78bfa;
+    border-radius: 10px;
+    font-weight: 600;
+    padding: 10px 16px;
+    text-decoration: none;
+    display: block;
+    text-align: center;
+}
+.cosmic-btn-add-funds:hover { background: rgba(40,40,60,0.9); color: #c4b5fd; border-color: rgba(167,139,250,0.6); }
 .cosmic-btn-disabled {
     background: rgba(30,30,45,0.5);
     border: 1px solid rgba(255,255,255,0.1);

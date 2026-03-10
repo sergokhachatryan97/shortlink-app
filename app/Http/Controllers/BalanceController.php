@@ -9,10 +9,15 @@ use Illuminate\Support\Facades\Auth;
 
 class BalanceController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         $user = Auth::user();
         $heleketAvailable = config('services.heleket.merchant') && config('services.heleket.payment_key');
+        $prefillAmount = $request->query('amount');
+        if ($prefillAmount !== null) {
+            $prefillAmount = max(0.10, min(10000, (float) $prefillAmount));
+        }
+        $plans = \App\Models\SubscriptionPlan::where('is_active', true)->orderBy('sort_order')->get();
 
         return view('balance.index', [
             'balance' => $user->balance,
@@ -21,6 +26,10 @@ class BalanceController extends Controller
                 ->limit(20)
                 ->get(),
             'heleketAvailable' => $heleketAvailable,
+            'prefillAmount' => $prefillAmount ?? 10,
+            'plans' => $plans,
+            'activeSubscription' => $user->activeSubscription(),
+            'lastExpiredSubscription' => $user->lastExpiredSubscription(),
         ]);
     }
 

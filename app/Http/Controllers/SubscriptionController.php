@@ -101,7 +101,11 @@ class SubscriptionController extends Controller
             return redirect()->route('subscription.index')->with('error', 'Can only upgrade to a higher tier plan.');
         }
 
-        $priceDiff = (float) $newPlan->price_usd - (float) $currentPlan->price_usd;
+        $daysRemaining = max(0, now()->diffInDays($activeSubscription->ends_at, false));
+        $currentDuration = max(1, (int) $currentPlan->duration_days);
+        $fullDiff = (float) $newPlan->price_usd - (float) $currentPlan->price_usd;
+        $priceDiff = round($fullDiff * ($daysRemaining / $currentDuration), 2);
+
         if ($priceDiff <= 0) {
             return redirect()->route('subscription.index')->with('error', 'Invalid upgrade.');
         }
