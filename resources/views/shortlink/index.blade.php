@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="heleket" content="89c70a02" />
+    <meta name="heleket" content="9701089f" />
     <title>Trastly – Create Trusted Short Links</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&display=swap" rel="stylesheet">
@@ -308,18 +308,6 @@
     </div>
 
     <div class="container mt-5 pt-4" style="max-width: 960px;">
-        <div class="row g-4 mb-5">
-            <div class="col-md-6">
-                <h5 class="text-white fw-bold mb-3">Use cases</h5>
-                <ul class="list-unstyled mb-0">
-                    <li class="d-flex align-items-center gap-2 mb-2" style="color: rgba(255,255,255,0.85);"><span class="text-success">✓</span> Affiliate campaigns</li>
-                    <li class="d-flex align-items-center gap-2 mb-2" style="color: rgba(255,255,255,0.85);"><span class="text-success">✓</span> Traffic distribution</li>
-                    <li class="d-flex align-items-center gap-2 mb-2" style="color: rgba(255,255,255,0.85);"><span class="text-success">✓</span> Media buying teams</li>
-                    <li class="d-flex align-items-center gap-2" style="color: rgba(255,255,255,0.85);"><span class="text-success">✓</span> Telegram marketers</li>
-                </ul>
-            </div>
-        </div>
-
         @if ($plans ?? null)
         <h5 class="text-center mb-4" style="color: rgba(255,255,255,0.6); font-size: 1rem; font-weight: 500;">Pricing</h5>
         <div class="row g-3 mb-4 justify-content-center card-style" style="padding: 15px 0 25px 0">
