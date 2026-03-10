@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\ShortlinkSetting;
 use App\Models\ShortlinkTransaction;
 use App\Models\SubscriptionPlan;
+use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 
@@ -44,12 +45,14 @@ class AdminController extends Controller
         $transactions = ShortlinkTransaction::orderByDesc('created_at')->paginate(20);
         $totalPaid = ShortlinkTransaction::where('status', 'paid')->sum('amount');
         $plans = SubscriptionPlan::orderBy('sort_order')->get();
+        $users = User::orderByDesc('created_at')->paginate(15, ['*'], 'users_page');
 
         return view('admin.dashboard', [
             'transactions' => $transactions,
             'totalPaid' => $totalPaid,
             'pricePerLink' => ShortlinkSetting::get('price_per_link', '0.01'),
             'plans' => $plans,
+            'users' => $users,
         ]);
     }
 
@@ -61,7 +64,7 @@ class AdminController extends Controller
 
         ShortlinkSetting::set('price_per_link', $validated['price_per_link']);
 
-        return back()->with('success', 'Settings updated.');
+        return redirect()->route('admin.dashboard', ['tab' => 'settings'])->with('success', 'Settings updated.');
     }
 
     public function updatePlan(Request $request, SubscriptionPlan $plan): RedirectResponse
@@ -78,6 +81,28 @@ class AdminController extends Controller
             'price_usd' => $validated['price_usd'],
         ]);
 
-        return back()->with('success', 'Plan "' . $plan->name . '" updated.');
+        return redirect()->route('admin.dashboard', ['tab' => 'settings'])->with('success', 'Plan "' . $plan->name . '" updated.');
+    }
+
+    public function addUserBalance(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'user' => ['required', 'string'],
+            'amount' => ['required', 'numeric', 'min:0.01', 'max:10000'],
+        ]);
+
+        $user = User::where('email', $validated['user'])
+            ->orWhere('id', (int) $validated['user'])
+            ->first();
+
+        if (!$user) {
+            return back()->with('error', 'User not found.');
+        }
+
+        $amount = (float) $validated['amount'];
+        $user->increment('balance', $amount);
+
+        $tab = $request->input('tab', 'users');
+        return redirect()->route('admin.dashboard', ['tab' => $tab])->with('success', 'Added $' . number_format($amount, 2) . ' to ' . ($user->email ?? 'user#' . $user->id) . '. New balance: $' . number_format($user->fresh()->balance, 2));
     }
 }

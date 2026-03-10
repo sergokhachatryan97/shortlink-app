@@ -59,5 +59,6 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('/', [AdminController::class, 'dashboard'])->name('dashboard');
         Route::post('/settings', [AdminController::class, 'updateSettings'])->name('settings.update');
         Route::post('/plans/{plan}', [AdminController::class, 'updatePlan'])->name('plans.update');
+        Route::post('/users/add-balance', [AdminController::class, 'addUserBalance'])->name('users.add-balance');
     });
 });

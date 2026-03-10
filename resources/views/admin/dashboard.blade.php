@@ -13,11 +13,30 @@
             <a href="{{ route('admin.logout') }}" class="btn btn-outline-light btn-sm">Logout</a>
         </div>
     </nav>
+    @php
+        $activeTab = request()->get('tab', 'settings');
+    @endphp
     <div class="container py-4">
         @if (session('success'))
             <div class="alert alert-success py-2">{{ session('success') }}</div>
         @endif
+        @if (session('error'))
+            <div class="alert alert-danger py-2">{{ session('error') }}</div>
+        @endif
 
+        <ul class="nav nav-tabs mb-4">
+            <li class="nav-item">
+                <a class="nav-link {{ $activeTab === 'settings' ? 'active' : '' }}" href="{{ route('admin.dashboard', ['tab' => 'settings']) }}">Settings</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {{ $activeTab === 'users' ? 'active' : '' }}" href="{{ route('admin.dashboard', ['tab' => 'users']) }}">User list</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {{ $activeTab === 'transactions' ? 'active' : '' }}" href="{{ route('admin.dashboard', ['tab' => 'transactions']) }}">Transactions</a>
+            </li>
+        </ul>
+
+        @if ($activeTab === 'settings')
         <div class="row mb-4">
             <div class="col-md-6">
                 <div class="card h-100">
@@ -25,6 +44,7 @@
                     <div class="card-body">
                         <form method="POST" action="{{ route('admin.settings.update') }}">
                             @csrf
+                            <input type="hidden" name="tab" value="settings">
                             <div class="mb-3">
                                 <label class="form-label small">Price per link (USD)</label>
                                 <input type="number" name="price_per_link" step="0.001" min="0.001"
@@ -69,6 +89,7 @@
                                     <td class="align-top" colspan="2">
                                         <form method="POST" action="{{ route('admin.plans.update', $plan) }}" class="d-flex flex-wrap align-items-center gap-2">
                                             @csrf
+                                            <input type="hidden" name="tab" value="settings">
                                             <input type="text" name="description" value="{{ old('description', $plan->description) }}" class="form-control form-control-sm" placeholder="Plan description" style="min-width: 200px;">
                                             <input type="number" name="links_limit" value="{{ $plan->links_limit }}" min="0" step="1" class="form-control form-control-sm" style="width: 80px;" title="0 = unlimited">
                                             <input type="number" name="price_usd" value="{{ $plan->price_usd }}" min="0" step="0.01" class="form-control form-control-sm" style="width: 90px;">
@@ -85,7 +106,59 @@
                 @endif
             </div>
         </div>
+        @endif
 
+        @if ($activeTab === 'users')
+        <div class="card mb-4">
+            <div class="card-header fw-semibold d-flex justify-content-between align-items-center">
+                <span>Users</span>
+                <span class="badge bg-secondary">{{ $users->total() }} users</span>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Email</th>
+                                <th>Name</th>
+                                <th>Balance</th>
+                                <th>Add balance</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach ($users as $user)
+                                <tr>
+                                    <td><code class="small">{{ $user->id }}</code></td>
+                                    <td>{{ $user->email ?? '—' }}</td>
+                                    <td>{{ $user->name ?? '—' }}</td>
+                                    <td>${{ number_format($user->balance ?? 0, 2) }}</td>
+                                    <td>
+                                        <form method="POST" action="{{ route('admin.users.add-balance') }}" class="d-inline-flex align-items-center gap-2">
+                                            @csrf
+                                            <input type="hidden" name="user" value="{{ $user->id }}">
+                                            <input type="hidden" name="tab" value="users">
+                                            <input type="number" name="amount" value="10" step="0.01" min="0.01" max="10000" class="form-control form-control-sm" style="width: 90px;" required>
+                                            <button type="submit" class="btn btn-sm btn-success">Add</button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+                @if ($users->isEmpty())
+                    <p class="text-muted text-center py-4 mb-0">No users yet</p>
+                @else
+                    <div class="p-2">
+                        {{ $users->appends(['tab' => 'users'])->links('pagination::bootstrap-5') }}
+                    </div>
+                @endif
+            </div>
+        </div>
+        @endif
+
+        @if ($activeTab === 'transactions')
         <div class="card">
             <div class="card-header fw-semibold">Transactions</div>
             <div class="card-body p-0">
@@ -122,10 +195,11 @@
                     </table>
                 </div>
                 <div class="p-2">
-                    {{ $transactions->links('pagination::bootstrap-5') }}
+                    {{ $transactions->appends(['tab' => 'transactions'])->links('pagination::bootstrap-5') }}
                 </div>
             </div>
         </div>
+        @endif
     </div>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
