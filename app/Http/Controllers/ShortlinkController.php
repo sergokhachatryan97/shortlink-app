@@ -54,6 +54,8 @@ class ShortlinkController extends Controller
         }
 
         $plans = SubscriptionPlan::where('is_active', true)->orderBy('sort_order')->get();
+        $activeSubscription = $user?->activeSubscription();
+        $balance = $user?->balance ?? 0;
 
         return view('shortlink.index', [
             'remaining' => $remaining,
@@ -65,6 +67,8 @@ class ShortlinkController extends Controller
             'planUsed' => $planUsed,
             'planRemaining' => $planRemaining,
             'plans' => $plans,
+            'activeSubscription' => $activeSubscription,
+            'balance' => $balance,
         ]);
     }
 

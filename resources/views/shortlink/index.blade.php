@@ -201,16 +201,69 @@
         }
         .pricing-plan-name { color: rgba(255,255,255,0.6); font-size: 0.875rem; font-weight: 500; }
         .pricing-plan-price { color: #fff; font-size: 1.5rem; font-weight: 700; }
+        .pricing-card-landing-full {
+            background: rgba(30, 30, 45, 0.7);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 12px;
+            position: relative;
+            overflow: visible;
+        }
+        .pricing-card-landing-full.pricing-card-recommended { border-color: rgba(167,139,250,0.5); box-shadow: 0 0 20px rgba(167,139,250,0.2); }
+        .pricing-plan-badge {
+            position: absolute;
+            top: -8px;
+            right: 16px;
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            color: #fff;
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 6px 12px;
+            border-radius: 20px;
+        }
+        .pricing-plan-body { display: flex; flex-direction: column; }
+        .pricing-plan-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            flex-shrink: 0;
+        }
+        .pricing-plan-icon.icon-lightning,
+        .pricing-plan-icon.icon-check { background: rgba(255,255,255,0.2); }
+        .pricing-card-recommended .pricing-plan-icon { background: rgba(167,139,250,0.4); }
+        .pricing-plan-icon.icon-star { background: rgba(255,255,255,0.2); }
+        .pricing-plan-name-full { color: #fff; font-weight: 600; }
+        .pricing-plan-desc { color: rgba(255,255,255,0.8); font-size: 0.9375rem; line-height: 1.5; }
+        .pricing-plan-features { display: flex; flex-wrap: wrap; gap: 0.5rem; font-size: 0.8125rem; }
+        .pricing-plan-feature { background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.85); padding: 4px 10px; border-radius: 6px; }
+        .pricing-plan-price-full { font-size: 1.25rem; font-weight: 700; color: #fff; }
+        .pricing-card-recommended .pricing-plan-price-full { font-size: 1.5rem; color: #a78bfa; }
+        .pricing-card-current { border-color: rgba(34,197,94,0.5); }
+        .pricing-btn-primary { background: linear-gradient(135deg, #6366f1, #8b5cf6); border: none; color: #fff !important; font-weight: 600; padding: 10px 24px; border-radius: 10px; }
+        .pricing-btn-primary:hover { opacity: 0.95; color: #fff !important; }
+        .pricing-btn-plan { background: rgba(30,30,45,0.9); border: 1px solid rgba(255,255,255,0.2); color: #fff; border-radius: 8px; font-weight: 600; }
+        .pricing-btn-plan:hover { background: rgba(40,40,60,0.9); color: #fff; }
+        .pricing-btn-add-funds { background: transparent; border: 1px solid rgba(167,139,250,0.5); color: #a78bfa; border-radius: 8px; font-weight: 600; text-decoration: none; display: block; text-align: center; padding: 10px 16px; font-size: 0.875rem; }
+        .pricing-btn-add-funds:hover { background: rgba(167,139,250,0.2); color: #c4b5fd; }
+        .pricing-btn-active { background: rgba(34,197,94,0.25); border: 1px solid rgba(34,197,94,0.5); color: #86efac; border-radius: 8px; font-weight: 600; cursor: default; }
+        .pricing-btn-disabled { background: rgba(30,30,45,0.5); border: 1px solid rgba(255,255,255,0.1); color: rgba(255,255,255,0.5); border-radius: 10px; font-weight: 600; padding: 10px 16px; }
+        .pricing-pay-today { color: rgba(255,255,255,0.6); }
         .pricing-view-btn {
-            background: rgba(30, 30, 45, 0.6);
+            background: rgba(30, 30, 45, 0.9);
             border: 1px solid rgba(255,255,255,0.2);
-            color: rgba(255,255,255,0.7);
+            color: rgba(255,255,255,0.8);
             font-size: 0.875rem;
-            font-weight: 500;
+            font-weight: 600;
             padding: 10px 24px;
             border-radius: 10px;
+            text-decoration: none;
+            display: block;
+            text-align: center;
         }
-        .pricing-view-btn:hover { background: rgba(40,40,60,0.8); color: #fff; border-color: rgba(255,255,255,0.3); }
+        .pricing-view-btn:hover { background: rgba(40,40,60,0.9); color: #fff; border-color: rgba(255,255,255,0.3); }
     </style>
 </head>
 <body class="min-vh-100 landing-page">
@@ -310,18 +363,95 @@
     <div class="container mt-5 pt-4" style="max-width: 960px;">
         @if ($plans ?? null)
         <h5 class="text-center mb-4" style="color: rgba(255,255,255,0.6); font-size: 1rem; font-weight: 500;">Pricing</h5>
-        <div class="row g-3 mb-4 justify-content-center card-style" style="padding: 15px 0 25px 0">
+        <div class="row g-4 mb-4 justify-content-center">
             @foreach($plans as $plan)
-            <div class="col-6 col-md-4 col-lg-3">
-                <div class="pricing-card-landing text-center py-4 px-3">
-                    <p class="mb-1 pricing-plan-name">{{ $plan->name }}</p>
-                    <p class="mb-0 pricing-plan-price">${{ $plan->price_usd == (int) $plan->price_usd ? number_format($plan->price_usd, 0) : number_format($plan->price_usd, 2) }}</p>
+            @php
+                $hasActivePlan = (bool)($activeSubscription ?? null);
+                $isCurrentPlan = $hasActivePlan && $activeSubscription->plan->id === $plan->id;
+                $canUpgrade = $hasActivePlan && $plan->sort_order > $activeSubscription->plan->sort_order;
+                $upgradePriceDiff = 0;
+                if ($canUpgrade) {
+                    $currentPlan = $activeSubscription->plan;
+                    $daysRemaining = max(0, now()->diffInDays($activeSubscription->ends_at, false));
+                    $currentDuration = max(1, (int)$currentPlan->duration_days);
+                    $fullDiff = (float)$plan->price_usd - (float)$currentPlan->price_usd;
+                    $upgradePriceDiff = round($fullDiff * ($daysRemaining / $currentDuration), 2);
+                }
+                $canAffordUpgrade = $canUpgrade && ($balance ?? 0) >= $upgradePriceDiff;
+                $canBuyWithBalance = !$hasActivePlan && ($balance ?? 0) >= (float)$plan->price_usd;
+                $isRecommended = strtolower($plan->slug ?? '') === 'pro';
+                $planAmount = $canUpgrade ? $upgradePriceDiff : (float)$plan->price_usd;
+                $addFundsAmount = max(0.10, round($planAmount - ($balance ?? 0), 2));
+                $iconClass = match(strtolower($plan->slug ?? '')) {
+                    'starter' => 'icon-lightning',
+                    'vip' => 'icon-star',
+                    default => 'icon-check',
+                };
+            @endphp
+            <div class="col-md-4 d-flex">
+                <div class="pricing-card-landing-full w-100 d-flex flex-column {{ $isCurrentPlan ? 'pricing-card-current' : '' }} {{ $isRecommended ? 'pricing-card-recommended' : '' }}">
+                    @if ($isRecommended)
+                    <div class="pricing-plan-badge">★ Recommended</div>
+                    @endif
+                    <div class="pricing-plan-body p-4 d-flex flex-column flex-grow-1">
+                        <div class="d-flex align-items-center gap-2 mb-3">
+                            <div class="pricing-plan-icon {{ $iconClass }}">
+                                @if ($iconClass === 'icon-lightning')
+                                <svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24"><path d="M7 2v11h3v9l7-12h-4l4-8z"/></svg>
+                                @elseif ($iconClass === 'icon-star')
+                                <svg width="28" height="28" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                                @else
+                                <svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                                @endif
+                            </div>
+                            <h5 class="pricing-plan-name-full mb-0">{{ $plan->name }}</h5>
+                        </div>
+                        <p class="pricing-plan-desc mb-2">
+                            @if ($plan->isUnlimited())
+                                <strong>Unlimited links</strong> until subscription ends
+                            @else
+                                {{ $plan->description }}
+                            @endif
+                        </p>
+                        <div class="pricing-plan-features mb-3">
+                            <span class="pricing-plan-feature">{{ $plan->links_limit ? number_format($plan->links_limit) . ' links' : 'Unlimited links' }}</span>
+                            <span class="pricing-plan-feature">{{ (int)$plan->duration_days }} days</span>
+                        </div>
+                        <p class="pricing-plan-price-full mb-3">${{ number_format($plan->price_usd, 2) }}{{ strtolower($plan->slug ?? '') === 'vip' ? '/yr' : '/mo' }}</p>
+                        <div class="mt-auto pt-2">
+                            @if ($isCurrentPlan)
+                                <button type="button" class="btn pricing-btn-active w-100" disabled>Active</button>
+                            @elseif ($canUpgrade)
+                                @if ($canAffordUpgrade)
+                                    <form method="POST" action="{{ route('subscription.upgrade') }}">
+                                        @csrf
+                                        <input type="hidden" name="plan_id" value="{{ $plan->id }}">
+                                        <button type="submit" class="btn w-100 pricing-btn-primary">Upgrade to {{ $plan->name }}</button>
+                                        @if ($upgradePriceDiff > 0)
+                                        <p class="pricing-pay-today small mt-2 mb-0 text-center">Pay ${{ number_format($upgradePriceDiff, 2) }} today</p>
+                                        @endif
+                                    </form>
+                                @else
+                                    <a href="{{ route('balance.index', ['amount' => $addFundsAmount]) }}" class="btn pricing-btn-add-funds w-100">Add funds</a>
+                                @endif
+                            @elseif ($hasActivePlan)
+                                <button type="button" class="btn pricing-btn-disabled w-100" disabled>Downgrade not available</button>
+                            @else
+                                @if ($canBuyWithBalance)
+                                    <form method="POST" action="{{ route('subscription.purchase') }}">
+                                        @csrf
+                                        <input type="hidden" name="plan_id" value="{{ $plan->id }}">
+                                        <button type="submit" class="btn w-100 {{ $isRecommended ? 'pricing-btn-primary' : 'pricing-btn-plan' }}">Buy {{ $plan->name }}</button>
+                                    </form>
+                                @else
+                                    <a href="{{ route('balance.index', ['amount' => $addFundsAmount]) }}" class="btn pricing-btn-add-funds w-100">Add funds</a>
+                                @endif
+                            @endif
+                        </div>
+                    </div>
                 </div>
             </div>
             @endforeach
-        </div>
-        <div class="text-center">
-            <a href="{{ route('subscription.index') }}" class="btn pricing-view-btn">View Pricing</a>
         </div>
         @endif
     </div>

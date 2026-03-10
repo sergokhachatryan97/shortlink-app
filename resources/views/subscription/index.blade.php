@@ -69,7 +69,7 @@
                 $canAffordUpgrade = $canUpgrade && ($balance ?? 0) >= $upgradePriceDiff;
                 $canBuyWithBalance = !$hasActivePlan && ($balance ?? 0) >= (float) $plan->price_usd;
                 $isRecommended = strtolower($plan->slug ?? '') === 'pro';
-                $planAmount = $plan->price_usd;
+                $planAmount = $canUpgrade ? $upgradePriceDiff : (float) $plan->price_usd;
                 $addFundsAmount = max(0.10, round($planAmount - ($balance ?? 0), 2));
                 $iconClass = match(strtolower($plan->slug ?? '')) {
                     'starter' => 'icon-lightning',
