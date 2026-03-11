@@ -74,6 +74,7 @@ class BalanceController extends Controller
             'url_success' => $urlSuccess,
             'url_return' => $urlReturn,
             'webhook_url' => $webhookUrl,
+            'url_callback' => $webhookUrl,
         ];
 
         $jsonBody = json_encode($payload);

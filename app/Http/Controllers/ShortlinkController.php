@@ -385,6 +385,7 @@ class ShortlinkController extends Controller
             'url_success' => $urlSuccess . '?order_id=' . $orderId,
             'url_return' => $urlReturn,
             'webhook_url' => $webhookUrl,
+            'url_callback' => $webhookUrl,
         ];
 
         $jsonBody = json_encode($payload);
