@@ -37,6 +37,7 @@ class BalanceController extends Controller
     {
         $validated = $request->validate(['amount' => 'required|numeric|min:0.1|max:10000']);
         $amount = (float) $validated['amount'];
+        $amount = number_format($amount, 2, '.', '');
         if ($amount < 0.10 || $amount > 10000) {
             return redirect()->route('balance.index')->with('error', 'Amount must be between $0.10 and $10,000.');
         }
