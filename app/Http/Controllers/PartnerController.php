@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\PartnerPayoutSetting;
 use App\Services\PartnerActivationService;
+use App\Services\PayoutRouteResolver;
+use App\Services\WalletValidationService;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -38,7 +40,7 @@ class PartnerController extends Controller
 
         $payoutSettings = $user->partnerPayoutSettings;
         $hasActivePayout = $payoutSettings->where('is_active', true)->whereNotNull('wallet_address')->where('wallet_address', '!=', '')->isNotEmpty();
-        $commissionPercent = $user->is_partner ? \App\Services\PartnerCommissionService::getEffectiveCommissionPercent($user) : null;
+        $commissionPercent = $user->is_partner ? app(\App\Services\PartnerCommissionService::class)->getEffectiveCommissionPercent($user) : null;
 
         return view('partner.dashboard', [
             'user' => $user,
@@ -70,7 +72,7 @@ class PartnerController extends Controller
             ->cookie('referral_code', $partner->referral_code, 60 * 24 * 30); // 30 days
     }
 
-    public function updatePayoutSettings(Request $request): RedirectResponse
+    public function updatePayoutSettings(Request $request, WalletValidationService $walletValidator, PayoutRouteResolver $routeResolver): RedirectResponse
     {
         $user = Auth::user();
         if (!$user || !$user->is_partner) {
@@ -78,27 +80,46 @@ class PartnerController extends Controller
         }
 
         $validated = $request->validate([
-            'provider' => ['required', 'string', 'in:heleket,coinrush'],
+            'provider' => ['required', 'string', 'in:heleket'],
+            'currency' => ['required', 'string', 'max:20'],
+            'network' => ['required', 'string', 'max:50'],
             'wallet_address' => ['nullable', 'string', 'max:255'],
             'is_active' => ['nullable', 'boolean'],
         ]);
 
+        $provider = strtolower($validated['provider']);
+        $currency = trim($validated['currency']);
+        $network = trim($validated['network']);
         $wallet = trim($validated['wallet_address'] ?? '');
+
         if (empty($wallet)) {
             PartnerPayoutSetting::where('user_id', $user->id)
-                ->where('provider', $validated['provider'])
+                ->where('provider', $provider)
+                ->where('currency', $currency)
+                ->where('network', $network)
                 ->delete();
-            return redirect()->route('partner.dashboard')->with('success', 'Payout setting removed.');
+            return redirect()->route('partner.dashboard')->with('success', 'USDT wallet removed.');
         }
 
+        if (!$routeResolver->isRouteAllowed($provider, $currency, $network)) {
+            return redirect()->route('partner.dashboard')->with('error', 'Invalid payout route for this provider.');
+        }
+
+        $walletValidator->validateOrFail($wallet, $currency, $network);
+
         PartnerPayoutSetting::updateOrCreate(
-            ['user_id' => $user->id, 'provider' => $validated['provider']],
+            [
+                'user_id' => $user->id,
+                'provider' => $provider,
+                'currency' => $currency,
+                'network' => $network,
+            ],
             [
                 'wallet_address' => $wallet,
                 'is_active' => $request->boolean('is_active', false),
             ]
         );
 
-        return redirect()->route('partner.dashboard')->with('success', 'Payout settings saved.');
+        return redirect()->route('partner.dashboard')->with('success', 'USDT wallet saved.');
     }
 }

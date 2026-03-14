@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'My Links')
+@section('title', __('messages.links.title'))
 
 @section('content')
 <div class="links-page-cosmic">
@@ -11,26 +11,26 @@
                 <p class="links-page-subtitle mb-0">All links you ever generated! Download before your subscription ends.</p>
             </div>
             <div class="d-flex align-items-center gap-2 flex-shrink-0 flex-wrap">
-                <input type="search" id="search-links" class="form-control links-search" placeholder="Search Links...">
+                <input type="search" id="search-links" class="form-control links-search" placeholder="{{ __('messages.links.search') }}">
                 @if ($totalCount > 0)
-                    <button type="button" id="copy-all-links" class="btn btn-links-outline">Copy all links</button>
-                    <a href="{{ route('links.download') }}" class="btn btn-links-primary">Export CSV</a>
+                    <button type="button" id="copy-all-links" class="btn btn-links-outline">{{ __('messages.links.copy_all') }}</button>
+                    <a href="{{ route('links.download') }}" class="btn btn-links-primary">{{ __('messages.links.export_csv') }}</a>
                 @else
-                    <button type="button" class="btn btn-links-outline" disabled>Copy all links</button>
-                    <button type="button" class="btn btn-links-primary" disabled>Export CSV</button>
+                    <button type="button" class="btn btn-links-outline" disabled>{{ __('messages.links.copy_all') }}</button>
+                    <button type="button" class="btn btn-links-primary" disabled>{{ __('messages.links.export_csv') }}</button>
                 @endif
             </div>
         </div>
 
         @if ($planLimit > 0)
             <p class="links-page-count mb-3">
-                <strong>{{ $totalCount }}</strong> / {{ number_format($planLimit) }} links used
+                {{ __('messages.links.used', ['count' => $totalCount, 'limit' => number_format($planLimit)]) }}
                 @if ($totalCount >= $planLimit)
-                    <span class="text-warning">— at plan limit. New links require balance payment.</span>
+                    <span class="text-warning">{{ __('messages.links.at_limit') }}</span>
                 @endif
             </p>
         @else
-            <p class="links-page-count mb-3"><strong>{{ $totalCount }}</strong> links generated</p>
+            <p class="links-page-count mb-3">{{ __('messages.links.generated', ['count' => $totalCount]) }}</p>
         @endif
 
         <div class="links-table-card">
@@ -38,9 +38,9 @@
                 <table class="table table-hover align-middle mb-0 links-table">
                     <thead>
                         <tr>
-                            <th class="links-th">Original URL</th>
-                            <th class="links-th">Short URL</th>
-                            <th class="links-th text-end" style="min-width: 80px;">Actions</th>
+                            <th class="links-th">{{ __('messages.links.original_url') }}</th>
+                            <th class="links-th">{{ __('messages.links.short_url') }}</th>
+                            <th class="links-th text-end" style="min-width: 80px;">{{ __('messages.links.actions') }}</th>
                         </tr>
                     </thead>
                     <tbody id="links-tbody">
@@ -59,7 +59,7 @@
                         @empty
                         <tr>
                             <td colspan="3" class="links-empty">
-                                No links yet. <a href="{{ route('shortlink.index') }}">Generate links</a>
+                                {{ __('messages.links.no_links') }} <a href="{{ route('shortlink.index') }}">{{ __('messages.links.generate_links') }}</a>
                             </td>
                         </tr>
                         @endforelse
@@ -220,6 +220,7 @@
 
 @push('scripts')
 <script>
+window.__copiedText = @json(__('messages.common.copied'));
 (function() {
     const search = document.getElementById('search-links');
     const rows = document.querySelectorAll('.link-row');
@@ -256,7 +257,7 @@
             const url = this.dataset.url;
             navigator.clipboard.writeText(url).then(function() {
                 const orig = btn.textContent;
-                btn.textContent = 'Copied!';
+                btn.textContent = window.__copiedText || 'Copied!';
                 btn.style.background = 'rgba(34,197,94,0.3)';
                 btn.style.borderColor = 'rgba(34,197,94,0.6)';
                 setTimeout(function() {

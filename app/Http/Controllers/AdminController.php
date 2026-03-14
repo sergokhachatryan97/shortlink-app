@@ -59,6 +59,7 @@ class AdminController extends Controller
             'pricePerLink' => ShortlinkSetting::get('price_per_link', '0.01'),
             'partnerDefaultPayoutProvider' => ShortlinkSetting::get('partner_default_payout_provider') ?? config('partner.default_payout_provider', 'heleket'),
             'partnerDefaultCommissionPercent' => ShortlinkSetting::get('partner_default_commission_percent') ?? '10',
+            'partnerMinPayoutAmount' => ShortlinkSetting::get('partner_min_payout_amount') ?? config('partner.default_min_payout_amount', 100),
             'plans' => $plans,
             'users' => $users,
             'partnerPayoutSettings' => $partnerPayoutSettings,
@@ -70,13 +71,15 @@ class AdminController extends Controller
     {
         $validated = $request->validate([
             'price_per_link' => ['required', 'numeric', 'min:0.001', 'max:10'],
-            'partner_default_payout_provider' => ['nullable', 'string', 'in:heleket,coinrush'],
+            'partner_default_payout_provider' => ['nullable', 'string', 'in:heleket'],
             'partner_default_commission_percent' => ['nullable', 'numeric', 'min:0', 'max:100'],
+            'partner_min_payout_amount' => ['nullable', 'numeric', 'min:0', 'max:100000'],
         ]);
 
         ShortlinkSetting::set('price_per_link', $validated['price_per_link']);
         ShortlinkSetting::set('partner_default_payout_provider', $validated['partner_default_payout_provider'] ?? config('partner.default_payout_provider', 'heleket'));
         ShortlinkSetting::set('partner_default_commission_percent', (string) ($validated['partner_default_commission_percent'] ?? 10));
+        ShortlinkSetting::set('partner_min_payout_amount', (string) ($validated['partner_min_payout_amount'] ?? config('partner.default_min_payout_amount', 100)));
 
         return redirect()->route('admin.dashboard', ['tab' => 'settings'])->with('success', 'Settings updated.');
     }
@@ -127,7 +130,7 @@ class AdminController extends Controller
     {
         $validated = $request->validate([
             'user_id' => ['required', 'integer', 'exists:users,id'],
-            'payout_provider' => ['nullable', 'string', 'in:heleket,coinrush'],
+            'payout_provider' => ['nullable', 'string', 'in:heleket'],
         ]);
 
         $user = User::findOrFail($validated['user_id']);
@@ -155,35 +158,6 @@ class AdminController extends Controller
 
         $msg = $percent !== null ? "Commission set to {$percent}%." : 'Commission cleared (will use global default).';
         return redirect()->route('admin.dashboard', ['tab' => 'users'])->with('success', $msg);
-    }
-
-    public function savePartnerPayoutSetting(Request $request): RedirectResponse
-    {
-        $validated = $request->validate([
-            'user_id' => ['required', 'integer', 'exists:users,id'],
-            'provider' => ['required', 'string', 'in:heleket,coinrush'],
-            'wallet_address' => ['required', 'string', 'max:255'],
-            'currency' => ['nullable', 'string', 'max:20'],
-            'network' => ['nullable', 'string', 'max:50'],
-            'percent' => ['nullable', 'numeric', 'min:0', 'max:100'],
-            'is_active' => ['nullable', 'boolean'],
-        ]);
-
-        PartnerPayoutSetting::updateOrCreate(
-            [
-                'user_id' => $validated['user_id'],
-                'provider' => $validated['provider'],
-            ],
-            [
-                'wallet_address' => $validated['wallet_address'],
-                'currency' => $validated['currency'] ?? 'USDT',
-                'network' => $validated['network'] ?? null,
-                'percent' => $validated['percent'] ?? 10,
-                'is_active' => $request->boolean('is_active', true),
-            ]
-        );
-
-        return redirect()->route('admin.dashboard', ['tab' => 'users'])->with('success', 'Payout setting saved.');
     }
 
     public function addUserBalance(Request $request): RedirectResponse

@@ -7,36 +7,63 @@ return [
     | Default Payout Provider
     |--------------------------------------------------------------------------
     |
-    | When a partner has no admin-set payout_provider, this default is used.
-    | Payout provider = which system sends money to the partner (heleket/coinrush).
-    | This is separate from source provider (where the referred user paid).
+    | Platform uses Heleket for partner payouts. TRON network only.
     |
     */
-    'default_payout_provider' => env('PARTNER_DEFAULT_PAYOUT_PROVIDER', 'heleket'),
+    'default_payout_provider' => 'heleket',
 
     /*
     |--------------------------------------------------------------------------
     | Allowed Payout Providers
     |--------------------------------------------------------------------------
     |
-    | Providers that admin may configure for partner payouts.
+    | Only Heleket is supported for partner payouts.
     |
     */
-    'allowed_payout_providers' => ['heleket', 'coinrush'],
+    'allowed_payout_providers' => ['heleket'],
 
     /*
     |--------------------------------------------------------------------------
     | Payout Providers Enabled for Automatic Processing
     |--------------------------------------------------------------------------
     |
-    | Only providers in this list are actually used for daily automatic payouts.
-    | CoinRush payout API is not yet integrated; keep only 'heleket' until ready.
-    | Pending commissions with disabled providers are skipped (remain pending).
+    | Heleket sends payouts to TRON-compatible wallets (TRC20, TRON).
     |
     */
-    'payout_providers_enabled' => array_filter(
-        explode(',', env('PARTNER_PAYOUT_PROVIDERS_ENABLED', 'heleket')),
-        fn ($p) => !empty(trim($p))
-    ) ?: ['heleket'],
+    'payout_providers_enabled' => ['heleket'],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Allowed Payout Routes (provider => [currency, network])
+    |--------------------------------------------------------------------------
+    |
+    | Only TRON network. USDT (TRC20) and TRX (TRON).
+    | Wallet addresses must be TRON-compatible (start with T, 34 chars).
+    |
+    */
+    'allowed_payout_routes' => [
+        'heleket' => [
+            ['currency' => 'USDT', 'network' => 'TRC20', 'label' => 'USDT (TRC20)'],
+        ],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Default Payout Route (currency, network) per provider
+    |--------------------------------------------------------------------------
+    */
+    'default_payout_route' => [
+        'heleket' => ['currency' => 'USDT', 'network' => 'TRC20'],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Default Minimum Payout Amount (USD)
+    |--------------------------------------------------------------------------
+    |
+    | Batches below this amount stay pending. Admin can override via Settings.
+    |
+    */
+    'default_min_payout_amount' => 100,
 
 ];

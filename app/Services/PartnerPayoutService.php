@@ -36,6 +36,12 @@ class PartnerPayoutService
             return false;
         }
 
+        if (empty(trim($first->currency ?? '')) || empty(trim($first->network ?? ''))) {
+            Log::error('PartnerPayoutService: incomplete route (currency/network required)', ['batch' => $batchIdentifier]);
+            $this->markBatchFailed($ids, 'Incomplete payout route - currency and network required');
+            return false;
+        }
+
         if ($totalAmount <= 0) {
             Log::warning('PartnerPayoutService: batch total <= 0', ['batch' => $batchIdentifier]);
             return false;

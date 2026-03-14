@@ -11,6 +11,14 @@ use App\Http\Controllers\ShortlinkController;
 use App\Http\Controllers\SubscriptionController;
 use Illuminate\Support\Facades\Route;
 
+Route::get('/locale/{locale}', function (string $locale) {
+    $supported = ['en', 'zh', 'ru'];
+    if (in_array($locale, $supported, true)) {
+        session(['locale' => $locale]);
+    }
+    return redirect()->back();
+})->name('locale.set')->where('locale', 'en|zh|ru');
+
 Route::get('/', [ShortlinkController::class, 'index'])->name('shortlink.index');
 
 if (in_array(app()->environment(), ['local', 'testing'])) {
@@ -68,6 +76,5 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::post('/users/set-partner', [AdminController::class, 'setUserPartner'])->name('users.set-partner');
         Route::post('/users/set-payout-provider', [AdminController::class, 'setUserPayoutProvider'])->name('users.set-payout-provider');
         Route::post('/users/set-commission-percent', [AdminController::class, 'setUserCommissionPercent'])->name('users.set-commission-percent');
-        Route::post('/users/payout-setting', [AdminController::class, 'savePartnerPayoutSetting'])->name('users.payout-setting');
     });
 });

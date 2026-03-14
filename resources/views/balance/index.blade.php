@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Add Funds')
+@section('title', __('messages.balance.title'))
 
 @section('content')
 <div class="cosmic-page-section">
@@ -22,7 +22,7 @@
 
         <div class="cosmic-addfunds-card p-4 mb-4" id="addfunds-form">
             <div class="addfunds-balance-box mb-4">
-                <div class="cosmic-text-muted small mb-1">Current Balance</div>
+                <div class="cosmic-text-muted small mb-1">{{ __('messages.balance.current_balance') }}</div>
                 <div class="d-flex align-items-center gap-2">
                     <div class="addfunds-wallet-icon">
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
@@ -44,38 +44,38 @@
             </div>
 
             <div class="mb-4">
-                <label class="cosmic-label mb-2">Choose Payment Method</label>
+                <label class="cosmic-label mb-2">{{ __('messages.balance.payment_method') }}</label>
                 <div class="addfunds-methods d-flex gap-3 flex-wrap">
                     <div class="addfunds-method addfunds-method-tron active" data-method="tron">
-                        <span class="addfunds-method-badge">★ Recommended</span>
+                        <span class="addfunds-method-badge">{{ __('messages.shortlink.recommended') }}</span>
                         <div class="d-flex align-items-center gap-2 mb-2">
                             <div class="addfunds-method-icon addfunds-icon-tron">
                                 <img src="{{ asset('images/tron-logo.png') }}" alt="Tron" width="24" height="24">
                             </div>
-                            <span class="cosmic-card-title mb-0">Pay with Tron</span>
+                            <span class="cosmic-card-title mb-0">{{ __('messages.balance.pay_tron') }}</span>
                         </div>
-                        <p class="cosmic-text-muted small mb-2">USDT / TRX</p>
-                        <div class="addfunds-check">✓ Low fees</div>
-                        <div class="addfunds-check">✓ Fast payment</div>
+                        <p class="cosmic-text-muted small mb-2">{{ __('messages.balance.tron_desc') }}</p>
+                        <div class="addfunds-check">{{ __('messages.balance.tron_feature1') }}</div>
+                        <div class="addfunds-check">{{ __('messages.balance.tron_feature2') }}</div>
                     </div>
                     <div class="addfunds-method addfunds-method-heleket" data-method="heleket">
                         <div class="d-flex align-items-center gap-2 mb-2">
                             <div class="addfunds-method-icon addfunds-icon-heleket">H</div>
-                            <span class="cosmic-card-title mb-0">Pay with Heleket</span>
+                            <span class="cosmic-card-title mb-0">{{ __('messages.balance.pay_heleket') }}</span>
                         </div>
-                        <p class="cosmic-text-muted small mb-2">Bitcoin, Ethereum, and more</p>
-                        <div class="addfunds-check">✓ Secure checkout</div>
+                        <p class="cosmic-text-muted small mb-2">{{ __('messages.balance.heleket_desc') }}</p>
+                        <div class="addfunds-check">{{ __('messages.balance.heleket_feature') }}</div>
                     </div>
                 </div>
             </div>
 
             <div class="addfunds-summary mb-4">
-                <div class="d-flex justify-content-between mb-1"><span class="cosmic-text-muted">You will pay:</span> <span class="cosmic-text-muted"  id="summary-pay">$0.00</span></div>
-                <div class="d-flex justify-content-between mb-1"><span class="cosmic-text-muted">Network fee:</span> <span class="cosmic-text-muted">~$0.10</span></div>
-                <div class="d-flex justify-content-between addfunds-total"><span class="cosmic-text-muted">Total:</span> <span id="summary-total" class="cosmic-text-muted">$0.10</span></div>
+                <div class="d-flex justify-content-between mb-1"><span class="cosmic-text-muted">{{ __('messages.balance.you_pay') }}</span> <span class="cosmic-text-muted"  id="summary-pay">$0.00</span></div>
+                <div class="d-flex justify-content-between mb-1"><span class="cosmic-text-muted">{{ __('messages.balance.network_fee') }}</span> <span class="cosmic-text-muted">{{ __('messages.balance.network_fee_val') }}</span></div>
+                <div class="d-flex justify-content-between addfunds-total"><span class="cosmic-text-muted">{{ __('messages.balance.total') }}</span> <span id="summary-total" class="cosmic-text-muted">$0.10</span></div>
             </div>
 
-            <div class="addfunds-secure mb-4">✓ Secure crypto payment confirmed on the blockchain</div>
+            <div class="addfunds-secure mb-4">{{ __('messages.balance.secure') }}</div>
 
             <div class="d-flex justify-content-end gap-2">
                 @if(config('services.coinrush.store_key'))
@@ -87,15 +87,15 @@
                 <form method="POST" action="{{ route('balance.heleket.initiate') }}" id="heleket-form" class="d-inline">
                     @csrf
                     <input type="hidden" name="amount" id="heleket-amount">
-                    <button type="submit" class="btn cosmic-btn-heleket addfunds-pay-btn" id="heleket-btn" data-method="heleket">Pay with Heleket</button>
+                    <button type="submit" class="btn cosmic-btn-heleket addfunds-pay-btn" id="heleket-btn" data-method="heleket">{{ __('messages.balance.pay_heleket') }}</button>
                 </form>
                 @endif
             </div>
         </div>
 
         <div class="cosmic-card p-4 mb-4">
-            <h5 class="cosmic-card-title mb-3">Subscription Plans</h5>
-            <p class="cosmic-text-muted small mb-4">Use your balance to buy a plan. Add funds above, then choose a plan.</p>
+            <h5 class="cosmic-card-title mb-3">{{ __('messages.balance.subscription_plans') }}</h5>
+            <p class="cosmic-text-muted small mb-4">{{ __('messages.balance.subscription_desc') }}</p>
             <div class="row g-4">
                 @foreach($plans ?? [] as $plan)
                 @php

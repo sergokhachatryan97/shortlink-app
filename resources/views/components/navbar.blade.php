@@ -10,42 +10,58 @@
         <div class="collapse navbar-collapse" id="navbarNav">
             <ul class="navbar-nav me-auto align-items-center gap-1">
                 <li class="nav-item">
-                    <a class="nav-link {{ request()->routeIs('shortlink.index') ? 'active fw-600' : '' }}" href="{{ route('shortlink.index') }}">Generator</a>
+                    <a class="nav-link {{ request()->routeIs('shortlink.index') ? 'active fw-600' : '' }}" href="{{ route('shortlink.index') }}">{{ __('messages.nav.generator') }}</a>
                 </li>
                 @auth
                 <li class="nav-item">
-                    <a class="nav-link {{ request()->routeIs('links.*') ? 'active fw-600' : '' }}" href="{{ route('links.index') }}">My Links</a>
+                    <a class="nav-link {{ request()->routeIs('links.*') ? 'active fw-600' : '' }}" href="{{ route('links.index') }}">{{ __('messages.nav.my_links') }}</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link {{ request()->routeIs('subscription.index') ? 'active fw-600' : '' }}" href="{{ route('subscription.index') }}">Pricing</a>
+                    <a class="nav-link {{ request()->routeIs('subscription.index') ? 'active fw-600' : '' }}" href="{{ route('subscription.index') }}">{{ __('messages.nav.pricing') }}</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link {{ request()->routeIs('profile.*') ? 'active fw-600' : '' }}" href="{{ route('profile.index') }}">Profile</a>
+                    <a class="nav-link {{ request()->routeIs('profile.*') ? 'active fw-600' : '' }}" href="{{ route('profile.index') }}">{{ __('messages.nav.profile') }}</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link {{ request()->routeIs('partner.*') ? 'active fw-600' : '' }}" href="{{ route('partner.dashboard') }}">Partner</a>
+                    <a class="nav-link {{ request()->routeIs('partner.*') ? 'active fw-600' : '' }}" href="{{ route('partner.dashboard') }}">{{ __('messages.nav.partner') }}</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link {{ request()->routeIs('contact.index') ? 'active fw-600' : '' }}" href="{{ route('contact.index') }}">Contact</a>
+                    <a class="nav-link {{ request()->routeIs('contact.index') ? 'active fw-600' : '' }}" href="{{ route('contact.index') }}">{{ __('messages.nav.contact') }}</a>
                 </li>
                 @endauth
                 @guest
                 <li class="nav-item">
-                    <a class="nav-link {{ request()->routeIs('subscription.index') ? 'active fw-600' : '' }}" href="{{ route('subscription.index') }}">Pricing</a>
+                    <a class="nav-link {{ request()->routeIs('subscription.index') ? 'active fw-600' : '' }}" href="{{ route('subscription.index') }}">{{ __('messages.nav.pricing') }}</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link {{ request()->routeIs('contact.index') ? 'active fw-600' : '' }}" href="{{ route('contact.index') }}">Contact</a>
+                    <a class="nav-link {{ request()->routeIs('contact.index') ? 'active fw-600' : '' }}" href="{{ route('contact.index') }}">{{ __('messages.nav.contact') }}</a>
                 </li>
                 @endguest
             </ul>
             <ul class="navbar-nav align-items-center gap-2 navbar-wallet-logout">
+                @if(!request()->routeIs('admin.*'))
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle py-2 d-flex align-items-center gap-1" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        @switch(app()->getLocale())
+                            @case('zh') 🇨🇳 中文 @break
+                            @case('ru') 🇷🇺 RU @break
+                            @default 🇬🇧 EN
+                        @endswitch
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li><a class="dropdown-item d-flex align-items-center gap-2 {{ app()->getLocale() === 'en' ? 'active' : '' }}" href="{{ route('locale.set', ['locale' => 'en']) }}"><span>🇬🇧</span> English</a></li>
+                        <li><a class="dropdown-item d-flex align-items-center gap-2 {{ app()->getLocale() === 'zh' ? 'active' : '' }}" href="{{ route('locale.set', ['locale' => 'zh']) }}"><span>🇨🇳</span> 中文</a></li>
+                        <li><a class="dropdown-item d-flex align-items-center gap-2 {{ app()->getLocale() === 'ru' ? 'active' : '' }}" href="{{ route('locale.set', ['locale' => 'ru']) }}"><span>🇷🇺</span> Русский</a></li>
+                    </ul>
+                </li>
+                @endif
                 @auth
                 <li class="nav-item dropdown">
                     <a class="nav-wallet dropdown-toggle d-flex align-items-center gap-2 text-decoration-none" href="#" role="button" data-bs-toggle="dropdown">
                         <span class="nav-wallet-icon">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
                         </span>
-                        <span class="nav-wallet-text">Wallet <span class="balance-amount" id="balance-amount">${{ number_format(auth()->user()->balance ?? 0, 2) }}</span></span>
+                        <span class="nav-wallet-text">{{ __('messages.nav.wallet') }} <span class="balance-amount" id="balance-amount">${{ number_format(auth()->user()->balance ?? 0, 2) }}</span></span>
                     </a>
                     <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0" style="border-radius: 10px;">
                         <li><a class="dropdown-item" href="{{ route('balance.index') }}">Add funds</a></li>
@@ -57,16 +73,16 @@
                         @csrf
                         <button type="submit" class="nav-logout-btn">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                            <span>Logout</span>
+                            <span>{{ __('messages.nav.logout') }}</span>
                         </button>
                     </form>
                 </li>
                 @else
                 <li class="nav-item">
-                    <a class="nav-link" href="{{ route('auth.login') }}">Sign in</a>
+                    <a class="nav-link" href="{{ route('auth.login') }}">{{ __('messages.nav.sign_in') }}</a>
                 </li>
                 <li class="nav-item">
-                    <a class="btn btn-sm text-white" href="{{ route('auth.register') }}" style="background:linear-gradient(135deg,#6366f1,#8b5cf6); border:none; font-weight:600; padding:6px 14px; border-radius:8px;">Sign up</a>
+                    <a class="btn btn-sm text-white" href="{{ route('auth.register') }}" style="background:linear-gradient(135deg,#6366f1,#8b5cf6); border:none; font-weight:600; padding:6px 14px; border-radius:8px;">{{ __('messages.nav.sign_up') }}</a>
                 </li>
                 @endauth
             </ul>

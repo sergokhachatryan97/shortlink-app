@@ -43,33 +43,36 @@ class SendPartnerPayoutJob implements ShouldQueue
                 return [];
             }
 
-            $allPending = $rows->every(fn ($p) => $p->isPending());
-            if (!$allPending) {
-                $settled = $rows->filter(fn ($p) => $p->isSettled());
-                if ($settled->isNotEmpty()) {
-                    Log::info('SendPartnerPayoutJob: batch already settled', [
-                        'ids' => $this->commissionIds,
-                        'settled' => $settled->pluck('id')->all(),
-                    ]);
-                    return [];
-                }
-                $allProcessing = $rows->every(fn ($p) => $p->isProcessing());
-                $stale = $rows->filter(fn ($p) => $p->updated_at && $p->updated_at->lt(now()->subHour()));
-                if ($allProcessing && $stale->count() === $rows->count()) {
-                    PartnerCommissionPayout::whereIn('id', $this->commissionIds)->update([
-                        'status' => PartnerCommissionPayout::STATUS_PENDING,
-                    ]);
-                    $rows = PartnerCommissionPayout::whereIn('id', $this->commissionIds)
-                        ->orderBy('id')
-                        ->get();
-                } else {
-                    return [];
-                }
+            $settled = $rows->filter(fn ($p) => $p->isSettled());
+            if ($settled->isNotEmpty()) {
+                Log::info('SendPartnerPayoutJob: batch already settled', [
+                    'ids' => $this->commissionIds,
+                    'settled' => $settled->pluck('id')->all(),
+                ]);
+                return [];
             }
 
-            PartnerCommissionPayout::whereIn('id', $this->commissionIds)->update([
-                'status' => PartnerCommissionPayout::STATUS_PROCESSING,
-            ]);
+            $allPending = $rows->every(fn ($p) => $p->isPending());
+            $allProcessing = $rows->every(fn ($p) => $p->isProcessing());
+            $stale = $rows->filter(fn ($p) => $p->updated_at && $p->updated_at->lt(now()->subHour()));
+
+            if ($allPending) {
+                PartnerCommissionPayout::whereIn('id', $this->commissionIds)->update([
+                    'status' => PartnerCommissionPayout::STATUS_PROCESSING,
+                ]);
+            } elseif ($allProcessing && $stale->count() === $rows->count()) {
+                PartnerCommissionPayout::whereIn('id', $this->commissionIds)->update([
+                    'status' => PartnerCommissionPayout::STATUS_PENDING,
+                ]);
+                $rows = PartnerCommissionPayout::whereIn('id', $this->commissionIds)
+                    ->orderBy('id')
+                    ->get();
+                PartnerCommissionPayout::whereIn('id', $this->commissionIds)->update([
+                    'status' => PartnerCommissionPayout::STATUS_PROCESSING,
+                ]);
+            } elseif (!$allProcessing && !$allPending) {
+                return [];
+            }
 
             return $rows->all();
         });

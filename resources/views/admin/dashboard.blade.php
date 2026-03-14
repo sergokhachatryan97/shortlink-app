@@ -23,6 +23,15 @@
         @if (session('error'))
             <div class="alert alert-danger py-2">{{ session('error') }}</div>
         @endif
+        @if ($errors->any())
+            <div class="alert alert-danger py-2">
+                <ul class="mb-0 ps-3">
+                    @foreach ($errors->all() as $e)
+                        <li>{{ $e }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
 
         <ul class="nav nav-tabs mb-4">
             <li class="nav-item">
@@ -54,18 +63,22 @@
                                        value="{{ $pricePerLink }}" class="form-control" required>
                             </div>
                             <div class="mb-3">
-                                <label class="form-label small">Global default payout provider</label>
-                                <select name="partner_default_payout_provider" class="form-select">
-                                    <option value="heleket" {{ ($partnerDefaultPayoutProvider ?? 'heleket') === 'heleket' ? 'selected' : '' }}>Heleket</option>
-                                    <option value="coinrush" {{ ($partnerDefaultPayoutProvider ?? '') === 'coinrush' ? 'selected' : '' }}>CoinRush</option>
-                                </select>
-                                <small class="text-muted">Applied to all partners unless overridden per user.</small>
+                                <label class="form-label small">Partner payout provider</label>
+                                <input type="text" class="form-control form-control-sm" value="Heleket — USDT (TRC20) only" readonly style="max-width: 220px;">
+                                <input type="hidden" name="partner_default_payout_provider" value="heleket">
+                                <small class="text-muted">Partners receive USDT (TRC20) via Heleket. Valid addresses only (start with T, 34 chars).</small>
                             </div>
                             <div class="mb-3">
-                                <label class="form-label small">Global default commission %</label>
+                                <label class="form-label small">Partner commission %</label>
                                 <input type="number" name="partner_default_commission_percent" step="0.01" min="0" max="100"
                                        value="{{ $partnerDefaultCommissionPercent ?? 10 }}" class="form-control" style="max-width: 120px;">
-                                <small class="text-muted">Applied to all partners unless overridden per payout setting.</small>
+                                <small class="text-muted">Commission rate for all partners. Override per partner in User list.</small>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label small">Partner minimum payout (USD)</label>
+                                <input type="number" name="partner_min_payout_amount" step="0.01" min="0" max="100000"
+                                       value="{{ $partnerMinPayoutAmount ?? 100 }}" class="form-control" style="max-width: 120px;" required>
+                                <small class="text-muted">Payout only when batch total reaches this amount. Below = stays pending.</small>
                             </div>
                             <button type="submit" class="btn btn-primary">Save</button>
                         </form>
@@ -140,7 +153,7 @@
                                 <th>Email</th>
                                 <th>Name</th>
                                 <th>Partner</th>
-                                <th>Payout</th>
+                                <th>Payout (USDT)</th>
                                 <th>Commission %</th>
                                 <th>Balance</th>
                                 <th>Add balance</th>
@@ -163,17 +176,7 @@
                                     </td>
                                     <td>
                                         @if($user->is_partner)
-                                        <form method="POST" action="{{ route('admin.users.set-payout-provider') }}" class="d-inline-flex align-items-center gap-1">
-                                            @csrf
-                                            <input type="hidden" name="user_id" value="{{ $user->id }}">
-                                            <input type="hidden" name="tab" value="users">
-                                            <select name="payout_provider" class="form-select form-select-sm" style="width: 100px;">
-                                                <option value="">Default</option>
-                                                <option value="heleket" {{ ($user->payout_provider ?? '') === 'heleket' ? 'selected' : '' }}>Heleket</option>
-                                                <option value="coinrush" {{ ($user->payout_provider ?? '') === 'coinrush' ? 'selected' : '' }}>CoinRush</option>
-                                            </select>
-                                            <button type="submit" class="btn btn-sm btn-outline-secondary">Set</button>
-                                        </form>
+                                        <span class="small text-muted" title="USDT (TRC20) via Heleket">Heleket USDT</span>
                                         @else
                                         —
                                         @endif
@@ -215,6 +218,8 @@
                 @endif
             </div>
         </div>
+
+        {{-- Partners set their valid USDT (TRC20) wallet in Partner Dashboard --}}
         @endif
 
         @if ($activeTab === 'transactions')
@@ -262,7 +267,7 @@
 
         @if ($activeTab === 'partner-payouts')
         <div class="card">
-            <div class="card-header fw-semibold">Partner commission payouts</div>
+            <div class="card-header fw-semibold">Partner commission payouts (USDT TRC20)</div>
             <div class="card-body p-0">
                 <div class="table-responsive">
                     <table class="table table-hover mb-0">
@@ -272,8 +277,8 @@
                                 <th>Source user</th>
                                 <th>Partner</th>
                                 <th>Amount</th>
-                                <th>Payout</th>
-                                <th>Source</th>
+                                <th>Provider</th>
+                                <th>Payment source</th>
                                 <th>Status</th>
                                 <th>Date</th>
                             </tr>

@@ -1,13 +1,13 @@
 @extends('layouts.app')
 
-@section('title', 'Billing')
+@section('title', __('messages.subscription.billing'))
 
 @section('content')
 <div class="cosmic-page-section">
     <div class="container cosmic-container" style="max-width: 960px;">
         <div class="cosmic-page-header mb-4">
-            <h1 class="cosmic-page-title">Billing</h1>
-            <p class="cosmic-page-subtitle mb-0">Unlock more trusted shortlinks before your subscription ends.</p>
+            <h1 class="cosmic-page-title">{{ __('messages.subscription.billing') }}</h1>
+            <p class="cosmic-page-subtitle mb-0">{{ __('messages.subscription.billing_sub') }}</p>
         </div>
 
         @if (session('success'))
@@ -21,9 +21,9 @@
             <div class="cosmic-alert cosmic-alert-success mb-4 d-flex align-items-center gap-2">
                 <span class="cosmic-alert-icon">✓</span>
                 <div>
-                    <strong>Active plan: {{ $activeSubscription->plan->name }}</strong> until {{ $activeSubscription->ends_at->format('M j, Y') }}
+                    <strong>{{ __('messages.subscription.active_plan', ['name' => $activeSubscription->plan->name, 'date' => $activeSubscription->ends_at->format('M j, Y')]) }}</strong>
                     @if ($activeSubscription->provider_ref === 'balance')
-                        <span class="cosmic-badge ms-2">Paid with balance</span>
+                        <span class="cosmic-badge ms-2">{{ __('messages.subscription.paid_balance') }}</span>
                     @endif
                 </div>
             </div>
@@ -39,7 +39,7 @@
                     <div class="dropdown">
                         <button class="btn cosmic-btn-add dropdown-toggle" type="button" data-bs-toggle="dropdown">Add</button>
                         <ul class="dropdown-menu dropdown-menu-dark">
-                            <li><a class="dropdown-item" href="{{ route('balance.index') }}">Add funds</a></li>
+                            <li><a class="dropdown-item" href="{{ route('balance.index') }}">{{ __('messages.subscription.add_funds') }}</a></li>
                         </ul>
                     </div>
                     <div>
@@ -47,7 +47,7 @@
                         <strong class="cosmic-balance-amount ms-1">${{ number_format($balance ?? 0, 2) }} USD</strong>
                     </div>
                 </div>
-                <a href="{{ route('balance.index') }}" class="btn cosmic-btn-primary">View Transactions</a>
+                <a href="{{ route('balance.index') }}" class="btn cosmic-btn-primary">{{ __('messages.subscription.view_transactions') }}</a>
             </div>
         </div>
 

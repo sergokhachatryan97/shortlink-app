@@ -1,13 +1,13 @@
 @extends('layouts.app')
 
-@section('title', 'Partner Dashboard')
+@section('title', __('messages.partner.dashboard'))
 
 @section('content')
 <div class="cosmic-page-section">
     <div class="container cosmic-container" style="max-width: 720px;">
         <div class="cosmic-page-header mb-4">
             <h1 class="cosmic-page-title">Partner Dashboard</h1>
-            <p class="cosmic-page-subtitle mb-0">Share your referral link and earn {{ number_format($commissionPercent ?? 10, 1) }}% commission when referred users pay.</p>
+            <p class="cosmic-page-subtitle mb-0">{{ __('messages.partner.subtitle', ['percent' => number_format($commissionPercent ?? 10, 1)]) }}</p>
         </div>
 
         @if(session('success'))
@@ -20,10 +20,10 @@
         @if (!$user->is_partner)
             <div class="cosmic-card p-4 mb-4">
                 <h5 class="cosmic-card-title mb-3">Become a Partner</h5>
-                <p class="cosmic-text-muted mb-4">Activate partner mode to get your unique referral link and start earning commissions when people you refer make payments.</p>
+                <p class="cosmic-text-muted mb-4">Activate partner mode to get your unique referral link and earn commissions in USDT (TRC20) when people you refer make payments.</p>
                 <form method="POST" action="{{ route('partner.activate') }}">
                     @csrf
-                    <button type="submit" class="btn cosmic-btn-primary">Become a Partner</button>
+                    <button type="submit" class="btn cosmic-btn-primary">{{ __('messages.partner.activate') }}</button>
                 </form>
             </div>
         @else
@@ -36,42 +36,47 @@
             </div>
 
             <div class="cosmic-card p-4 mb-4">
-                <h5 class="cosmic-card-title mb-3">Stats</h5>
-                <p class="cosmic-text-muted mb-1">Referred users: <strong>{{ $referredCount }}</strong></p>
-                <p class="cosmic-text-muted mb-0">Your commission rate: <strong>{{ number_format($commissionPercent ?? 10, 1) }}%</strong>@if($user->commission_percent !== null) <span class="badge bg-info ms-1">Custom</span>@endif</p>
+                <h5 class="cosmic-card-title mb-3">{{ __('messages.partner.stats') }}</h5>
+                <p class="cosmic-text-muted mb-1">{{ __('messages.partner.referred_users') }} <strong>{{ $referredCount }}</strong></p>
+                <p class="cosmic-text-muted mb-2">{{ __('messages.partner.commission_rate') }} <strong>{{ number_format($commissionPercent ?? 10, 1) }}%</strong>@if($user->commission_percent !== null) <span class="badge bg-info ms-1">{{ __('messages.partner.custom') }}</span>@endif</p>
+                <p class="cosmic-text-muted small mb-0">{{ __('messages.partner.commission_note') }}</p>
             </div>
 
             <div class="cosmic-card p-4 mb-4">
-                <h5 class="cosmic-card-title mb-3">Payout Settings</h5>
-                <p class="cosmic-text-muted small mb-4">Configure your wallet to receive commissions. The payout system (Heleket/CoinRush) is set by admin. Add the wallet for the provider admin has configured for you.</p>
+                <h5 class="cosmic-card-title mb-3">Payout wallet (USDT)</h5>
+                <p class="cosmic-text-muted small mb-4">Enter a valid USDT (TRC20) address. Must start with T and be 34 characters. Invalid addresses are rejected. Payouts run when total reaches the minimum (set by admin).</p>
 
                 @php
-                    $enabledProviders = config('partner.payout_providers_enabled', ['heleket']);
-                    $providerConfigs = [
-                        'heleket' => ['Heleket', in_array('heleket', $enabledProviders)],
-                        'coinrush' => ['CoinRush', in_array('coinrush', $enabledProviders)],
-                    ];
+                    $allowedRoutes = config('partner.allowed_payout_routes.heleket', []);
                 @endphp
-                @foreach($providerConfigs as $provider => $providerData)
+                @foreach($allowedRoutes as $route)
                 @php
-                    $label = $providerData[0];
-                    $enabled = $providerData[1];
-                    $setting = $payoutSettings->firstWhere('provider', $provider);
+                    $currency = $route['currency'] ?? 'USDT';
+                    $network = $route['network'] ?? 'TRC20';
+                    $routeLabel = $route['label'] ?? $currency . ' (' . $network . ')';
+                    $routeKey = 'heleket-' . $currency . '-' . $network;
+                    $setting = $payoutSettings->first(fn ($s) => $s->provider === 'heleket' && ($s->currency ?? '') === $currency && ($s->network ?? '') === $network);
                 @endphp
                 <div class="cosmic-payout-setting mb-4 pb-4 {{ !$loop->last ? 'border-bottom border-secondary' : '' }}">
-                    <h6 class="cosmic-card-title small mb-2">{{ $label }}@if(!$enabled) <span class="badge bg-secondary ms-1">Coming soon</span>@endif</h6>
+                    <h6 class="cosmic-card-title small mb-2">{{ __('messages.partner.usdt_via_heleket') }}</h6>
                     <form method="POST" action="{{ route('partner.payout-settings.update') }}">
                         @csrf
-                        <input type="hidden" name="provider" value="{{ $provider }}">
+                        <input type="hidden" name="provider" value="heleket">
+                        <input type="hidden" name="currency" value="{{ $currency }}">
+                        <input type="hidden" name="network" value="{{ $network }}">
                         <div class="mb-2">
-                            <input type="text" name="wallet_address" class="cosmic-input form-control" placeholder="Wallet address" value="{{ $setting?->wallet_address }}">
+                            <label class="form-label small cosmic-text-muted mb-1">Valid USDT (TRC20) address</label>
+                            <input type="text" name="wallet_address" class="cosmic-input form-control" placeholder="T..." pattern="^T[a-zA-Z0-9]{33}$" maxlength="34" value="{{ $setting?->wallet_address }}" title="USDT TRC20 address: starts with T, 34 characters">
                         </div>
+                        @if($errors->any())
+                            <div class="cosmic-alert cosmic-alert-danger mb-2 small">{{ $errors->first() }}</div>
+                        @endif
                         <div class="d-flex align-items-center gap-2 flex-wrap">
                             <div class="form-check">
-                                <input type="checkbox" name="is_active" value="1" class="form-check-input" id="active-{{ $provider }}" {{ ($setting?->is_active ?? false) && $setting?->wallet_address ? 'checked' : '' }}>
-                                <label class="form-check-label cosmic-text-muted small" for="active-{{ $provider }}">Active</label>
+                                <input type="checkbox" name="is_active" value="1" class="form-check-input" id="active-{{ $routeKey }}" {{ ($setting?->is_active ?? false) && $setting?->wallet_address ? 'checked' : '' }}>
+                                <label class="form-check-label cosmic-text-muted small" for="active-{{ $routeKey }}">{{ __('messages.partner.active') }}</label>
                             </div>
-                            <button type="submit" class="btn btn-sm cosmic-btn-primary">Save</button>
+                            <button type="submit" class="btn btn-sm cosmic-btn-primary">{{ __('messages.partner.save') }}</button>
                         </div>
                     </form>
                 </div>
@@ -108,9 +113,9 @@
 document.querySelectorAll('.cosmic-btn-copy').forEach(function(btn) {
     btn.addEventListener('click', function() {
         const text = this.dataset.copy;
+        const orig = btn.textContent;
         navigator.clipboard.writeText(text).then(function() {
-            const orig = btn.textContent;
-            btn.textContent = 'Copied!';
+            btn.textContent = @json(__('messages.common.copied'));
             setTimeout(function() { btn.textContent = orig; }, 1500);
         });
     });

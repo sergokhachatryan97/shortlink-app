@@ -186,7 +186,7 @@
         .landing-page .navbar .nav-link.active { color: #a78bfa !important; }
         .landing-page .navbar .btn-outline-secondary { border-color: rgba(255,255,255,0.4); color: #fff; }
         .landing-page .navbar .btn-outline-secondary:hover { background: rgba(255,255,255,0.1); color: #fff; border-color: rgba(255,255,255,0.5); }
-        .landing-page .navbar .dropdown-toggle { background: rgba(255,255,255,0.1) !important; color: #fff !important; }
+        .landing-page .navbar .dropdown-toggle { background: rgba(255,255,255,0) !important; color: #fff !important; }
         .landing-page .navbar .balance-amount { color: #fff !important; }
         .landing-page .navbar .navbar-toggler { border-color: rgba(255,255,255,0.4); }
         .landing-page .navbar .navbar-toggler-icon { filter: invert(1); }
@@ -270,8 +270,8 @@
     @include('components.navbar')
     <div class="container" style="max-width: 600px;">
         <header class="mb-4 mt-4">
-            <h1 class="hero-title mb-1">Create Trusted Short Links Instantly</h1>
-            <p class="hero-sub mb-0">High-trust domain redirects for campaigns, traffic distribution, and link management.</p>
+            <h1 class="hero-title mb-1">{{ __('messages.shortlink.title') }}</h1>
+            <p class="hero-sub mb-0">{{ __('messages.shortlink.subtitle') }}</p>
         </header>
 
         @if (session('success'))
@@ -284,8 +284,8 @@
         <div id="plan-limit-alert" class="alert alert-warning mb-4 py-3 align-items-center" style="display: {{ ($atPlanLimit ?? false) ? 'flex' : 'none' }};">
             <span class="me-2">⚠️</span>
             <div>
-                <strong>Plan limit reached.</strong> Generated links will be deducted from your balance.
-                <span class="d-block mt-1 text-muted small">$<span id="price-per-link">{{ number_format($pricePerLink ?? 0.01, 2) }}</span> per link</span>
+                <strong>{{ __('messages.shortlink.plan_limit_reached') }}</strong> {{ __('messages.shortlink.plan_limit_desc') }}
+                <span class="d-block mt-1 text-muted small">$<span id="price-per-link">{{ number_format($pricePerLink ?? 0.01, 2) }}</span> {{ __('messages.shortlink.per_link') }}</span>
             </div>
         </div>
 
@@ -295,7 +295,7 @@
                 <input type="hidden" name="fingerprint" id="fingerprint" value="">
 
                 <div class="mb-4">
-                    <label for="url" class="form-label fw-medium">Destination URL</label>
+                    <label for="url" class="form-label fw-medium">{{ __('messages.shortlink.destination_url') }}</label>
                     <div class="input-group">
                         <input type="url" id="url" name="url" required placeholder="https://example.com"
                                class="form-control">
@@ -303,18 +303,18 @@
                 </div>
 
                 <div class="mb-4">
-                    <label for="count" class="form-label fw-medium">Number of links</label>
+                    <label for="count" class="form-label fw-medium">{{ __('messages.shortlink.num_links') }}</label>
                     <div class="input-group input-group-quantity">
                         <button type="button" class="btn btn-outline-secondary" id="qty-minus">−</button>
                         <input type="number" id="count" name="count" required min="1" max="1000" value="50"
                                class="form-control">
                         <button type="button" class="btn btn-outline-secondary" id="qty-plus">+</button>
                     </div>
-                    <p class="form-text text-white mt-1 small">Max 50 for free trial. Above requires payment. <strong>$<span id="form-price-per-link">{{ number_format($pricePerLink ?? 0.001, 3) }}</span> per link</strong></p>
+                    <p class="form-text text-white mt-1 small">{{ __('messages.shortlink.max_free') }} <strong>$<span id="form-price-per-link">{{ number_format($pricePerLink ?? 0.001, 3) }}</span> {{ __('messages.shortlink.per_link') }}</strong></p>
                 </div>
 
                 <button type="submit" id="generate-btn" class="btn btn-primary btn-lg w-100 mb-4">
-                    Generate Trust Links
+                    {{ __('messages.shortlink.generate') }}
                 </button>
             </form>
 
@@ -362,7 +362,7 @@
 
     <div class="container mt-5 pt-4" style="max-width: 960px;">
         @if ($plans ?? null)
-        <h5 class="text-center mb-4" style="color: rgba(255,255,255,0.6); font-size: 1rem; font-weight: 500;">Pricing</h5>
+        <h5 class="text-center mb-4" style="color: rgba(255,255,255,0.6); font-size: 1rem; font-weight: 500;">{{ __('messages.shortlink.pricing') }}</h5>
         <div class="row g-4 mb-4 justify-content-center">
             @foreach($plans as $plan)
             @php
@@ -391,7 +391,7 @@
             <div class="col-md-4 d-flex">
                 <div class="pricing-card-landing-full w-100 d-flex flex-column {{ $isCurrentPlan ? 'pricing-card-current' : '' }} {{ $isRecommended ? 'pricing-card-recommended' : '' }}">
                     @if ($isRecommended)
-                    <div class="pricing-plan-badge">★ Recommended</div>
+                    <div class="pricing-plan-badge">{{ __('messages.shortlink.recommended') }}</div>
                     @endif
                     <div class="pricing-plan-body p-4 d-flex flex-column flex-grow-1">
                         <div class="d-flex align-items-center gap-2 mb-3">
@@ -408,43 +408,43 @@
                         </div>
                         <p class="pricing-plan-desc mb-2">
                             @if ($plan->isUnlimited())
-                                <strong>Unlimited links</strong> until subscription ends
+                                {{ __('messages.shortlink.unlimited_until') }}
                             @else
                                 {{ $plan->description }}
                             @endif
                         </p>
                         <div class="pricing-plan-features mb-3">
-                            <span class="pricing-plan-feature">{{ $plan->links_limit ? number_format($plan->links_limit) . ' links' : 'Unlimited links' }}</span>
-                            <span class="pricing-plan-feature">{{ (int)$plan->duration_days }} days</span>
+                            <span class="pricing-plan-feature">{{ $plan->links_limit ? number_format($plan->links_limit) . ' ' . __('messages.shortlink.links') : __('messages.shortlink.unlimited') . ' ' . __('messages.shortlink.links') }}</span>
+                            <span class="pricing-plan-feature">{{ (int)$plan->duration_days }} {{ __('messages.shortlink.days') }}</span>
                         </div>
                         <p class="pricing-plan-price-full mb-3">${{ number_format($plan->price_usd, 2) }}{{ strtolower($plan->slug ?? '') === 'vip' ? '/yr' : '/mo' }}</p>
                         <div class="mt-auto pt-2">
                             @if ($isCurrentPlan)
-                                <button type="button" class="btn pricing-btn-active w-100" disabled>Active</button>
+                                <button type="button" class="btn pricing-btn-active w-100" disabled>{{ __('messages.shortlink.active') }}</button>
                             @elseif ($canUpgrade)
                                 @if ($canAffordUpgrade)
                                     <form method="POST" action="{{ route('subscription.upgrade') }}">
                                         @csrf
                                         <input type="hidden" name="plan_id" value="{{ $plan->id }}">
-                                        <button type="submit" class="btn w-100 pricing-btn-primary">Upgrade to {{ $plan->name }}</button>
+                                        <button type="submit" class="btn w-100 pricing-btn-primary">{{ __('messages.shortlink.upgrade_to', ['name' => $plan->name]) }}</button>
                                         @if ($upgradePriceDiff > 0)
-                                        <p class="pricing-pay-today small mt-2 mb-0 text-center">Pay ${{ number_format($upgradePriceDiff, 2) }} today</p>
+                                        <p class="pricing-pay-today small mt-2 mb-0 text-center">{{ __('messages.shortlink.pay_today', ['amount' => number_format($upgradePriceDiff, 2)]) }}</p>
                                         @endif
                                     </form>
                                 @else
-                                    <a href="{{ route('balance.index', ['amount' => $addFundsAmount]) }}" class="btn pricing-btn-add-funds w-100">Add funds</a>
+                                    <a href="{{ route('balance.index', ['amount' => $addFundsAmount]) }}" class="btn pricing-btn-add-funds w-100">{{ __('messages.shortlink.add_funds') }}</a>
                                 @endif
                             @elseif ($hasActivePlan)
-                                <button type="button" class="btn pricing-btn-disabled w-100" disabled>Downgrade not available</button>
+                                <button type="button" class="btn pricing-btn-disabled w-100" disabled>{{ __('messages.shortlink.downgrade_na') }}</button>
                             @else
                                 @if ($canBuyWithBalance)
                                     <form method="POST" action="{{ route('subscription.purchase') }}">
                                         @csrf
                                         <input type="hidden" name="plan_id" value="{{ $plan->id }}">
-                                        <button type="submit" class="btn w-100 {{ $isRecommended ? 'pricing-btn-primary' : 'pricing-btn-plan' }}">Buy {{ $plan->name }}</button>
+                                        <button type="submit" class="btn w-100 {{ $isRecommended ? 'pricing-btn-primary' : 'pricing-btn-plan' }}">{{ __('messages.shortlink.buy', ['name' => $plan->name]) }}</button>
                                     </form>
                                 @else
-                                    <a href="{{ route('balance.index', ['amount' => $addFundsAmount]) }}" class="btn pricing-btn-add-funds w-100">Add funds</a>
+                                    <a href="{{ route('balance.index', ['amount' => $addFundsAmount]) }}" class="btn pricing-btn-add-funds w-100">{{ __('messages.shortlink.add_funds') }}</a>
                                 @endif
                             @endif
                         </div>
@@ -461,7 +461,7 @@
             <div class="d-flex flex-wrap align-items-center justify-content-center justify-content-md-between gap-3">
                 <span class="small" style="color: rgba(255,255,255,0.5);">&copy; {{ date('Y') }} {{ config('app.name') }}</span>
                 <div class="d-flex align-items-center gap-4 flex-wrap">
-                    <a href="{{ route('contact.index') }}" class="small text-decoration-none d-inline-flex align-items-center gap-1" style="color: #a78bfa;">Contact</a>
+                    <a href="{{ route('contact.index') }}" class="small text-decoration-none d-inline-flex align-items-center gap-1" style="color: #a78bfa;">{{ __('messages.footer.contact') }}</a>
                     <a href="mailto:{{ config('app.support_email') }}" class="small text-decoration-none d-inline-flex align-items-center gap-1" style="color: rgba(255,255,255,0.6);">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
                         {{ config('app.support_email') }}
@@ -469,7 +469,7 @@
                     @if(config('app.support_telegram'))
                     <a href="{{ config('app.support_telegram') }}" target="_blank" rel="noopener" class="small text-decoration-none d-inline-flex align-items-center gap-1" style="color: rgba(255,255,255,0.6);">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/></svg>
-                        Telegram
+                        {{ __('messages.footer.telegram') }}
                     </a>
                     @endif
                 </div>
@@ -485,15 +485,25 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body px-4 pb-4 pt-0">
-                    <p class="mb-3" style="color: #334155; font-size: 1rem;"><strong>Free trial:</strong> Up to 50 links, one-time per device.</p>
-                    <p class="mb-0" style="color: #334155; font-size: 1rem;"><strong>Paid:</strong> More than 50 links or after trial — pay per link via Heleket or Tron (crypto).</p>
+                    <p class="mb-3" style="color: #334155; font-size: 1rem;">{{ __('messages.shortlink.modal_free') }}</p>
+                    <p class="mb-0" style="color: #334155; font-size: 1rem;">{{ __('messages.shortlink.modal_paid') }}</p>
                 </div>
             </div>
         </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    @php
+        $shortlinkTranslations = [
+            'processing' => __('messages.common.processing'),
+            'generate' => __('messages.shortlink.generate'),
+            'copied' => __('messages.common.copied'),
+            'error' => __('messages.common.error'),
+            'try_again' => __('messages.common.try_again'),
+        ];
+    @endphp
     <script>
+        window.__translations = @json($shortlinkTranslations);
         function simpleFingerprint() {
             const data = [
                 (screen.width || 0) + 'x' + (screen.height || 0),
@@ -593,7 +603,7 @@
             copyToClipboard(allLinks.join('\n'));
             const btn = document.getElementById('copy-all-links');
             const orig = btn.textContent;
-            btn.textContent = 'Copied!';
+            btn.textContent = (window.__translations && window.__translations.copied) || 'Copied!';
             setTimeout(() => { btn.textContent = orig; }, 1500);
         });
 
@@ -667,7 +677,7 @@
             if (!fpInput.value) fpInput.value = simpleFingerprint();
 
             btn.disabled = true;
-            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Processing';
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>' + (window.__translations.processing || 'Processing');
 
             try {
                 const formData = new FormData(e.target);

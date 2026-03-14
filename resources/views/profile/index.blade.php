@@ -6,8 +6,8 @@
 <div class="cosmic-page-section">
     <div class="container cosmic-container" style="max-width: 600px;">
         <div class="cosmic-page-header mb-4">
-            <h1 class="cosmic-page-title">Profile</h1>
-            <p class="cosmic-page-subtitle mb-0">Manage your account and preferences.</p>
+            <h1 class="cosmic-page-title">{{ __('messages.profile.title') }}</h1>
+            <p class="cosmic-page-subtitle mb-0">{{ __('messages.profile.subtitle') }}</p>
         </div>
 
         @if (session('success'))
@@ -36,7 +36,7 @@
                     <form method="POST" action="{{ route('partner.activate') }}" class="d-inline">
                         @csrf
                         <input type="hidden" name="redirect" value="{{ route('partner.dashboard') }}">
-                        <button type="submit" class="btn cosmic-btn-primary">Become a Partner</button>
+                        <button type="submit" class="btn cosmic-btn-primary">{{ __('messages.partner.activate') }}</button>
                     </form>
                 @endif
             </div>
@@ -49,10 +49,10 @@
                 </div>
                 @if(auth()->user()->email)
                 <div class="cosmic-form-group mt-3">
-                    <label class="cosmic-label">Email</label>
+                    <label class="cosmic-label">{{ __('messages.auth.email') }}</label>
                     <div class="d-flex align-items-center gap-2">
                         <input type="text" class="cosmic-input form-control" value="{{ auth()->user()->email }}" disabled>
-                        <button type="button" class="btn cosmic-btn-copy" data-copy="{{ auth()->user()->email }}">Copy</button>
+                        <button type="button" class="btn cosmic-btn-copy" data-copy="{{ auth()->user()->email }}">{{ __('messages.links.copy') }}</button>
                     </div>
                 </div>
                 @endif
@@ -77,7 +77,7 @@
                 </div>
             </div>
 
-            <button type="submit" class="btn cosmic-btn-primary">Save changes</button>
+            <button type="submit" class="btn cosmic-btn-primary">{{ __('messages.profile.save') }}</button>
         </form>
     </div>
 </div>
