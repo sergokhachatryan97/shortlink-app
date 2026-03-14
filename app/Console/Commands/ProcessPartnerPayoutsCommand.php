@@ -64,7 +64,7 @@ class ProcessPartnerPayoutsCommand extends Command
 
         $dispatched = 0;
         foreach ($batches as $batch) {
-            SendPartnerPayoutJob::dispatch($batch['ids']);
+//            SendPartnerPayoutJob::dispatch($batch['ids']);
             $dispatched++;
         }
 
