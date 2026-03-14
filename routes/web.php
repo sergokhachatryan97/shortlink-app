@@ -3,6 +3,7 @@
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ContactController;
+use App\Http\Controllers\PartnerController;
 use App\Http\Controllers\BalanceController;
 use App\Http\Controllers\LinksController;
 use App\Http\Controllers\ProfileController;
@@ -34,6 +35,7 @@ Route::get('/auth/google/callback', [AuthController::class, 'handleGoogleCallbac
 Route::get('/auth/telegram', [AuthController::class, 'telegram'])->name('auth.telegram');
 Route::post('/auth/logout', [AuthController::class, 'logout'])->name('auth.logout');
 Route::get('/contact', [ContactController::class, 'index'])->name('contact.index');
+Route::get('/r/{code}', [PartnerController::class, 'referralRedirect'])->name('referral.redirect');
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'index'])->name('profile.index');
@@ -49,6 +51,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/subscription', [SubscriptionController::class, 'index'])->name('subscription.index');
     Route::post('/subscription/purchase', [SubscriptionController::class, 'purchase'])->name('subscription.purchase');
     Route::post('/subscription/upgrade', [SubscriptionController::class, 'upgrade'])->name('subscription.upgrade');
+    Route::post('/partner/activate', [PartnerController::class, 'activate'])->name('partner.activate');
+    Route::get('/partner', [PartnerController::class, 'dashboard'])->name('partner.dashboard');
+    Route::post('/partner/payout-settings', [PartnerController::class, 'updatePayoutSettings'])->name('partner.payout-settings.update');
 });
 
 Route::prefix('admin')->name('admin.')->group(function () {
@@ -60,5 +65,9 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::post('/settings', [AdminController::class, 'updateSettings'])->name('settings.update');
         Route::post('/plans/{plan}', [AdminController::class, 'updatePlan'])->name('plans.update');
         Route::post('/users/add-balance', [AdminController::class, 'addUserBalance'])->name('users.add-balance');
+        Route::post('/users/set-partner', [AdminController::class, 'setUserPartner'])->name('users.set-partner');
+        Route::post('/users/set-payout-provider', [AdminController::class, 'setUserPayoutProvider'])->name('users.set-payout-provider');
+        Route::post('/users/set-commission-percent', [AdminController::class, 'setUserCommissionPercent'])->name('users.set-commission-percent');
+        Route::post('/users/payout-setting', [AdminController::class, 'savePartnerPayoutSetting'])->name('users.payout-setting');
     });
 });

@@ -39,11 +39,13 @@ return [
         'base' => env('HELEKET_API_BASE', 'https://api.heleket.com'),
         'merchant' => env('HELEKET_MERCHANT'),
         'payment_key' => env('HELEKET_PAYMENT_KEY'),
+        'payout_api_key' => env('HELEKET_PAYOUT_API_KEY'),
     ],
 
     'coinrush' => [
         'store_key' => env('COINRUSH_STORE_KEY'),
         'api_url' => env('COINRUSH_API_URL', 'https://coinrush.link/store'),
+        'payout_api_key' => env('COINRUSH_PAYOUT_API_KEY'),
     ],
 
     'admin' => [

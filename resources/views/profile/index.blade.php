@@ -27,6 +27,21 @@
             @csrf
 
             <div class="cosmic-card p-4 mb-4">
+                <h5 class="cosmic-card-title mb-3">Partner program</h5>
+                @if (auth()->user()->is_partner ?? false)
+                    <p class="cosmic-text-muted mb-2">You are a partner. Share your referral link to earn commissions.</p>
+                    <a href="{{ route('partner.dashboard') }}" class="btn cosmic-btn-primary">Partner dashboard</a>
+                @else
+                    <p class="cosmic-text-muted mb-2">Activate partner mode to get your referral link and earn 10% when referred users pay.</p>
+                    <form method="POST" action="{{ route('partner.activate') }}" class="d-inline">
+                        @csrf
+                        <input type="hidden" name="redirect" value="{{ route('partner.dashboard') }}">
+                        <button type="submit" class="btn cosmic-btn-primary">Become a Partner</button>
+                    </form>
+                @endif
+            </div>
+
+            <div class="cosmic-card p-4 mb-4">
                 <h5 class="cosmic-card-title mb-3">Manage account</h5>
                 <div class="cosmic-form-group">
                     <label for="name" class="cosmic-label">Name</label>

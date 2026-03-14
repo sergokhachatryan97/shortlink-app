@@ -34,6 +34,9 @@
             <li class="nav-item">
                 <a class="nav-link {{ $activeTab === 'transactions' ? 'active' : '' }}" href="{{ route('admin.dashboard', ['tab' => 'transactions']) }}">Transactions</a>
             </li>
+            <li class="nav-item">
+                <a class="nav-link {{ $activeTab === 'partner-payouts' ? 'active' : '' }}" href="{{ route('admin.dashboard', ['tab' => 'partner-payouts']) }}">Partner payouts</a>
+            </li>
         </ul>
 
         @if ($activeTab === 'settings')
@@ -49,6 +52,20 @@
                                 <label class="form-label small">Price per link (USD)</label>
                                 <input type="number" name="price_per_link" step="0.001" min="0.001"
                                        value="{{ $pricePerLink }}" class="form-control" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label small">Global default payout provider</label>
+                                <select name="partner_default_payout_provider" class="form-select">
+                                    <option value="heleket" {{ ($partnerDefaultPayoutProvider ?? 'heleket') === 'heleket' ? 'selected' : '' }}>Heleket</option>
+                                    <option value="coinrush" {{ ($partnerDefaultPayoutProvider ?? '') === 'coinrush' ? 'selected' : '' }}>CoinRush</option>
+                                </select>
+                                <small class="text-muted">Applied to all partners unless overridden per user.</small>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label small">Global default commission %</label>
+                                <input type="number" name="partner_default_commission_percent" step="0.01" min="0" max="100"
+                                       value="{{ $partnerDefaultCommissionPercent ?? 10 }}" class="form-control" style="max-width: 120px;">
+                                <small class="text-muted">Applied to all partners unless overridden per payout setting.</small>
                             </div>
                             <button type="submit" class="btn btn-primary">Save</button>
                         </form>
@@ -122,6 +139,9 @@
                                 <th>ID</th>
                                 <th>Email</th>
                                 <th>Name</th>
+                                <th>Partner</th>
+                                <th>Payout</th>
+                                <th>Commission %</th>
                                 <th>Balance</th>
                                 <th>Add balance</th>
                             </tr>
@@ -132,6 +152,45 @@
                                     <td><code class="small">{{ $user->id }}</code></td>
                                     <td>{{ $user->email ?? '—' }}</td>
                                     <td>{{ $user->name ?? '—' }}</td>
+                                    <td>
+                                        <form method="POST" action="{{ route('admin.users.set-partner') }}" class="d-inline-flex align-items-center gap-1">
+                                            @csrf
+                                            <input type="hidden" name="user_id" value="{{ $user->id }}">
+                                            <input type="hidden" name="tab" value="users">
+                                            <input type="number" name="partner_id" value="{{ $user->partner_id }}" min="0" placeholder="0=clear" class="form-control form-control-sm" style="width: 80px;">
+                                            <button type="submit" class="btn btn-sm btn-outline-secondary">Set</button>
+                                        </form>
+                                    </td>
+                                    <td>
+                                        @if($user->is_partner)
+                                        <form method="POST" action="{{ route('admin.users.set-payout-provider') }}" class="d-inline-flex align-items-center gap-1">
+                                            @csrf
+                                            <input type="hidden" name="user_id" value="{{ $user->id }}">
+                                            <input type="hidden" name="tab" value="users">
+                                            <select name="payout_provider" class="form-select form-select-sm" style="width: 100px;">
+                                                <option value="">Default</option>
+                                                <option value="heleket" {{ ($user->payout_provider ?? '') === 'heleket' ? 'selected' : '' }}>Heleket</option>
+                                                <option value="coinrush" {{ ($user->payout_provider ?? '') === 'coinrush' ? 'selected' : '' }}>CoinRush</option>
+                                            </select>
+                                            <button type="submit" class="btn btn-sm btn-outline-secondary">Set</button>
+                                        </form>
+                                        @else
+                                        —
+                                        @endif
+                                    </td>
+                                    <td>
+                                        @if($user->is_partner)
+                                        <form method="POST" action="{{ route('admin.users.set-commission-percent') }}" class="d-inline-flex align-items-center gap-1">
+                                            @csrf
+                                            <input type="hidden" name="user_id" value="{{ $user->id }}">
+                                            <input type="hidden" name="tab" value="users">
+                                            <input type="number" name="commission_percent" step="0.01" min="0" max="100" value="{{ $user->commission_percent ?? '' }}" placeholder="—" class="form-control form-control-sm" style="width: 70px;" title="Leave empty for global default">
+                                            <button type="submit" class="btn btn-sm btn-outline-secondary">Set</button>
+                                        </form>
+                                        @else
+                                        —
+                                        @endif
+                                    </td>
                                     <td>${{ number_format($user->balance ?? 0, 2) }}</td>
                                     <td>
                                         <form method="POST" action="{{ route('admin.users.add-balance') }}" class="d-inline-flex align-items-center gap-2">
@@ -196,6 +255,49 @@
                 </div>
                 <div class="p-2">
                     {{ $transactions->appends(['tab' => 'transactions'])->links('pagination::bootstrap-5') }}
+                </div>
+            </div>
+        </div>
+        @endif
+
+        @if ($activeTab === 'partner-payouts')
+        <div class="card">
+            <div class="card-header fw-semibold">Partner commission payouts</div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Source user</th>
+                                <th>Partner</th>
+                                <th>Amount</th>
+                                <th>Payout</th>
+                                <th>Source</th>
+                                <th>Status</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse ($partnerPayouts as $p)
+                                <tr>
+                                    <td>{{ $p->id }}</td>
+                                    <td>{{ $p->sourceUser?->email ?? '#' . $p->source_user_id }}</td>
+                                    <td>{{ $p->partnerUser?->email ?? '#' . $p->partner_user_id }}</td>
+                                    <td>${{ number_format($p->commission_amount, 2) }}</td>
+                                    <td>{{ $p->provider }}</td>
+                                    <td><small class="text-muted">{{ $p->source_provider ?? '—' }}</small></td>
+                                    <td><span class="badge {{ $p->status === 'paid' ? 'bg-success' : ($p->status === 'failed' ? 'bg-danger' : 'bg-secondary') }}">{{ $p->status }}</span></td>
+                                    <td><small>{{ $p->created_at->format('Y-m-d H:i') }}</small></td>
+                                </tr>
+                            @empty
+                                <tr><td colspan="8" class="text-center text-muted py-4">No partner payouts yet</td></tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+                <div class="p-2">
+                    {{ $partnerPayouts->appends(['tab' => 'partner-payouts'])->links('pagination::bootstrap-5') }}
                 </div>
             </div>
         </div>

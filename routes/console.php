@@ -12,3 +12,4 @@ Artisan::command('inspire', function () {
 
 Schedule::job(new ExpireSubscriptionsJob)->daily();
 Schedule::job(new ExpireShortlinkLinksJob)->daily();
+Schedule::command('partner:process-payouts')->dailyAt('23:55');

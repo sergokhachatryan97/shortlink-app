@@ -47,7 +47,7 @@
     </style>
     @stack('styles')
 </head>
-<body class="{{ request()->routeIs('links.*') || request()->routeIs('contact.index') || request()->routeIs('subscription.index') || request()->routeIs('profile.*') || request()->routeIs('balance.*') ? 'cosmic-page-body' : '' }}">
+<body class="{{ request()->routeIs('links.*') || request()->routeIs('contact.index') || request()->routeIs('subscription.index') || request()->routeIs('profile.*') || request()->routeIs('balance.*') || request()->routeIs('partner.*') ? 'cosmic-page-body' : '' }}">
     @include('components.navbar')
     <main class="main-content d-flex flex-column" style="min-height: calc(100vh - var(--navbar-height) - 80px);">
         @yield('content')

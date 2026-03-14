@@ -23,6 +23,9 @@
                     <a class="nav-link {{ request()->routeIs('profile.*') ? 'active fw-600' : '' }}" href="{{ route('profile.index') }}">Profile</a>
                 </li>
                 <li class="nav-item">
+                    <a class="nav-link {{ request()->routeIs('partner.*') ? 'active fw-600' : '' }}" href="{{ route('partner.dashboard') }}">Partner</a>
+                </li>
+                <li class="nav-item">
                     <a class="nav-link {{ request()->routeIs('contact.index') ? 'active fw-600' : '' }}" href="{{ route('contact.index') }}">Contact</a>
                 </li>
                 @endauth
