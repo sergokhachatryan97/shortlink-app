@@ -49,7 +49,7 @@
                         @endswitch
                     </a>
                     <ul class="dropdown-menu dropdown-menu-end">
-                        <li><a class="dropdown-item d-flex align-items-center gap-2 {{ app()->getLocale() === 'en' ? 'active' : '' }}" href="{{ route('locale.set', ['locale' => 'en']) }}"><span>🇬🇧</span> English</a></li>
+                        <li><a class="dropdown-item d-flex align-items-center gap-2 {{ app()->getLocale() === 'en' ? 'active' : '' }}" href="{{ route('locale.set', ['locale' => 'en']) }}"><span>🇺🇲</span> English</a></li>
                         <li><a class="dropdown-item d-flex align-items-center gap-2 {{ app()->getLocale() === 'zh' ? 'active' : '' }}" href="{{ route('locale.set', ['locale' => 'zh']) }}"><span>🇨🇳</span> 中文</a></li>
                         <li><a class="dropdown-item d-flex align-items-center gap-2 {{ app()->getLocale() === 'ru' ? 'active' : '' }}" href="{{ route('locale.set', ['locale' => 'ru']) }}"><span>🇷🇺</span> Русский</a></li>
                     </ul>
