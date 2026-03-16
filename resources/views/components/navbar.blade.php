@@ -45,7 +45,7 @@
                         @switch(app()->getLocale())
                             @case('zh') 🇨🇳 中文 @break
                             @case('ru') 🇷🇺 RU @break
-                            @default 🇬🇧 EN
+                            @default 🇺🇲 EN
                         @endswitch
                     </a>
                     <ul class="dropdown-menu dropdown-menu-end">
