@@ -13,6 +13,7 @@ use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 
 class PartnerController extends Controller
@@ -152,12 +153,20 @@ class PartnerController extends Controller
 
         $managerEmail = config('app.support_email');
         if ($managerEmail) {
-            Mail::to($managerEmail)->send(new PartnerWithdrawalRequestMail(
-                $user,
-                number_format($available, 2),
-                $wallet,
-                $comment
-            ));
+            try {
+                Mail::to($managerEmail)->send(
+                    new PartnerWithdrawalRequestMail(
+                        $user,
+                        number_format($available, 2),
+                        $wallet,
+                        $comment
+                    )
+                );
+            } catch (\Throwable $e) {
+                Log::error('Withdrawal mail failed', [
+                    'error' => $e->getMessage(),
+                ]);
+            }
         }
 
         return redirect()->route('partner.dashboard')->with('success', 'Your withdrawal request has been sent to the manager.');
