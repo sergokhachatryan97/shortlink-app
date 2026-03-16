@@ -21,7 +21,7 @@
             <div class="cosmic-alert cosmic-alert-success mb-4 d-flex align-items-center gap-2">
                 <span class="cosmic-alert-icon">✓</span>
                 <div>
-                    <strong>{{ __('messages.subscription.active_plan', ['name' => $activeSubscription->plan->name, 'date' => $activeSubscription->ends_at->format('M j, Y')]) }}</strong>
+                    <strong>{{ __('messages.subscription.active_plan', ['name' => $activeSubscription->plan->getTranslatedName(), 'date' => $activeSubscription->ends_at->format('M j, Y')]) }}</strong>
                     @if ($activeSubscription->provider_ref === 'balance')
                         <span class="cosmic-badge ms-2">{{ __('messages.subscription.paid_balance') }}</span>
                     @endif
@@ -29,7 +29,7 @@
             </div>
         @elseif ($lastExpiredSubscription)
             <div class="cosmic-alert cosmic-alert-warning mb-4">
-                <strong>Subscription expired.</strong> Your plan ({{ $lastExpiredSubscription->plan->name }}) ended on {{ $lastExpiredSubscription->ends_at->format('M j, Y') }}. Purchase a new plan with balance to continue.
+                <strong>Subscription expired.</strong> Your plan ({{ $lastExpiredSubscription->plan->getTranslatedName() }}) ended on {{ $lastExpiredSubscription->ends_at->format('M j, Y') }}. Purchase a new plan with balance to continue.
             </div>
         @endif
 
@@ -93,14 +93,14 @@
                                 <svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
                                 @endif
                             </div>
-                            <h5 class="cosmic-plan-name mb-0">{{ $plan->name }}</h5>
+                            <h5 class="cosmic-plan-name mb-0">{{ $plan->getTranslatedName() }}</h5>
                         </div>
                         <p class="cosmic-plan-desc mb-3">
                             @if ($plan->isUnlimited())
                                 <strong>Unlimited links</strong><br>
                                 <span class="cosmic-text-muted">until subscription ends</span>
                             @else
-                                {{ $plan->description }}
+                                {{ $plan->getTranslatedDescription() }}
                             @endif
                         </p>
                         <p class="cosmic-plan-price mb-3">${{ number_format($plan->price_usd, 2) }}{{ strtolower($plan->slug ?? '') === 'vip' ? '/yr' : '/mo' }}</p>
@@ -112,7 +112,7 @@
                                 <form method="POST" action="{{ route('subscription.upgrade') }}">
                                     @csrf
                                     <input type="hidden" name="plan_id" value="{{ $plan->id }}">
-                                    <button type="submit" class="btn w-100 cosmic-btn-primary">Upgrade to {{ $plan->name }}</button>
+                                    <button type="submit" class="btn w-100 cosmic-btn-primary">Upgrade to {{ $plan->getTranslatedName() }}</button>
                                     @if ($upgradePriceDiff > 0)
                                     <p class="cosmic-pay-today small mt-2 mb-0 text-center">Pay ${{ number_format($upgradePriceDiff, 2) }} today</p>
                                     @endif
@@ -127,7 +127,7 @@
                                 <form method="POST" action="{{ route('subscription.purchase') }}">
                                     @csrf
                                     <input type="hidden" name="plan_id" value="{{ $plan->id }}">
-                                    <button type="submit" class="btn w-100 {{ $isRecommended ? 'cosmic-btn-primary' : 'cosmic-btn-plan' }}">Buy {{ $plan->name }}</button>
+                                    <button type="submit" class="btn w-100 {{ $isRecommended ? 'cosmic-btn-primary' : 'cosmic-btn-plan' }}">Buy {{ $plan->getTranslatedName() }}</button>
                                 </form>
                             @else
                                 <a href="{{ route('balance.index', ['amount' => $addFundsAmount]) }}" class="btn cosmic-btn-add-funds w-100">Add funds</a>

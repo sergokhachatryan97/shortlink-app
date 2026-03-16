@@ -37,6 +37,7 @@
         }
         body > * { position: relative; z-index: 1; }
         .hero-title {
+            text-align: center;
             font-size: 2.25rem;
             font-weight: 700;
             letter-spacing: -0.02em;
@@ -404,13 +405,13 @@
                                 <svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
                                 @endif
                             </div>
-                            <h5 class="pricing-plan-name-full mb-0">{{ $plan->name }}</h5>
+                            <h5 class="pricing-plan-name-full mb-0">{{ $plan->getTranslatedName() }}</h5>
                         </div>
                         <p class="pricing-plan-desc mb-2">
                             @if ($plan->isUnlimited())
                                 {{ __('messages.shortlink.unlimited_until') }}
                             @else
-                                {{ $plan->description }}
+                                {{ $plan->getTranslatedDescription() }}
                             @endif
                         </p>
                         <div class="pricing-plan-features mb-3">
@@ -426,7 +427,7 @@
                                     <form method="POST" action="{{ route('subscription.upgrade') }}">
                                         @csrf
                                         <input type="hidden" name="plan_id" value="{{ $plan->id }}">
-                                        <button type="submit" class="btn w-100 pricing-btn-primary">{{ __('messages.shortlink.upgrade_to', ['name' => $plan->name]) }}</button>
+                                        <button type="submit" class="btn w-100 pricing-btn-primary">{{ __('messages.shortlink.upgrade_to', ['name' => $plan->getTranslatedName()]) }}</button>
                                         @if ($upgradePriceDiff > 0)
                                         <p class="pricing-pay-today small mt-2 mb-0 text-center">{{ __('messages.shortlink.pay_today', ['amount' => number_format($upgradePriceDiff, 2)]) }}</p>
                                         @endif
@@ -441,7 +442,7 @@
                                     <form method="POST" action="{{ route('subscription.purchase') }}">
                                         @csrf
                                         <input type="hidden" name="plan_id" value="{{ $plan->id }}">
-                                        <button type="submit" class="btn w-100 {{ $isRecommended ? 'pricing-btn-primary' : 'pricing-btn-plan' }}">{{ __('messages.shortlink.buy', ['name' => $plan->name]) }}</button>
+                                        <button type="submit" class="btn w-100 {{ $isRecommended ? 'pricing-btn-primary' : 'pricing-btn-plan' }}">{{ __('messages.shortlink.buy', ['name' => $plan->getTranslatedName()]) }}</button>
                                     </form>
                                 @else
                                     <a href="{{ route('balance.index', ['amount' => $addFundsAmount]) }}" class="btn pricing-btn-add-funds w-100">{{ __('messages.shortlink.add_funds') }}</a>

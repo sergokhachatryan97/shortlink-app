@@ -7,8 +7,8 @@
     <div class="container links-page-container" style="max-width: 900px;">
         <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
             <div>
-                <h1 class="links-page-title mb-1">My Links</h1>
-                <p class="links-page-subtitle mb-0">All links you ever generated! Download before your subscription ends.</p>
+                <h1 class="links-page-title mb-1">{{ __('messages.nav.my_links') }}</h1>
+                <p class="links-page-subtitle mb-0">{{ __('messages.links.subtitle') }}</p>
             </div>
             <div class="d-flex align-items-center gap-2 flex-shrink-0 flex-wrap">
                 <input type="search" id="search-links" class="form-control links-search" placeholder="{{ __('messages.links.search') }}">

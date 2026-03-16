@@ -77,7 +77,7 @@ class SubscriptionController extends Controller
 
         return redirect()
             ->route('subscription.index')
-            ->with('success', 'Subscribed to ' . $plan->name . ' until ' . now()->addDays((int) $plan->duration_days)->format('M j, Y') . '.');
+            ->with('success', 'Subscribed to ' . $plan->getTranslatedName() . ' until ' . now()->addDays((int) $plan->duration_days)->format('M j, Y') . '.');
     }
 
     public function upgrade(Request $request): RedirectResponse

@@ -97,40 +97,63 @@
         </div>
 
         <div class="card mb-4">
-            <div class="card-header fw-semibold">Subscription plans</div>
+            <div class="card-header fw-semibold">Subscription plans (name & description per language)</div>
             <div class="card-body p-0">
-                <div class="table-responsive">
-                    <table class="table table-hover mb-0">
-                        <thead>
-                            <tr>
-                                <th>Plan</th>
-                                <th>Description · Links limit · Price (USD)</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach ($plans ?? [] as $plan)
-                                <tr>
-                                    <td class="align-top pt-3">
-                                        <strong>{{ $plan->name }}</strong>
-                                        @if ($plan->links_limit == 0)
-                                            <span class="badge bg-secondary ms-1">Unlimited</span>
-                                        @endif
-                                    </td>
-                                    <td class="align-top" colspan="2">
-                                        <form method="POST" action="{{ route('admin.plans.update', $plan) }}" class="d-flex flex-wrap align-items-center gap-2">
-                                            @csrf
-                                            <input type="hidden" name="tab" value="settings">
-                                            <input type="text" name="description" value="{{ old('description', $plan->description) }}" class="form-control form-control-sm" placeholder="Plan description" style="min-width: 200px;">
-                                            <input type="number" name="links_limit" value="{{ $plan->links_limit }}" min="0" step="1" class="form-control form-control-sm" style="width: 80px;" title="0 = unlimited">
-                                            <input type="number" name="price_usd" value="{{ $plan->price_usd }}" min="0" step="0.01" class="form-control form-control-sm" style="width: 90px;">
-                                            <button type="submit" class="btn btn-sm btn-primary">Save</button>
-                                        </form>
-                                    </td>
-                                </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
+                @foreach ($plans ?? [] as $plan)
+                @php
+                    $nameTrans = $plan->name_translations ?? [];
+                    $descTrans = $plan->description_translations ?? [];
+                @endphp
+                <div class="p-3 border-bottom">
+                    <form method="POST" action="{{ route('admin.plans.update', $plan) }}">
+                        @csrf
+                        <input type="hidden" name="tab" value="settings">
+                        <div class="d-flex flex-wrap align-items-start gap-3 mb-2">
+                            <strong class="text-nowrap">{{ $plan->slug }}</strong>
+                            @if ($plan->links_limit == 0)
+                                <span class="badge bg-secondary">Unlimited</span>
+                            @endif
+                        </div>
+                        <div class="row g-2 mb-2">
+                            <div class="col-12 small fw-semibold text-muted">Name</div>
+                            <div class="col-md-4">
+                                <label class="form-label small mb-0">EN</label>
+                                <input type="text" name="name_en" value="{{ old('name_en', $nameTrans['en'] ?? $plan->name) }}" class="form-control form-control-sm" placeholder="Name (English)">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label small mb-0">中文</label>
+                                <input type="text" name="name_zh" value="{{ old('name_zh', $nameTrans['zh'] ?? '') }}" class="form-control form-control-sm" placeholder="Name (Chinese)">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label small mb-0">RU</label>
+                                <input type="text" name="name_ru" value="{{ old('name_ru', $nameTrans['ru'] ?? '') }}" class="form-control form-control-sm" placeholder="Name (Russian)">
+                            </div>
+                        </div>
+                        <div class="row g-2 mb-2">
+                            <div class="col-12 small fw-semibold text-muted">Description</div>
+                            <div class="col-md-4">
+                                <label class="form-label small mb-0">EN</label>
+                                <textarea name="description_en" class="form-control form-control-sm" rows="2" placeholder="Description (English)">{{ old('description_en', $descTrans['en'] ?? $plan->description) }}</textarea>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label small mb-0">中文</label>
+                                <textarea name="description_zh" class="form-control form-control-sm" rows="2" placeholder="Description (Chinese)">{{ old('description_zh', $descTrans['zh'] ?? '') }}</textarea>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label small mb-0">RU</label>
+                                <textarea name="description_ru" class="form-control form-control-sm" rows="2" placeholder="Description (Russian)">{{ old('description_ru', $descTrans['ru'] ?? '') }}</textarea>
+                            </div>
+                        </div>
+                        <div class="d-flex flex-wrap align-items-center gap-2">
+                            <label class="small mb-0">Links limit</label>
+                            <input type="number" name="links_limit" value="{{ old('links_limit', $plan->links_limit) }}" min="0" step="1" class="form-control form-control-sm" style="width: 80px;" title="0 = unlimited">
+                            <label class="small mb-0">Price (USD)</label>
+                            <input type="number" name="price_usd" value="{{ old('price_usd', $plan->price_usd) }}" min="0" step="0.01" class="form-control form-control-sm" style="width: 90px;">
+                            <button type="submit" class="btn btn-sm btn-primary">Save plan</button>
+                        </div>
+                    </form>
                 </div>
+                @endforeach
                 @if (empty($plans) || $plans->isEmpty())
                     <p class="text-muted text-center py-3 mb-0">No subscription plans. Run SubscriptionPlanSeeder.</p>
                 @endif
@@ -266,6 +289,48 @@
         @endif
 
         @if ($activeTab === 'partner-payouts')
+        @if (count($requestedWithdrawals ?? []) > 0)
+        <div class="card mb-3 border-warning">
+            <div class="card-header fw-semibold bg-light">Withdrawal requests (mark paid or reject)</div>
+            <div class="card-body p-0">
+                <table class="table table-sm mb-0">
+                    <thead>
+                        <tr>
+                            <th>Partner</th>
+                            <th>Amount</th>
+                            <th>Wallet</th>
+                            <th>Requested</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach ($requestedWithdrawals as $w)
+                        <tr>
+                            <td>{{ $w['partner']->name ?? '—' }}<br><small class="text-muted">{{ $w['partner']->email }}</small><br><small>ID: {{ $w['partner']->id }}</small></td>
+                            <td>${{ number_format($w['total'], 2) }} USDT</td>
+                            <td><code class="small">{{ Str::limit($w['wallet'] ?? '—', 20) }}</code></td>
+                            <td><small>{{ $w['requested_at']->format('Y-m-d H:i') }}</small></td>
+                            <td class="small">
+                                <form method="POST" action="{{ route('admin.partner-payouts.mark-paid') }}" class="d-inline-flex align-items-center gap-1 flex-wrap mb-1">
+                                    @csrf
+                                    <input type="hidden" name="partner_user_id" value="{{ $w['partner']->id }}">
+                                    <input type="text" name="provider_transaction_id" class="form-control form-control-sm" style="width: 120px;" placeholder="Tx ID (optional)">
+                                    <button type="submit" class="btn btn-sm btn-success">Mark paid</button>
+                                </form>
+                                <form method="POST" action="{{ route('admin.partner-payouts.reject') }}" class="d-inline-flex align-items-center gap-1 flex-wrap" onsubmit="return confirm('Reject this withdrawal request?');">
+                                    @csrf
+                                    <input type="hidden" name="partner_user_id" value="{{ $w['partner']->id }}">
+                                    <input type="text" name="reason" class="form-control form-control-sm" style="width: 120px;" placeholder="Reason (optional)">
+                                    <button type="submit" class="btn btn-sm btn-danger">Reject</button>
+                                </form>
+                            </td>
+                        </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        @endif
         <div class="card">
             <div class="card-header fw-semibold">Partner commission payouts (USDT TRC20)</div>
             <div class="card-body p-0">
@@ -284,16 +349,16 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @forelse ($partnerPayouts as $p)
+                            @forelse ($partnerPayouts ?? [] as $p)
                                 <tr>
-                                    <td>{{ $p->id }}</td>
-                                    <td>{{ $p->sourceUser?->email ?? '#' . $p->source_user_id }}</td>
-                                    <td>{{ $p->partnerUser?->email ?? '#' . $p->partner_user_id }}</td>
+                                    <td>{{ $p?->id }}</td>
+                                    <td>{{ $p?->sourceUser?->email ?? '#' . $p?->source_user_id }}</td>
+                                    <td>{{ $p?->partnerUser?->email ?? '#' . $p?->partner_user_id }}</td>
                                     <td>${{ number_format($p->commission_amount, 2) }}</td>
-                                    <td>{{ $p->provider }}</td>
-                                    <td><small class="text-muted">{{ $p->source_provider ?? '—' }}</small></td>
-                                    <td><span class="badge {{ $p->status === 'paid' ? 'bg-success' : ($p->status === 'failed' ? 'bg-danger' : 'bg-secondary') }}">{{ $p->status }}</span></td>
-                                    <td><small>{{ $p->created_at->format('Y-m-d H:i') }}</small></td>
+                                    <td>{{ $p?->provider }}</td>
+                                    <td><small class="text-muted">{{ $p?->source_provider ?? '—' }}</small></td>
+                                    <td><span class="badge {{ $p->status === 'paid' ? 'bg-success' : ($p?->status === 'failed' ? 'bg-danger' : ($p->status === 'requested' ? 'bg-warning text-dark' : ($p->status === 'rejected' ? 'bg-danger' : 'bg-secondary'))) }}">{{ $p->status }}</span></td>
+                                    <td><small>{{ $p?->updated_at?->format('Y-m-d H:i') }}</small></td>
                                 </tr>
                             @empty
                                 <tr><td colspan="8" class="text-center text-muted py-4">No partner payouts yet</td></tr>

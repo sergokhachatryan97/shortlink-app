@@ -71,7 +71,7 @@
 
             <div class="addfunds-summary mb-4">
                 <div class="d-flex justify-content-between mb-1"><span class="cosmic-text-muted">{{ __('messages.balance.you_pay') }}</span> <span class="cosmic-text-muted"  id="summary-pay">$0.00</span></div>
-                <div class="d-flex justify-content-between mb-1"><span class="cosmic-text-muted">{{ __('messages.balance.network_fee') }}</span> <span class="cosmic-text-muted">{{ __('messages.balance.network_fee_val') }}</span></div>
+{{--                <div class="d-flex justify-content-between mb-1"><span class="cosmic-text-muted">{{ __('messages.balance.network_fee') }}</span> <span class="cosmic-text-muted">{{ __('messages.balance.network_fee_val') }}</span></div>--}}
                 <div class="d-flex justify-content-between addfunds-total"><span class="cosmic-text-muted">{{ __('messages.balance.total') }}</span> <span id="summary-total" class="cosmic-text-muted">$0.10</span></div>
             </div>
 
@@ -137,13 +137,13 @@
                                     <svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
                                     @endif
                                 </div>
-                                <h5 class="cosmic-plan-name mb-0">{{ $plan->name }}</h5>
+                                <h5 class="cosmic-plan-name mb-0">{{ $plan->getTranslatedName() }}</h5>
                             </div>
                             <p class="cosmic-plan-desc mb-2">
                                 @if ($plan->isUnlimited())
                                     <strong>Unlimited links</strong> until subscription ends
                                 @else
-                                    {{ $plan->description }}
+                                    {{ $plan->getTranslatedDescription() }}
                                 @endif
                             </p>
                             <div class="cosmic-plan-features mb-3">
@@ -160,7 +160,7 @@
                                     <form method="POST" action="{{ route('subscription.upgrade') }}">
                                         @csrf
                                         <input type="hidden" name="plan_id" value="{{ $plan->id }}">
-                                        <button type="submit" class="btn w-100 cosmic-btn-primary">Upgrade to {{ $plan->name }}</button>
+                                        <button type="submit" class="btn w-100 cosmic-btn-primary">Upgrade to {{ $plan->getTranslatedName() }}</button>
                                         @if ($upgradePriceDiff > 0)
                                         <p class="cosmic-pay-today small mt-2 mb-0 text-center">Pay ${{ number_format($upgradePriceDiff, 2) }} today</p>
                                         @endif
@@ -175,7 +175,7 @@
                                     <form method="POST" action="{{ route('subscription.purchase') }}">
                                         @csrf
                                         <input type="hidden" name="plan_id" value="{{ $plan->id }}">
-                                        <button type="submit" class="btn w-100 {{ $isRecommended ? 'cosmic-btn-primary' : 'cosmic-btn-plan' }}">Buy {{ $plan->name }}</button>
+                                        <button type="submit" class="btn w-100 {{ $isRecommended ? 'cosmic-btn-primary' : 'cosmic-btn-plan' }}">Buy {{ $plan->getTranslatedName() }}</button>
                                     </form>
                                 @else
                                     <a href="{{ route('balance.index', ['amount' => $addFundsAmount]) }}" class="btn cosmic-btn-add-funds w-100 addfunds-plan-link" data-amount="{{ $addFundsAmount }}">Add funds</a>

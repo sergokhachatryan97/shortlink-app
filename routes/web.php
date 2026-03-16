@@ -62,6 +62,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/partner/activate', [PartnerController::class, 'activate'])->name('partner.activate');
     Route::get('/partner', [PartnerController::class, 'dashboard'])->name('partner.dashboard');
     Route::post('/partner/payout-settings', [PartnerController::class, 'updatePayoutSettings'])->name('partner.payout-settings.update');
+    Route::post('/partner/withdrawal-request', [PartnerController::class, 'submitWithdrawalRequest'])->name('partner.withdrawal-request');
 });
 
 Route::prefix('admin')->name('admin.')->group(function () {
@@ -76,5 +77,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::post('/users/set-partner', [AdminController::class, 'setUserPartner'])->name('users.set-partner');
         Route::post('/users/set-payout-provider', [AdminController::class, 'setUserPayoutProvider'])->name('users.set-payout-provider');
         Route::post('/users/set-commission-percent', [AdminController::class, 'setUserCommissionPercent'])->name('users.set-commission-percent');
+        Route::post('/partner-payouts/mark-paid', [AdminController::class, 'markPartnerWithdrawalPaid'])->name('partner-payouts.mark-paid');
+        Route::post('/partner-payouts/reject', [AdminController::class, 'rejectPartnerWithdrawal'])->name('partner-payouts.reject');
     });
 });

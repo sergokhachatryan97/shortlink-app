@@ -42,7 +42,7 @@ class ShortlinkController extends Controller
             $sub = $user->activeSubscription();
             if ($sub) {
                 $plan = $sub->plan;
-                $planName = $plan->name;
+                $planName = $plan->getTranslatedName();
                 $planLimit = (int) $plan->links_limit;
                 $planUsed = ShortlinkLink::where('user_subscription_id', $sub->id)->count();
                 $planRemaining = $plan->isUnlimited() ? null : max(0, $planLimit - $planUsed);
@@ -274,7 +274,7 @@ class ShortlinkController extends Controller
         if ($sub) {
             $plan = $sub->plan;
             $currentCount = ShortlinkLink::where('user_subscription_id', $sub->id)->count();
-            $payload['plan_name'] = $plan->name;
+            $payload['plan_name'] = $plan->getTranslatedName();
             $payload['plan_limit'] = (int) $plan->links_limit;
             $payload['plan_used'] = $currentCount;
             $payload['plan_remaining'] = $plan->isUnlimited() ? null : max(0, (int) $plan->links_limit - $currentCount);

@@ -53,6 +53,22 @@ class AdminController extends Controller
             ->orderByDesc('created_at')
             ->paginate(20, ['*'], 'partner_payouts_page');
 
+        // Group requested withdrawals by partner for "Mark paid" / "Reject" actions
+        $requestedWithdrawals = PartnerCommissionPayout::where('status', PartnerCommissionPayout::STATUS_REQUESTED)
+            ->with('partnerUser')
+            ->orderByDesc('updated_at')
+            ->get()
+            ->groupBy('partner_user_id')
+            ->map(fn ($rows) => [
+                'partner' => $rows->first()->partnerUser,
+                'total' => $rows->sum(fn ($r) => (float) $r->commission_amount),
+                'count' => $rows->count(),
+                'wallet' => $rows->first()->wallet_address,
+                'requested_at' => $rows->first()->updated_at,
+                'ids' => $rows->pluck('id')->all(),
+            ])
+            ->values();
+
         return view('admin.dashboard', [
             'transactions' => $transactions,
             'totalPaid' => $totalPaid,
@@ -64,7 +80,57 @@ class AdminController extends Controller
             'users' => $users,
             'partnerPayoutSettings' => $partnerPayoutSettings,
             'partnerPayouts' => $partnerPayouts,
+            'requestedWithdrawals' => $requestedWithdrawals,
         ]);
+    }
+
+    /**
+     * Mark a partner's requested withdrawal as paid (manager completed the payout manually).
+     */
+    public function markPartnerWithdrawalPaid(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'partner_user_id' => ['required', 'integer', 'exists:users,id'],
+            'provider_transaction_id' => ['nullable', 'string', 'max:255'],
+        ]);
+
+        $updated = PartnerCommissionPayout::where('partner_user_id', $validated['partner_user_id'])
+            ->where('status', PartnerCommissionPayout::STATUS_REQUESTED)
+            ->update([
+                'status' => PartnerCommissionPayout::STATUS_PAID,
+                'provider_transaction_id' => $validated['provider_transaction_id'] ?? null,
+                'error_message' => null,
+            ]);
+
+        if ($updated === 0) {
+            return redirect()->route('admin.dashboard', ['tab' => 'partner-payouts'])->with('error', 'No requested withdrawal found for this partner.');
+        }
+
+        return redirect()->route('admin.dashboard', ['tab' => 'partner-payouts'])->with('success', "Marked {$updated} record(s) as paid.");
+    }
+
+    /**
+     * Reject a partner's withdrawal request.
+     */
+    public function rejectPartnerWithdrawal(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'partner_user_id' => ['required', 'integer', 'exists:users,id'],
+            'reason' => ['nullable', 'string', 'max:500'],
+        ]);
+
+        $updated = PartnerCommissionPayout::where('partner_user_id', $validated['partner_user_id'])
+            ->where('status', PartnerCommissionPayout::STATUS_REQUESTED)
+            ->update([
+                'status' => PartnerCommissionPayout::STATUS_PENDING,
+                'error_message' => null,
+            ]);
+
+        if ($updated === 0) {
+            return redirect()->route('admin.dashboard', ['tab' => 'partner-payouts'])->with('error', 'No requested withdrawal found for this partner.');
+        }
+
+        return redirect()->route('admin.dashboard', ['tab' => 'partner-payouts'])->with('success', "Rejected. {$updated} record(s) reverted to pending so the partner can submit a new request.");
     }
 
     public function updateSettings(Request $request)
@@ -86,19 +152,33 @@ class AdminController extends Controller
 
     public function updatePlan(Request $request, SubscriptionPlan $plan): RedirectResponse
     {
-        $validated = $request->validate([
-            'description' => ['nullable', 'string', 'max:500'],
+        $locales = SubscriptionPlan::translationLocales();
+        $rules = [
             'links_limit' => ['required', 'integer', 'min:0'],
             'price_usd' => ['required', 'numeric', 'min:0', 'max:9999.99'],
-        ]);
+        ];
+        foreach ($locales as $locale) {
+            $rules["name_{$locale}"] = ['nullable', 'string', 'max:255'];
+            $rules["description_{$locale}"] = ['nullable', 'string', 'max:1000'];
+        }
+        $validated = $request->validate($rules);
 
+        $nameTranslations = [];
+        $descriptionTranslations = [];
+        foreach ($locales as $locale) {
+            $nameTranslations[$locale] = trim($validated["name_{$locale}"] ?? '');
+            $descriptionTranslations[$locale] = trim($validated["description_{$locale}"] ?? '');
+        }
         $plan->update([
-            'description' => $validated['description'] ?? '',
+            'name_translations' => $nameTranslations,
+            'description_translations' => $descriptionTranslations,
+            'name' => $nameTranslations['en'] ?: $plan->name,
+            'description' => $descriptionTranslations['en'] ?: $plan->description,
             'links_limit' => $validated['links_limit'],
             'price_usd' => $validated['price_usd'],
         ]);
 
-        return redirect()->route('admin.dashboard', ['tab' => 'settings'])->with('success', 'Plan "' . $plan->name . '" updated.');
+        return redirect()->route('admin.dashboard', ['tab' => 'settings'])->with('success', 'Plan updated.');
     }
 
     public function setUserPartner(Request $request): RedirectResponse

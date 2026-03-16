@@ -9,8 +9,10 @@ class PartnerCommissionPayout extends Model
 {
     public const STATUS_PENDING = 'pending';
     public const STATUS_PROCESSING = 'processing';
+    public const STATUS_REQUESTED = 'requested';
     public const STATUS_PAID = 'paid';
     public const STATUS_FAILED = 'failed';
+    public const STATUS_REJECTED = 'rejected';
 
     protected $fillable = [
         'source_user_id',
@@ -68,8 +70,24 @@ class PartnerCommissionPayout extends Model
         return $this->status === self::STATUS_FAILED;
     }
 
+    public function isRequested(): bool
+    {
+        return $this->status === self::STATUS_REQUESTED;
+    }
+
+    public function isRejected(): bool
+    {
+        return $this->status === self::STATUS_REJECTED;
+    }
+
     public function isSettled(): bool
     {
-        return in_array($this->status, [self::STATUS_PAID, self::STATUS_FAILED], true);
+        return in_array($this->status, [self::STATUS_PAID, self::STATUS_FAILED, self::STATUS_REJECTED], true);
+    }
+
+    /** Whether this record counts toward available withdrawal (pending only). */
+    public function isAvailableForWithdrawal(): bool
+    {
+        return $this->status === self::STATUS_PENDING;
     }
 }

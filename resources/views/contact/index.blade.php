@@ -13,9 +13,9 @@
         <div class="cosmic-card p-4">
             <h5 class="cosmic-card-title d-flex align-items-center gap-2 mb-3">
                 <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
-                Contact Support
+                {{__('messages.contact.support')}}
             </h5>
-            <p class="cosmic-text-muted mb-2">For any questions or assistance, please contact us:</p>
+            <p class="cosmic-text-muted mb-2">{{__('messages.contact.support_desc')}}</p>
             <p class="mb-2">
                 <a href="mailto:{{ $supportEmail }}" class="cosmic-email d-inline-flex align-items-center gap-2">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>

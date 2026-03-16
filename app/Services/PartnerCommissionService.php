@@ -122,8 +122,6 @@ class PartnerCommissionService
             return null;
         }
 
-        $idsToPayout = [];
-
         $payout = DB::transaction(function () use (
             $sourceUser,
             $partner,
@@ -134,7 +132,6 @@ class PartnerCommissionService
             $sourceType,
             $sourceId,
             $sourceProvider,
-            &$idsToPayout,
         ) {
             $payout = PartnerCommissionPayout::create([
                 'source_user_id' => $sourceUser->id,
@@ -161,14 +158,17 @@ class PartnerCommissionService
                 'commission_amount' => $commissionAmount,
             ]);
 
-            $idsToPayout = $this->checkAndTriggerPayoutForBatch($payout);
+            // Automatic payout disabled: payouts are handled manually by manager.
+            // Preserved for future reuse - uncomment to re-enable auto payout when threshold is reached.
+            // $idsToPayout = $this->checkAndTriggerPayoutForBatch($payout);
 
             return $payout;
         });
 
-        if (!empty($idsToPayout)) {
-            SendPartnerPayoutJob::dispatch($idsToPayout);
-        }
+        // Automatic payout disabled: do not dispatch SendPartnerPayoutJob.
+        // if (!empty($idsToPayout)) {
+        //     SendPartnerPayoutJob::dispatch($idsToPayout);
+        // }
 
         return $payout;
     }
@@ -219,6 +219,27 @@ class PartnerCommissionService
         ]);
 
         return $ids;
+    }
+
+    /**
+     * Sum of commission_amount for the partner that is still available for withdrawal (status = pending).
+     * Used for partner dashboard and manual withdrawal eligibility.
+     */
+    public function getAvailableWithdrawAmount(User $partner): float
+    {
+        $sum = PartnerCommissionPayout::where('partner_user_id', $partner->id)
+            ->whereIn('status', [PartnerCommissionPayout::STATUS_PENDING, PartnerCommissionPayout::STATUS_REJECTED])
+            ->sum('commission_amount');
+
+        return round((float) $sum, 2);
+    }
+
+    /**
+     * Minimum amount (USD) required to request a withdrawal. From admin settings or config default.
+     */
+    public function getMinWithdrawAmount(): float
+    {
+        return (float) (ShortlinkSetting::get('partner_min_payout_amount') ?? config('partner.default_min_payout_amount', 100));
     }
 
     /**
