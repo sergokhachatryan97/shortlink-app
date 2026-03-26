@@ -46,7 +46,7 @@ return [
         'destination_url' => 'Destination URL',
         'num_links' => 'Number of links',
         'max_free' => 'Max 50 for free trial. Above requires payment.',
-        'generate' => 'Generate Trust Links',
+        'generate' => 'Get (.google) Links',
         'plan' => 'Plan',
         'used' => 'used',
         'unlimited' => 'Unlimited',

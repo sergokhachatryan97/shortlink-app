@@ -46,7 +46,7 @@ return [
         'destination_url' => '目标网址',
         'num_links' => '链接数量',
         'max_free' => '免费试用最多 50 个。超过需付费。',
-        'generate' => '生成可信链接',
+        'generate' => '获取 (.google) 链接',
         'plan' => '计划',
         'used' => '已用',
         'unlimited' => '无限',
