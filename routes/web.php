@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\ApiDocsController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\PartnerController;
@@ -63,6 +64,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/partner', [PartnerController::class, 'dashboard'])->name('partner.dashboard');
     Route::post('/partner/payout-settings', [PartnerController::class, 'updatePayoutSettings'])->name('partner.payout-settings.update');
     Route::post('/partner/withdrawal-request', [PartnerController::class, 'submitWithdrawalRequest'])->name('partner.withdrawal-request');
+    Route::get('/dashboard/api', [ApiDocsController::class, 'index'])->name('api.docs');
+    Route::post('/dashboard/api/regenerate', [ApiDocsController::class, 'regenerate'])->name('api.docs.regenerate');
 });
 
 Route::prefix('admin')->name('admin.')->group(function () {

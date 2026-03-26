@@ -15,6 +15,8 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'admin' => \App\Http\Middleware\AdminAuth::class,
             'locale' => \App\Http\Middleware\SetLocale::class,
+            'auth.external_panel' => \App\Http\Middleware\ExternalPanelAuth::class,
+            'rate.external_panel' => \App\Http\Middleware\ExternalPanelRateLimit::class,
         ]);
         $middleware->appendToGroup('web', \App\Http\Middleware\SetLocale::class);
     })

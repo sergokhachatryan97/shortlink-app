@@ -6,6 +6,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
@@ -111,5 +112,10 @@ class User extends Authenticatable
             ->where('provider', $provider)
             ->where('is_active', true)
             ->first();
+    }
+
+    public function externalClient(): HasOne
+    {
+        return $this->hasOne(ExternalClient::class);
     }
 }
