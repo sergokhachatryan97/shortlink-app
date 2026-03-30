@@ -64,7 +64,7 @@
                         <span class="nav-wallet-icon">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
                         </span>
-                        <span class="nav-wallet-text">{{ __('messages.nav.wallet') }} <span class="balance-amount" id="balance-amount">${{ number_format(auth()->user()->balance ?? 0, 2) }}</span></span>
+                        <span class="nav-wallet-text">{{ __('messages.nav.wallet') }} <span class="balance-amount" id="balance-amount">${{ \App\Support\MoneyDisplay::plainDecimal(auth()->user()->balance ?? 0) }}</span></span>
                     </a>
                     <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0" style="border-radius: 10px;">
                         <li><a class="dropdown-item" href="{{ route('balance.index') }}">Add funds</a></li>

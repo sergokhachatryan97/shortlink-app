@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\ExternalClient;
 use App\Models\ShortlinkLink;
 use App\Models\ShortlinkTransaction;
 use App\Models\User;
+use App\Services\BalanceService;
 use App\Services\PartnerCommissionService;
 use App\Services\ShortenService;
 use Illuminate\Http\JsonResponse;
@@ -31,12 +33,14 @@ class CoinRushWebhookController extends Controller
 
         if (! $transactionId) {
             Log::warning('CoinRush webhook: missing transaction_id');
+
             return response()->json(['error' => 'Missing transaction_id'], 400);
         }
 
         if (in_array($status, ['expired', 'failed', 'cancelled', 'canceled'])) {
             ShortlinkTransaction::where('order_id', $transactionId)->update(['status' => 'failed']);
             Log::info('CoinRush webhook: order failed', ['order_id' => $transactionId, 'status' => $status]);
+
             return response()->json(['ok' => true]);
         }
 
@@ -47,15 +51,17 @@ class CoinRushWebhookController extends Controller
         $tx = ShortlinkTransaction::where('order_id', $transactionId)->lockForUpdate()->first();
         if (! $tx) {
             Log::warning('CoinRush webhook: transaction not found', ['order_id' => $transactionId]);
+
             return response()->json(['ok' => true]);
         }
 
         if ($tx->status === 'paid') {
             Log::info('CoinRush webhook: duplicate webhook ignored', ['order_id' => $transactionId]);
+
             return response()->json(['ok' => true]);
         }
 
-        $providerRef = 'tron:' . ($body['tx_hash'] ?? $body['provider_ref'] ?? 'webhook');
+        $providerRef = 'tron:'.($body['tx_hash'] ?? $body['provider_ref'] ?? 'webhook');
         $isBalanceTopup = $tx->isBalanceTopup();
         $isShortlinkPayment = $tx->isShortlinkPayment();
 
@@ -67,7 +73,8 @@ class CoinRushWebhookController extends Controller
 
             if ($isBalanceTopup) {
                 $userId = (int) substr($tx->identifier, 5);
-                User::where('id', $userId)->increment('balance', (float) $tx->amount);
+                app(BalanceService::class)->incrementBalance(User::class, $userId, $tx->amount);
+                ExternalClient::syncBalanceFromUserWallet($userId);
                 $this->recordPartnerCommission($userId, (float) $tx->amount, 'coinrush_topup', $tx->order_id);
                 Log::info('CoinRush webhook: balance credited', ['order_id' => $tx->order_id, 'user_id' => $userId]);
             } elseif ($isShortlinkPayment) {
@@ -94,7 +101,7 @@ class CoinRushWebhookController extends Controller
             return;
         }
         $sub = $user->activeSubscription();
-        $batchId = 'batch-' . uniqid();
+        $batchId = 'batch-'.uniqid();
         $expiresAt = $sub ? null : now()->addDays(30);
         foreach ($links as $i => $shortUrl) {
             ShortlinkLink::create([
@@ -112,7 +119,7 @@ class CoinRushWebhookController extends Controller
     private function recordPartnerCommission(int $userId, float $amount, string $sourceType, string $sourceId): void
     {
         $user = User::find($userId);
-        if (!$user) {
+        if (! $user) {
             return;
         }
         app(PartnerCommissionService::class)->recordCommission($user, $amount, $sourceType, $sourceId, 'coinrush');

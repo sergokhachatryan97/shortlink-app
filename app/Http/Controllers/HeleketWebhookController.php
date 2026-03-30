@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\ExternalClient;
 use App\Models\ShortlinkLink;
 use App\Models\ShortlinkTransaction;
 use App\Models\User;
+use App\Services\BalanceService;
 use App\Services\PartnerCommissionService;
 use App\Services\ShortenService;
 use Illuminate\Http\JsonResponse;
@@ -28,6 +30,7 @@ class HeleketWebhookController extends Controller
 
         if (! is_array($body)) {
             Log::warning('Heleket webhook: invalid JSON body');
+
             return response()->json(['error' => 'Invalid body'], 400);
         }
 
@@ -36,17 +39,20 @@ class HeleketWebhookController extends Controller
 
         if (! $orderId) {
             Log::warning('Heleket webhook: missing order_id');
+
             return response()->json(['error' => 'Missing order_id'], 400);
         }
 
         if (! $this->verifySignature($body, $rawBody)) {
             Log::warning('Heleket webhook: invalid signature', ['order_id' => $orderId]);
+
             return response()->json(['error' => 'Invalid signature'], 401);
         }
 
         if (in_array($status, ['fail', 'cancel', 'expired', 'wrong_amount', 'system_fail'])) {
             ShortlinkTransaction::where('order_id', $orderId)->update(['status' => 'failed']);
             Log::info('Heleket webhook: order failed', ['order_id' => $orderId, 'status' => $status]);
+
             return response()->json(['ok' => true]);
         }
 
@@ -57,11 +63,13 @@ class HeleketWebhookController extends Controller
         $tx = ShortlinkTransaction::where('order_id', $orderId)->lockForUpdate()->first();
         if (! $tx) {
             Log::warning('Heleket webhook: transaction not found', ['order_id' => $orderId]);
+
             return response()->json(['ok' => true]);
         }
 
         if ($tx->status === 'paid') {
             Log::info('Heleket webhook: duplicate webhook ignored', ['order_id' => $orderId]);
+
             return response()->json(['ok' => true]);
         }
 
@@ -77,7 +85,8 @@ class HeleketWebhookController extends Controller
 
             if ($isBalanceTopup) {
                 $userId = (int) substr($tx->identifier, 5);
-                User::where('id', $userId)->increment('balance', (float) $tx->amount);
+                app(BalanceService::class)->incrementBalance(User::class, $userId, $tx->amount);
+                ExternalClient::syncBalanceFromUserWallet($userId);
                 $this->recordPartnerCommission($userId, (float) $tx->amount, 'heleket_topup', $tx->order_id);
                 Log::info('Heleket webhook: balance credited', ['order_id' => $tx->order_id, 'user_id' => $userId]);
             } elseif ($isShortlinkPayment) {
@@ -103,13 +112,14 @@ class HeleketWebhookController extends Controller
         $paymentKey = config('services.heleket.payment_key');
         if (! $paymentKey) {
             Log::warning('Heleket webhook: payment_key not configured');
+
             return false;
         }
 
         $data = $body;
         unset($data['sign']);
         $json = json_encode($data, JSON_UNESCAPED_UNICODE);
-        $hash = md5(base64_encode($json) . $paymentKey);
+        $hash = md5(base64_encode($json).$paymentKey);
 
         return hash_equals($hash, $sign);
     }
@@ -125,7 +135,7 @@ class HeleketWebhookController extends Controller
             return;
         }
         $sub = $user->activeSubscription();
-        $batchId = 'batch-' . uniqid();
+        $batchId = 'batch-'.uniqid();
         $expiresAt = $sub ? null : now()->addDays(30);
         foreach ($links as $i => $shortUrl) {
             ShortlinkLink::create([
@@ -143,7 +153,7 @@ class HeleketWebhookController extends Controller
     private function recordPartnerCommission(int $userId, float $amount, string $sourceType, string $sourceId): void
     {
         $user = User::find($userId);
-        if (!$user) {
+        if (! $user) {
             return;
         }
         app(PartnerCommissionService::class)->recordCommission($user, $amount, $sourceType, $sourceId, 'heleket');

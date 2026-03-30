@@ -671,6 +671,13 @@
             document.getElementById('links-next')?.addEventListener('click', () => renderLinksPage(currentPage + 1));
         }
 
+        function formatPlainMoneyDecimal(v) {
+            const f = parseFloat(v);
+            if (!Number.isFinite(f)) return '0';
+            const s = f.toFixed(10).replace(/\.?0+$/, '');
+            return s === '' || s === '-' ? '0' : s;
+        }
+
         document.getElementById('shortlink-form').addEventListener('submit', async (e) => {
             e.preventDefault();
             const btn = document.getElementById('generate-btn');
@@ -699,7 +706,7 @@
                 if (data.success) {
                     if (data.balance !== undefined) {
                         const balEl = document.getElementById('balance-amount');
-                        if (balEl) balEl.textContent = '$' + parseFloat(data.balance).toFixed(2);
+                        if (balEl) balEl.textContent = '$' + formatPlainMoneyDecimal(data.balance);
                     }
                     if (data.plan_name !== undefined || data.remaining !== undefined) {
                         updatePlanStatus(data);

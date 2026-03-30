@@ -44,7 +44,7 @@
                     </div>
                     <div>
                         <span class="cosmic-text-muted">Your balance:</span>
-                        <strong class="cosmic-balance-amount ms-1">${{ number_format($balance ?? 0, 2) }} USD</strong>
+                        <strong class="cosmic-balance-amount ms-1">${{ \App\Support\MoneyDisplay::plainDecimal($balance ?? 0) }} USD</strong>
                     </div>
                 </div>
                 <a href="{{ route('balance.index') }}" class="btn cosmic-btn-primary">{{ __('messages.subscription.view_transactions') }}</a>

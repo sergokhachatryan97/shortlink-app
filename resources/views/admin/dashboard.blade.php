@@ -217,7 +217,7 @@
                                         —
                                         @endif
                                     </td>
-                                    <td>${{ number_format($user->balance ?? 0, 2) }}</td>
+                                    <td>${{ \App\Support\MoneyDisplay::plainDecimal($user->balance ?? 0) }}</td>
                                     <td>
                                         <form method="POST" action="{{ route('admin.users.add-balance') }}" class="d-inline-flex align-items-center gap-2">
                                             @csrf

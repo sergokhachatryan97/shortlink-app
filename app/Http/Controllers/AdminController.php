@@ -2,12 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\ExternalClient;
 use App\Models\PartnerCommissionPayout;
 use App\Models\PartnerPayoutSetting;
 use App\Models\ShortlinkSetting;
 use App\Models\ShortlinkTransaction;
 use App\Models\SubscriptionPlan;
 use App\Models\User;
+use App\Services\BalanceService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 
@@ -18,13 +20,14 @@ class AdminController extends Controller
         if (session('admin_logged_in')) {
             return redirect()->route('admin.dashboard');
         }
+
         return view('admin.login');
     }
 
     public function login(Request $request)
     {
         $password = config('services.admin.password', env('ADMIN_PASSWORD'));
-        if (!$password) {
+        if (! $password) {
             return back()->with('error', 'Admin password not configured. Set ADMIN_PASSWORD in .env');
         }
 
@@ -33,12 +36,14 @@ class AdminController extends Controller
         }
 
         session(['admin_logged_in' => true]);
+
         return redirect()->route('admin.dashboard');
     }
 
     public function logout(Request $request)
     {
         $request->session()->forget('admin_logged_in');
+
         return redirect()->route('admin.login');
     }
 
@@ -189,11 +194,11 @@ class AdminController extends Controller
         ]);
 
         $user = User::findOrFail($validated['user_id']);
-        $partnerId = !empty($validated['partner_id']) && (int) $validated['partner_id'] > 0
+        $partnerId = ! empty($validated['partner_id']) && (int) $validated['partner_id'] > 0
             ? (int) $validated['partner_id']
             : null;
 
-        if ($partnerId && !User::where('id', $partnerId)->exists()) {
+        if ($partnerId && ! User::where('id', $partnerId)->exists()) {
             return redirect()->route('admin.dashboard', ['tab' => 'users'])->with('error', 'Partner user not found.');
         }
 
@@ -214,11 +219,12 @@ class AdminController extends Controller
         ]);
 
         $user = User::findOrFail($validated['user_id']);
-        $provider = !empty($validated['payout_provider']) ? $validated['payout_provider'] : null;
+        $provider = ! empty($validated['payout_provider']) ? $validated['payout_provider'] : null;
 
         $user->update(['payout_provider' => $provider]);
 
         $msg = $provider ? "Payout provider set to {$provider}." : 'Payout provider cleared (will use global default).';
+
         return redirect()->route('admin.dashboard', ['tab' => 'users'])->with('success', $msg);
     }
 
@@ -237,6 +243,7 @@ class AdminController extends Controller
         $user->update(['commission_percent' => $percent]);
 
         $msg = $percent !== null ? "Commission set to {$percent}%." : 'Commission cleared (will use global default).';
+
         return redirect()->route('admin.dashboard', ['tab' => 'users'])->with('success', $msg);
     }
 
@@ -251,14 +258,16 @@ class AdminController extends Controller
             ->orWhere('id', (int) $validated['user'])
             ->first();
 
-        if (!$user) {
+        if (! $user) {
             return back()->with('error', 'User not found.');
         }
 
         $amount = (float) $validated['amount'];
-        $user->increment('balance', $amount);
+        app(BalanceService::class)->incrementBalance(User::class, (int) $user->id, $amount);
+        ExternalClient::syncBalanceFromUserWallet((int) $user->id);
 
         $tab = $request->input('tab', 'users');
-        return redirect()->route('admin.dashboard', ['tab' => $tab])->with('success', 'Added $' . number_format($amount, 2) . ' to ' . ($user->email ?? 'user#' . $user->id) . '. New balance: $' . number_format($user->fresh()->balance, 2));
+
+        return redirect()->route('admin.dashboard', ['tab' => $tab])->with('success', 'Added $'.number_format($amount, 2).' to '.($user->email ?? 'user#'.$user->id).'. New balance: $'.number_format($user->fresh()->balance, 2));
     }
 }

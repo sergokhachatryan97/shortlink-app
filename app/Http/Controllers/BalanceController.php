@@ -2,10 +2,16 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\ExternalClient;
 use App\Models\ShortlinkTransaction;
+use App\Models\SubscriptionPlan;
+use App\Models\User;
+use App\Services\BalanceService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Http;
 
 class BalanceController extends Controller
 {
@@ -17,11 +23,11 @@ class BalanceController extends Controller
         if ($prefillAmount !== null) {
             $prefillAmount = max(0.10, min(10000, (float) $prefillAmount));
         }
-        $plans = \App\Models\SubscriptionPlan::where('is_active', true)->orderBy('sort_order')->get();
+        $plans = SubscriptionPlan::where('is_active', true)->orderBy('sort_order')->get();
 
         return view('balance.index', [
             'balance' => $user->balance,
-            'transactions' => ShortlinkTransaction::where('identifier', 'user:' . $user->id)
+            'transactions' => ShortlinkTransaction::where('identifier', 'user:'.$user->id)
                 ->orderByDesc('created_at')
                 ->limit(20)
                 ->get(),
@@ -44,26 +50,26 @@ class BalanceController extends Controller
 
         $merchant = config('services.heleket.merchant');
         $paymentKey = config('services.heleket.payment_key');
-        if (!$merchant || !$paymentKey) {
+        if (! $merchant || ! $paymentKey) {
             return redirect()->route('balance.index')->with('error', 'Heleket is not configured.');
         }
 
         $user = Auth::user();
-        $orderId = 'bal-' . uniqid();
+        $orderId = 'bal-'.uniqid();
 
         ShortlinkTransaction::create([
             'order_id' => $orderId,
             'amount' => $amount,
             'currency' => 'USD',
             'status' => 'pending',
-            'identifier' => 'user:' . $user->id,
+            'identifier' => 'user:'.$user->id,
             'count' => 0,
             'url' => null,
             'provider_ref' => 'heleket_topup',
         ]);
 
         $baseUrl = config('services.heleket.base', 'https://api.heleket.com');
-        $urlSuccess = route('balance.heleket.success') . '?order_id=' . $orderId;
+        $urlSuccess = route('balance.heleket.success').'?order_id='.$orderId;
         $urlReturn = route('balance.index');
         $webhookUrl = url('/api/webhooks/payments/heleket');
 
@@ -79,14 +85,14 @@ class BalanceController extends Controller
 
         $jsonBody = json_encode($payload);
         $encoded = base64_encode($jsonBody);
-        $sign = md5($encoded . $paymentKey);
+        $sign = md5($encoded.$paymentKey);
 
-        $response = \Illuminate\Support\Facades\Http::withHeaders([
+        $response = Http::withHeaders([
             'merchant' => $merchant,
             'sign' => $sign,
             'Content-Type' => 'application/json',
             'Accept' => 'application/json',
-        ])->withBody($jsonBody, 'application/json')->post(rtrim($baseUrl, '/') . '/v1/payment', $payload);
+        ])->withBody($jsonBody, 'application/json')->post(rtrim($baseUrl, '/').'/v1/payment', $payload);
 
         $data = $response->json();
         if (($data['state'] ?? -1) !== 0) {
@@ -94,7 +100,7 @@ class BalanceController extends Controller
         }
 
         $payUrl = $data['result']['url'] ?? null;
-        if (!$payUrl) {
+        if (! $payUrl) {
             return redirect()->route('balance.index')->with('error', 'Invalid payment response');
         }
 
@@ -126,7 +132,7 @@ class BalanceController extends Controller
         }
 
         $tx = ShortlinkTransaction::where('order_id', $orderId)
-            ->where('identifier', 'user:' . $user->id)
+            ->where('identifier', 'user:'.$user->id)
             ->first();
 
         if (! $tx) {
@@ -143,10 +149,10 @@ class BalanceController extends Controller
         }
 
         return redirect()->route('balance.index')
-            ->with('success', 'Balance topped up: $' . number_format($tx->amount, 2));
+            ->with('success', 'Balance topped up: $'.number_format($tx->amount, 2));
     }
 
-    public function prepareTopup(Request $request): \Illuminate\Http\JsonResponse
+    public function prepareTopup(Request $request): JsonResponse
     {
         $data = $request->validate(['amount' => 'required|numeric|min:0.1|max:10000']);
         $amount = (float) $data['amount'];
@@ -157,7 +163,7 @@ class BalanceController extends Controller
             return response()->json(['error' => 'Maximum top-up is $10,000'], 400);
         }
 
-        $orderId = 'bal-' . uniqid();
+        $orderId = 'bal-'.uniqid();
         $user = Auth::user();
 
         ShortlinkTransaction::create([
@@ -165,7 +171,7 @@ class BalanceController extends Controller
             'amount' => $amount,
             'currency' => 'USD',
             'status' => 'pending',
-            'identifier' => 'user:' . $user->id,
+            'identifier' => 'user:'.$user->id,
             'count' => 0,
             'url' => null,
             'provider_ref' => 'tron_topup',
@@ -191,9 +197,10 @@ class BalanceController extends Controller
             return redirect()->route('auth.login')->with('error', 'You must be logged in.');
         }
 
-        $user->increment('balance', $amount);
+        app(BalanceService::class)->incrementBalance(User::class, (int) $user->id, $amount);
+        ExternalClient::syncBalanceFromUserWallet((int) $user->id);
 
         return redirect()->route('balance.index')
-            ->with('success', 'Balance added (test): $' . number_format($amount, 2));
+            ->with('success', 'Balance added (test): $'.number_format($amount, 2));
     }
 }

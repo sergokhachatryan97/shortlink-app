@@ -30,7 +30,7 @@ class ExternalClient extends Model
 
     protected $casts = [
         'is_active' => 'boolean',
-        'balance' => 'decimal:2',
+        'balance' => 'decimal:6',
         'allowed_ips' => 'array',
     ];
 
@@ -42,5 +42,19 @@ class ExternalClient extends Model
     public function orders(): HasMany
     {
         return $this->hasMany(Order::class, 'external_client_id');
+    }
+
+    /**
+     * Set linked external_clients.balance to the user's current wallet (Panel API uses both).
+     * Call after crediting the user so top-ups are visible on /api/v2 balance.
+     */
+    public static function syncBalanceFromUserWallet(int $userId): void
+    {
+        $balance = User::query()->whereKey($userId)->value('balance');
+        if ($balance === null) {
+            return;
+        }
+
+        self::query()->where('user_id', $userId)->update(['balance' => $balance]);
     }
 }

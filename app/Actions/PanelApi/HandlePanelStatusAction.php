@@ -5,6 +5,7 @@ namespace App\Actions\PanelApi;
 use App\Models\ExternalClient;
 use App\Models\Order;
 use App\Services\PanelApi\PanelStatusMapper;
+use App\Support\MoneyDisplay;
 
 class HandlePanelStatusAction
 {
@@ -23,12 +24,12 @@ class HandlePanelStatusAction
             ->where('id', $orderId)
             ->first();
 
-        if (!$order) {
+        if (! $order) {
             return ['error' => 'Order not found'];
         }
 
         $response = [
-            'charge' => number_format((float) $order->charge, 2, '.', ''),
+            'charge' => MoneyDisplay::plainDecimal((float) $order->charge),
             'start_count' => $order->start_count ?? 0,
             'status' => $this->statusMapper->map($order->status),
             'remains' => $order->remains ?? max(0, $order->quantity),
