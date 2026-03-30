@@ -110,7 +110,7 @@ class HandlePanelAddAction
 
         $insufficientPayload = null;
 
-        $order = DB::transaction(function () use ($client, $service, $quantity, $link, $charge, $panelQuota, &$insufficientPayload, $freeTrialForIncomplete) {
+        $order = DB::transaction(function () use ($client, $service, $quantity, $link, $charge, $panelQuota, &$insufficientPayload, $freeTrialForIncomplete, $clientIp) {
             $lockedClient = ExternalClient::query()->lockForUpdate()->find($client->id);
             if (!$lockedClient) {
                 return null;
