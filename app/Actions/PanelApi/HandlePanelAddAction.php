@@ -9,13 +9,15 @@ use App\Models\Order;
 use App\Models\User;
 use App\Services\PanelApi\PanelStatusMapper;
 use App\Services\ShortenService;
+use App\Services\ShortlinkEntitlementService;
 use Illuminate\Support\Facades\DB;
 
 class HandlePanelAddAction
 {
     public function __construct(
         protected ShortenService $shortenService,
-        protected PanelStatusMapper $statusMapper
+        protected PanelStatusMapper $statusMapper,
+        protected ShortlinkEntitlementService $entitlement
     ) {}
 
     public function execute(ExternalClient $client, array $payload): array
@@ -53,11 +55,62 @@ class HandlePanelAddAction
             return ['error' => 'Invalid link'];
         }
 
-        $charge = (float) $quantity  * (float) $service->rate;
+        $requestedQuantity = $quantity;
+        $panelQuota = [
+            'effective_quantity' => $requestedQuantity,
+            'free_quantity' => 0,
+            'paid_quantity' => $requestedQuantity,
+            'user_subscription_id' => null,
+        ];
+
+        $clientIp = (string) (request()->ip() ?? '0.0.0.0');
+
+        /** @var User|null $linkedUser */
+        $linkedUser = null;
+        if ($client->user_id) {
+            $linkedUser = User::query()->find($client->user_id);
+            if ($linkedUser) {
+                $panelQuota = $this->entitlement->computePanelOrderQuota(
+                    $linkedUser,
+                    $requestedQuantity,
+                    $clientIp
+                );
+                $quantity = $panelQuota['effective_quantity'];
+            }
+        }
+
+        $freeTrialRemainingBeforeOrder = null;
+        if ($linkedUser && $panelQuota['user_subscription_id'] === null) {
+            $freeTrialRemainingBeforeOrder = $this->entitlement->getRemainingFreeTrial(
+                $this->entitlement->identifierForUser($linkedUser),
+                $clientIp
+            );
+        }
+
+        if ($quantity < (int) $service->min_quantity) {
+            $err = [
+                'error' => sprintf(
+                    'Your subscription or free allowance only allows %d more link(s) for this order; this service requires at least %d.',
+                    $quantity,
+                    $service->min_quantity
+                ),
+            ];
+            $snap = $this->freeTrialSnapshot($panelQuota, $freeTrialRemainingBeforeOrder, null, $requestedQuantity);
+            if ($snap !== null) {
+                $err['free_trial'] = $snap;
+            }
+
+            return $err;
+        }
+
+        $unitRate = (float) $service->rate;
+        $charge = (float) $panelQuota['paid_quantity'] * $unitRate;
+
+        $freeTrialForIncomplete = $this->freeTrialSnapshot($panelQuota, $freeTrialRemainingBeforeOrder, null, $requestedQuantity);
 
         $insufficientPayload = null;
 
-        $order = DB::transaction(function () use ($client, $service, $quantity, $link, $charge, &$insufficientPayload) {
+        $order = DB::transaction(function () use ($client, $service, $quantity, $link, $charge, $panelQuota, &$insufficientPayload, $freeTrialForIncomplete) {
             $lockedClient = ExternalClient::query()->lockForUpdate()->find($client->id);
             if (!$lockedClient) {
                 return null;
@@ -75,7 +128,7 @@ class HandlePanelAddAction
                 $effectiveBalance = min($clientBalance, (float) $lockedUser->balance);
             }
 
-            if ($effectiveBalance < $charge) {
+            if ($charge > 0 && $effectiveBalance < $charge) {
                 $current = $effectiveBalance;
                 $missing = max(0, round($charge - $current, 2));
                 $insufficientPayload = [
@@ -86,12 +139,17 @@ class HandlePanelAddAction
                     'currency' => $lockedClient->currency,
                     'action' => 'add_balance',
                 ];
+                if ($freeTrialForIncomplete !== null) {
+                    $insufficientPayload['free_trial'] = $freeTrialForIncomplete;
+                }
                 return false;
             }
 
-            $lockedClient->decrement('balance', $charge);
-            if ($lockedUser) {
-                $lockedUser->decrement('balance', $charge);
+            if ($charge > 0) {
+                $lockedClient->decrement('balance', $charge);
+                if ($lockedUser) {
+                    $lockedUser->decrement('balance', $charge);
+                }
             }
 
             return Order::query()->create([
@@ -103,6 +161,12 @@ class HandlePanelAddAction
                 'charge' => $charge,
                 'currency' => $lockedClient->currency,
                 'status' => Order::STATUS_VALIDATING,
+                'metadata' => [
+                    'panel_free_quantity' => (int) $panelQuota['free_quantity'],
+                    'panel_paid_quantity' => (int) $panelQuota['paid_quantity'],
+                    'panel_user_subscription_id' => $panelQuota['user_subscription_id'],
+                    'panel_client_ip' => $clientIp,
+                ],
             ]);
         });
 
@@ -128,7 +192,21 @@ class HandlePanelAddAction
                     ]),
                 ]);
 
-                return [
+                $order->refresh();
+                $panelUser = null;
+                $panelUserId = $order->externalClient?->user_id;
+                if ($panelUserId) {
+                    $panelUser = User::query()->find($panelUserId);
+                    if ($panelUser) {
+                        $this->entitlement->persistPanelOrderSideEffects(
+                            $order,
+                            $panelUser,
+                            (string) request()->ip()
+                        );
+                    }
+                }
+
+                $success = [
                     'order' => $order->id,
                     'status' => $this->statusMapper->map($order->status),
                     'original_link' => $order->link,
@@ -137,6 +215,18 @@ class HandlePanelAddAction
                     'currency' => $order->currency,
                     'generated_links' => $generatedLinks,
                 ];
+                if ($freeTrialRemainingBeforeOrder !== null && $panelUser) {
+                    $remainingAfter = $this->entitlement->getRemainingFreeTrial(
+                        $this->entitlement->identifierForUser($panelUser),
+                        $clientIp
+                    );
+                    $snapshot = $this->freeTrialSnapshot($panelQuota, $freeTrialRemainingBeforeOrder, $remainingAfter, $requestedQuantity);
+                    if ($snapshot !== null) {
+                        $success['free_trial'] = $snapshot;
+                    }
+                }
+
+                return $success;
             } catch (\Throwable) {
                 // Fallback to async flow when immediate generation is unavailable.
                 ProcessExternalOrderJob::dispatch($order->id);
@@ -145,7 +235,7 @@ class HandlePanelAddAction
             ProcessExternalOrderJob::dispatch($order->id);
         }
 
-        return [
+        $pending = [
             'order' => $order->id,
             'status' => $this->statusMapper->map($order->status),
             'original_link' => $order->link,
@@ -153,5 +243,41 @@ class HandlePanelAddAction
             'charge' => number_format((float) $order->charge, 2, '.', ''),
             'currency' => $order->currency,
         ];
+        if ($freeTrialForIncomplete !== null) {
+            $pending['free_trial'] = $freeTrialForIncomplete;
+        }
+
+        return $pending;
+    }
+
+    /**
+     * Free-trial breakdown for linked accounts without an active subscription.
+     *
+     * @return array<string, mixed>|null
+     */
+    private function freeTrialSnapshot(array $panelQuota, ?int $remainingBefore, ?int $remainingAfter, int $requestedQuantity): ?array
+    {
+        if ($panelQuota['user_subscription_id'] !== null || $remainingBefore === null) {
+            return null;
+        }
+
+        $effective = (int) ($panelQuota['effective_quantity'] ?? $requestedQuantity);
+
+        $out = [
+            'limit' => ShortlinkEntitlementService::FREE_TRIAL_LIMIT,
+            'requested_quantity' => $requestedQuantity,
+            'effective_quantity' => $effective,
+            'remaining_before_order' => $remainingBefore,
+            'quantity_beyond_free_trial_remaining' => max(0, $requestedQuantity - $remainingBefore),
+            'requested_minus_effective' => max(0, $requestedQuantity - $effective),
+            'applied_this_order' => (int) $panelQuota['free_quantity'],
+            'paid_quantity_this_order' => (int) $panelQuota['paid_quantity'],
+        ];
+
+        if ($remainingAfter !== null) {
+            $out['remaining_after_order'] = $remainingAfter;
+        }
+
+        return $out;
     }
 }

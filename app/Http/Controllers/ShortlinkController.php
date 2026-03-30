@@ -8,23 +8,25 @@ use App\Models\ShortlinkTransaction;
 use App\Models\SubscriptionPlan;
 use App\Models\UserSubscription;
 use App\Services\ShortenService;
+use App\Services\ShortlinkEntitlementService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ShortlinkController extends Controller
 {
-    public const FREE_TRIAL_LIMIT = 50;
+    public const FREE_TRIAL_LIMIT = ShortlinkEntitlementService::FREE_TRIAL_LIMIT;
 
     public function __construct(
-        private ShortenService $shortenService
+        private ShortenService $shortenService,
+        private ShortlinkEntitlementService $entitlement
     ) {}
 
     public function index(Request $request)
     {
         $identifier = $this->getIdentifier($request);
         $ip = $request->ip();
-        $remaining = $this->getRemainingFreeTrial($identifier, $ip);
+        $remaining = $this->entitlement->getRemainingFreeTrial($identifier, $ip);
 
         $links = [];
         if (session('download_ready')) {
@@ -85,45 +87,6 @@ class ShortlinkController extends Controller
         return 'ip:' . $request->ip();
     }
 
-    /** Get total links already used for free trial. */
-    private function getFreeTrialUsedCount(string $identifier, string $ip): int
-    {
-        $query = DB::table('shortlink_free_trial_uses');
-
-        if (str_starts_with($identifier, 'user:')) {
-            $query->where('identifier', $identifier);
-        } else {
-            $query->where(function ($q) use ($identifier, $ip) {
-                $q->where('identifier', $identifier)->orWhere('ip_address', $ip);
-            });
-        }
-
-        return (int) $query->sum('links_count');
-    }
-
-    /** Remaining free links (0–50) before payment is required. */
-    private function getRemainingFreeTrial(string $identifier, string $ip): int
-    {
-        $used = $this->getFreeTrialUsedCount($identifier, $ip);
-        return max(0, self::FREE_TRIAL_LIMIT - $used);
-    }
-
-    private function hasUsedFreeTrial(string $identifier, string $ip): bool
-    {
-        return $this->getFreeTrialUsedCount($identifier, $ip) >= self::FREE_TRIAL_LIMIT;
-    }
-
-    private function recordFreeTrialUse(string $identifier, string $ip, int $count): void
-    {
-        DB::table('shortlink_free_trial_uses')->insert([
-            'identifier' => $identifier,
-            'ip_address' => $ip,
-            'links_count' => $count,
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
-    }
-
     public function generate(Request $request): \Illuminate\Http\JsonResponse|StreamedResponse
     {
         $validated = $request->validate([
@@ -137,7 +100,7 @@ class ShortlinkController extends Controller
         $identifier = $this->getIdentifier($request);
         $ip = $request->ip();
 
-        $remaining = $this->getRemainingFreeTrial($identifier, $ip);
+        $remaining = $this->entitlement->getRemainingFreeTrial($identifier, $ip);
         $freeTrialExhausted = $remaining <= 0;
         $withinFreeLimit = $count <= $remaining;
         $requiresPayment = $freeTrialExhausted || !$withinFreeLimit;
@@ -249,7 +212,7 @@ class ShortlinkController extends Controller
 
         $freeCount = min($count, $remaining);
         $links = $this->shortenService->shorten($url, $freeCount);
-        $this->recordFreeTrialUse($identifier, $ip, $freeCount);
+        $this->entitlement->recordFreeTrialUse($identifier, $ip, $freeCount);
         $request->session()->put('shortlink_result', $links);
 
         $newRemaining = $remaining - $freeCount;
@@ -281,8 +244,8 @@ class ShortlinkController extends Controller
         } else {
             $payload['plan_name'] = null;
             $payload['plan_limit'] = self::FREE_TRIAL_LIMIT;
-            $payload['plan_used'] = self::FREE_TRIAL_LIMIT - $this->getRemainingFreeTrial('user:' . $user->id, request()->ip());
-            $payload['plan_remaining'] = $this->getRemainingFreeTrial('user:' . $user->id, request()->ip());
+            $payload['plan_used'] = self::FREE_TRIAL_LIMIT - $this->entitlement->getRemainingFreeTrial('user:' . $user->id, request()->ip());
+            $payload['plan_remaining'] = $this->entitlement->getRemainingFreeTrial('user:' . $user->id, request()->ip());
         }
         return $payload;
     }

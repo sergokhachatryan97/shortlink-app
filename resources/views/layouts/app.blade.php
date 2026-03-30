@@ -4,6 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    @stack('head')
     <title>@yield('title', 'Shortlink')</title>
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -47,7 +48,7 @@
     </style>
     @stack('styles')
 </head>
-<body class="{{ request()->routeIs('links.*') || request()->routeIs('contact.index') || request()->routeIs('subscription.index') || request()->routeIs('profile.*') || request()->routeIs('balance.*') || request()->routeIs('partner.*') || request()->routeIs('api.docs*') ? 'cosmic-page-body' : '' }}">
+<body class="{{ request()->routeIs('links.*') || request()->routeIs('contact.index') || request()->routeIs('subscription.index') || request()->routeIs('profile.*') || request()->routeIs('balance.*') || request()->routeIs('partner.*') || request()->routeIs('api.docs*') || request()->routeIs('shortlink.payment') ? 'cosmic-page-body' : '' }}">
     @include('components.navbar')
     <main class="main-content d-flex flex-column" style="min-height: calc(100vh - var(--navbar-height) - 80px);">
         @yield('content')

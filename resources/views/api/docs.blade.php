@@ -81,7 +81,10 @@ key=YOUR_API_KEY&amp;action=add&amp;service=1&amp;link=https://t.me/example&amp;
 
 {"charge":"0.03","status":"Completed","currency":"USD","original_link":"https://example.com/page","quantity":3,"generated_links":["https://trastly.org/abc123","https://trastly.org/def456","https://trastly.org/ghi789"]}
 
+{"error":"Not enough balance. Please add balance.","required":"8.80","current_balance":"0.00","missing":"8.80","currency":"USD","action":"add_balance","free_trial":{"limit":50,"requested_quantity":100,"effective_quantity":100,"remaining_before_order":12,"quantity_beyond_free_trial_remaining":88,"requested_minus_effective":0,"applied_this_order":12,"paid_quantity_this_order":88}}
+
 {"error":"Invalid API key"}</pre>
+            <p class="cosmic-text-muted small mt-2 mb-0">For linked accounts without a subscription, <code>add</code> may include <code>free_trial</code>: <code>requested_quantity</code>, <code>effective_quantity</code>, <code>remaining_before_order</code>, <code>quantity_beyond_free_trial_remaining</code> (request minus free pool left), <code>requested_minus_effective</code> (capped by plan in edge cases), <code>applied_this_order</code>, <code>paid_quantity_this_order</code>, optional <code>remaining_after_order</code> when the order completes in-process.</p>
         </div>
     </div>
 </div>
