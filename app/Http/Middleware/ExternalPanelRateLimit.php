@@ -15,20 +15,27 @@ class ExternalPanelRateLimit
     {
         /** @var ExternalClient|null $client */
         $client = $request->attributes->get('externalClient');
+
         if (!$client) {
             return $next($request);
         }
 
-        $limit = (int) ($client->rate_limit_per_minute ?? 60);
+        $limit = (int) ($client->rate_limit_per_minute ?? 5000);
         $limit = max(10, $limit);
+
         $action = (string) $request->input('action', '');
-        if (in_array($action, ['add', 'cancel'], true)) {
+        if (in_array($action, ['cancel'], true)) {
             $limit = max(5, (int) floor($limit / 2));
         }
-        $key = 'panel-api:' . $client->id;
+
+        $actionKey = $action !== '' ? $action : 'default';
+        $key = 'panel-api:' . $client->id . ':' . $actionKey;
 
         if (RateLimiter::tooManyAttempts($key, $limit)) {
-            return new JsonResponse(['error' => 'Rate limit exceeded'], 429);
+            return new JsonResponse([
+                'error' => 'Rate limit exceeded',
+                'retry_after' => RateLimiter::availableIn($key),
+            ], 429);
         }
 
         RateLimiter::hit($key, 60);
