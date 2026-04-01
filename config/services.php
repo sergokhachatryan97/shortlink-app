@@ -49,13 +49,16 @@ return [
     ],
 
     'admin' => [
-        'password' => env('ADMIN_PASSWORD'),
+        /** Full access (add balance, etc.). If unset, logging in with ADMIN_PASSWORD alone is treated as super admin (legacy). */
+        'super_admin_password' => env('SUPER_ADMIN_PASSWORD'),
+        /** Limited admin: use together with SUPER_ADMIN_PASSWORD. If only this is set (no super password), logins get super_admin. */
+        'admin_password' => env('ADMIN_PASSWORD'),
     ],
 
     'google' => [
         'client_id' => env('GOOGLE_CLIENT_ID'),
         'client_secret' => env('GOOGLE_CLIENT_SECRET'),
-        'redirect' => env('GOOGLE_REDIRECT_URI', env('APP_URL') . '/auth/google/callback'),
+        'redirect' => env('GOOGLE_REDIRECT_URI', env('APP_URL').'/auth/google/callback'),
     ],
 
     'telegram' => [

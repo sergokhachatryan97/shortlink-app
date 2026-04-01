@@ -3,10 +3,10 @@
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\ApiDocsController;
 use App\Http\Controllers\AuthController;
-use App\Http\Controllers\ContactController;
-use App\Http\Controllers\PartnerController;
 use App\Http\Controllers\BalanceController;
+use App\Http\Controllers\ContactController;
 use App\Http\Controllers\LinksController;
+use App\Http\Controllers\PartnerController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ShortlinkController;
 use App\Http\Controllers\SubscriptionController;
@@ -17,6 +17,7 @@ Route::get('/locale/{locale}', function (string $locale) {
     if (in_array($locale, $supported, true)) {
         session(['locale' => $locale]);
     }
+
     return redirect()->back();
 })->name('locale.set')->where('locale', 'en|zh|ru');
 
@@ -76,7 +77,9 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('/', [AdminController::class, 'dashboard'])->name('dashboard');
         Route::post('/settings', [AdminController::class, 'updateSettings'])->name('settings.update');
         Route::post('/plans/{plan}', [AdminController::class, 'updatePlan'])->name('plans.update');
-        Route::post('/users/add-balance', [AdminController::class, 'addUserBalance'])->name('users.add-balance');
+        Route::post('/users/add-balance', [AdminController::class, 'addUserBalance'])
+            ->middleware('admin.super')
+            ->name('users.add-balance');
         Route::post('/users/set-partner', [AdminController::class, 'setUserPartner'])->name('users.set-partner');
         Route::post('/users/set-payout-provider', [AdminController::class, 'setUserPayoutProvider'])->name('users.set-payout-provider');
         Route::post('/users/set-commission-percent', [AdminController::class, 'setUserCommissionPercent'])->name('users.set-commission-percent');

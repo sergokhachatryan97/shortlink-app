@@ -9,7 +9,7 @@
 <body class="bg-light min-vh-100 d-flex align-items-center justify-content-center p-4">
     <div class="card shadow-sm" style="width: 360px;">
         <div class="card-body p-4">
-            <h5 class="card-title mb-4">Admin Login</h5>
+            <h5 class="card-title mb-3">Admin Login</h5>
             @if (session('error'))
                 <div class="alert alert-danger py-2 small">{{ session('error') }}</div>
             @endif

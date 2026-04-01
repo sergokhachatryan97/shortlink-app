@@ -26,23 +26,35 @@ class AdminController extends Controller
 
     public function login(Request $request)
     {
-        $password = config('services.admin.password', env('ADMIN_PASSWORD'));
-        if (! $password) {
-            return back()->with('error', 'Admin password not configured. Set ADMIN_PASSWORD in .env');
+        $request->validate(['password' => ['required', 'string']]);
+
+        $super = config('services.admin.super_admin_password');
+        $admin = config('services.admin.admin_password');
+        $plain = (string) $request->password;
+
+        if (! filled($super) && ! filled($admin)) {
+            return back()->with('error', 'Configure SUPER_ADMIN_PASSWORD and/or ADMIN_PASSWORD in .env');
         }
 
-        if ($request->password !== $password) {
+        $role = null;
+        if (filled($super) && hash_equals($super, $plain)) {
+            $role = 'super_admin';
+        } elseif (filled($admin) && hash_equals($admin, $plain)) {
+            $role = filled($super) ? 'admin' : 'super_admin';
+        }
+
+        if ($role === null) {
             return back()->with('error', 'Invalid password');
         }
 
-        session(['admin_logged_in' => true]);
+        session(['admin_logged_in' => true, 'admin_role' => $role]);
 
         return redirect()->route('admin.dashboard');
     }
 
     public function logout(Request $request)
     {
-        $request->session()->forget('admin_logged_in');
+        $request->session()->forget(['admin_logged_in', 'admin_role']);
 
         return redirect()->route('admin.login');
     }
@@ -50,6 +62,17 @@ class AdminController extends Controller
     public function dashboard()
     {
         $transactions = ShortlinkTransaction::orderByDesc('created_at')->paginate(20);
+        $transactionUserIds = $transactions->getCollection()
+            ->pluck('identifier')
+            ->filter(fn ($v) => is_string($v) && str_starts_with($v, 'user:'))
+            ->map(fn ($v) => (int) substr($v, 5))
+            ->unique()
+            ->filter(fn (int $id) => $id > 0)
+            ->values()
+            ->all();
+        $transactionUsersById = $transactionUserIds === []
+            ? collect()
+            : User::query()->whereIn('id', $transactionUserIds)->get()->keyBy('id');
         $totalPaid = ShortlinkTransaction::where('status', 'paid')->sum('amount');
         $plans = SubscriptionPlan::orderBy('sort_order')->get();
         $users = User::orderByDesc('created_at')->paginate(15, ['*'], 'users_page');
@@ -76,6 +99,8 @@ class AdminController extends Controller
 
         return view('admin.dashboard', [
             'transactions' => $transactions,
+            'transactionUsersById' => $transactionUsersById,
+            'adminRole' => session('admin_role', 'super_admin'),
             'totalPaid' => $totalPaid,
             'pricePerLink' => ShortlinkSetting::get('price_per_link', '0.01'),
             'partnerDefaultPayoutProvider' => ShortlinkSetting::get('partner_default_payout_provider') ?? config('partner.default_payout_provider', 'heleket'),
@@ -249,6 +274,12 @@ class AdminController extends Controller
 
     public function addUserBalance(Request $request): RedirectResponse
     {
+        if (session('admin_role') !== 'super_admin') {
+            return redirect()
+                ->route('admin.dashboard', ['tab' => 'users'])
+                ->with('error', 'Only a super administrator can add user balance.');
+        }
+
         $validated = $request->validate([
             'user' => ['required', 'string'],
             'amount' => ['required', 'numeric', 'min:0.01', 'max:10000'],

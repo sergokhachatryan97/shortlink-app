@@ -8,9 +8,16 @@
 </head>
 <body class="bg-light">
     <nav class="navbar navbar-dark bg-dark">
-        <div class="container">
-            <span class="navbar-brand">Shortlink Admin</span>
-            <a href="{{ route('admin.logout') }}" class="btn btn-outline-light btn-sm">Logout</a>
+        <div class="container d-flex flex-wrap align-items-center justify-content-between gap-2">
+            <span class="navbar-brand mb-0">Shortlink Admin</span>
+            <div class="d-flex align-items-center gap-2">
+                @if (($adminRole ?? 'super_admin') === 'super_admin')
+                    <span class="badge bg-warning text-dark">Super admin</span>
+                @else
+                    <span class="badge bg-info text-dark">Admin</span>
+                @endif
+                <a href="{{ route('admin.logout') }}" class="btn btn-outline-light btn-sm">Logout</a>
+            </div>
         </div>
     </nav>
     @php
@@ -179,7 +186,9 @@
                                 <th>Payout (USDT)</th>
                                 <th>Commission %</th>
                                 <th>Balance</th>
-                                <th>Add balance</th>
+                                @if (($adminRole ?? 'super_admin') === 'super_admin')
+                                    <th>Add balance</th>
+                                @endif
                             </tr>
                         </thead>
                         <tbody>
@@ -218,15 +227,17 @@
                                         @endif
                                     </td>
                                     <td>${{ \App\Support\MoneyDisplay::plainDecimal($user->balance ?? 0) }}</td>
-                                    <td>
-                                        <form method="POST" action="{{ route('admin.users.add-balance') }}" class="d-inline-flex align-items-center gap-2">
-                                            @csrf
-                                            <input type="hidden" name="user" value="{{ $user->id }}">
-                                            <input type="hidden" name="tab" value="users">
-                                            <input type="number" name="amount" value="10" step="0.01" min="0.01" max="10000" class="form-control form-control-sm" style="width: 90px;" required>
-                                            <button type="submit" class="btn btn-sm btn-success">Add</button>
-                                        </form>
-                                    </td>
+                                    @if (($adminRole ?? 'super_admin') === 'super_admin')
+                                        <td>
+                                            <form method="POST" action="{{ route('admin.users.add-balance') }}" class="d-inline-flex align-items-center gap-2">
+                                                @csrf
+                                                <input type="hidden" name="user" value="{{ $user->id }}">
+                                                <input type="hidden" name="tab" value="users">
+                                                <input type="number" name="amount" value="10" step="0.01" min="0.01" max="10000" class="form-control form-control-sm" style="width: 90px;" required>
+                                                <button type="submit" class="btn btn-sm btn-success">Add</button>
+                                            </form>
+                                        </td>
+                                    @endif
                                 </tr>
                             @endforeach
                         </tbody>
@@ -254,6 +265,7 @@
                         <thead>
                             <tr>
                                 <th>Order ID</th>
+                                <th>User</th>
                                 <th>Amount</th>
                                 <th>Status</th>
                                 <th>Count</th>
@@ -263,8 +275,22 @@
                         </thead>
                         <tbody>
                             @forelse ($transactions as $t)
+                                @php
+                                    $txUserId = (is_string($t->identifier ?? null) && str_starts_with($t->identifier, 'user:'))
+                                        ? (int) substr($t->identifier, 5)
+                                        : null;
+                                    $txUser = $txUserId ? ($transactionUsersById[$txUserId] ?? null) : null;
+                                @endphp
                                 <tr>
                                     <td><code class="small">{{ $t->order_id }}</code></td>
+                                    <td>
+                                        @if ($txUser)
+                                            <span class="fw-medium">{{ $txUser->name }}</span>
+                                            <br><small class="text-muted">{{ $txUser->email }}</small>
+                                        @else
+                                            <span class="text-muted">—</span>
+                                        @endif
+                                    </td>
                                     <td>${{ number_format($t->amount, 2) }}</td>
                                     <td>
                                         <span class="badge {{ $t->status === 'paid' ? 'bg-success' : ($t->status === 'failed' ? 'bg-danger' : 'bg-secondary') }}">
@@ -276,7 +302,7 @@
                                     <td><small>{{ $t->created_at->format('Y-m-d H:i') }}</small></td>
                                 </tr>
                             @empty
-                                <tr><td colspan="6" class="text-center text-muted py-4">No transactions yet</td></tr>
+                                <tr><td colspan="7" class="text-center text-muted py-4">No transactions yet</td></tr>
                             @endforelse
                         </tbody>
                     </table>
