@@ -22,6 +22,9 @@
     </nav>
     @php
         $activeTab = request()->get('tab', 'settings');
+        if (($adminRole ?? 'super_admin') !== 'super_admin' && in_array($activeTab, ['transactions', 'partner-payouts'], true)) {
+            $activeTab = 'settings';
+        }
     @endphp
     <div class="container py-4">
         @if (session('success'))
@@ -47,12 +50,14 @@
             <li class="nav-item">
                 <a class="nav-link {{ $activeTab === 'users' ? 'active' : '' }}" href="{{ route('admin.dashboard', ['tab' => 'users']) }}">User list</a>
             </li>
-            <li class="nav-item">
-                <a class="nav-link {{ $activeTab === 'transactions' ? 'active' : '' }}" href="{{ route('admin.dashboard', ['tab' => 'transactions']) }}">Transactions</a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link {{ $activeTab === 'partner-payouts' ? 'active' : '' }}" href="{{ route('admin.dashboard', ['tab' => 'partner-payouts']) }}">Partner payouts</a>
-            </li>
+            @if (($adminRole ?? 'super_admin') === 'super_admin')
+                <li class="nav-item">
+                    <a class="nav-link {{ $activeTab === 'transactions' ? 'active' : '' }}" href="{{ route('admin.dashboard', ['tab' => 'transactions']) }}">Transactions</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {{ $activeTab === 'partner-payouts' ? 'active' : '' }}" href="{{ route('admin.dashboard', ['tab' => 'partner-payouts']) }}">Partner payouts</a>
+                </li>
+            @endif
         </ul>
 
         @if ($activeTab === 'settings')
