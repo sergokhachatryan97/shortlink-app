@@ -75,15 +75,25 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::match(['get', 'post'], 'logout', [AdminController::class, 'logout'])->name('logout');
     Route::middleware('admin')->group(function () {
         Route::get('/', [AdminController::class, 'dashboard'])->name('dashboard');
-        Route::post('/settings', [AdminController::class, 'updateSettings'])->name('settings.update');
+        Route::post('/settings', [AdminController::class, 'updateSettings'])
+            ->middleware('admin.super')
+            ->name('settings.update');
         Route::post('/plans/{plan}', [AdminController::class, 'updatePlan'])->name('plans.update');
         Route::post('/users/add-balance', [AdminController::class, 'addUserBalance'])
             ->middleware('admin.super')
             ->name('users.add-balance');
-        Route::post('/users/set-partner', [AdminController::class, 'setUserPartner'])->name('users.set-partner');
+        Route::post('/users/set-partner', [AdminController::class, 'setUserPartner'])
+            ->middleware('admin.super')
+            ->name('users.set-partner');
         Route::post('/users/set-payout-provider', [AdminController::class, 'setUserPayoutProvider'])->name('users.set-payout-provider');
-        Route::post('/users/set-commission-percent', [AdminController::class, 'setUserCommissionPercent'])->name('users.set-commission-percent');
-        Route::post('/partner-payouts/mark-paid', [AdminController::class, 'markPartnerWithdrawalPaid'])->name('partner-payouts.mark-paid');
-        Route::post('/partner-payouts/reject', [AdminController::class, 'rejectPartnerWithdrawal'])->name('partner-payouts.reject');
+        Route::post('/users/set-commission-percent', [AdminController::class, 'setUserCommissionPercent'])
+            ->middleware('admin.super')
+            ->name('users.set-commission-percent');
+        Route::post('/partner-payouts/mark-paid', [AdminController::class, 'markPartnerWithdrawalPaid'])
+            ->middleware('admin.super')
+            ->name('partner-payouts.mark-paid');
+        Route::post('/partner-payouts/reject', [AdminController::class, 'rejectPartnerWithdrawal'])
+            ->middleware('admin.super')
+            ->name('partner-payouts.reject');
     });
 });

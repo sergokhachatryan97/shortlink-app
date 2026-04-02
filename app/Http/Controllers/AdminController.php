@@ -183,6 +183,26 @@ class AdminController extends Controller
     public function updatePlan(Request $request, SubscriptionPlan $plan): RedirectResponse
     {
         $locales = SubscriptionPlan::translationLocales();
+
+        if (session('admin_role') !== 'super_admin') {
+            $rules = [];
+            foreach ($locales as $locale) {
+                $rules["description_{$locale}"] = ['nullable', 'string', 'max:1000'];
+            }
+            $validated = $request->validate($rules);
+
+            $descriptionTranslations = [];
+            foreach ($locales as $locale) {
+                $descriptionTranslations[$locale] = trim($validated["description_{$locale}"] ?? '');
+            }
+            $plan->update([
+                'description_translations' => $descriptionTranslations,
+                'description' => $descriptionTranslations['en'] ?: $plan->description,
+            ]);
+
+            return redirect()->route('admin.dashboard', ['tab' => 'settings'])->with('success', 'Plan descriptions updated.');
+        }
+
         $rules = [
             'links_limit' => ['required', 'integer', 'min:0'],
             'price_usd' => ['required', 'numeric', 'min:0', 'max:9999.99'],

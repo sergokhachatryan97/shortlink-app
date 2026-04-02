@@ -22,7 +22,7 @@
     </nav>
     @php
         $activeTab = request()->get('tab', 'settings');
-        if (($adminRole ?? 'super_admin') !== 'super_admin' && in_array($activeTab, ['transactions', 'partner-payouts'], true)) {
+        if (($adminRole ?? 'super_admin') !== 'super_admin' && $activeTab === 'partner-payouts') {
             $activeTab = 'settings';
         }
     @endphp
@@ -50,11 +50,11 @@
             <li class="nav-item">
                 <a class="nav-link {{ $activeTab === 'users' ? 'active' : '' }}" href="{{ route('admin.dashboard', ['tab' => 'users']) }}">User list</a>
             </li>
-            @if (($adminRole ?? 'super_admin') === 'super_admin')
                 <li class="nav-item">
                     <a class="nav-link {{ $activeTab === 'transactions' ? 'active' : '' }}" href="{{ route('admin.dashboard', ['tab' => 'transactions']) }}">Transactions</a>
                 </li>
-                <li class="nav-item">
+            @if (($adminRole ?? 'super_admin') === 'super_admin')
+            <li class="nav-item">
                     <a class="nav-link {{ $activeTab === 'partner-payouts' ? 'active' : '' }}" href="{{ route('admin.dashboard', ['tab' => 'partner-payouts']) }}">Partner payouts</a>
                 </li>
             @endif
@@ -66,6 +66,7 @@
                 <div class="card h-100">
                     <div class="card-header fw-semibold">Settings</div>
                     <div class="card-body">
+                        @if (($adminRole ?? 'super_admin') === 'super_admin')
                         <form method="POST" action="{{ route('admin.settings.update') }}">
                             @csrf
                             <input type="hidden" name="tab" value="settings">
@@ -94,6 +95,12 @@
                             </div>
                             <button type="submit" class="btn btn-primary">Save</button>
                         </form>
+                        @else
+                        <p class="text-muted small mb-3">Pricing and partner commission are managed by the super administrator.</p>
+                        <p class="mb-1"><strong>Price per link:</strong> ${{ $pricePerLink }} USD</p>
+                        <p class="mb-1"><strong>Partner commission (default):</strong> {{ $partnerDefaultCommissionPercent ?? 10 }}%</p>
+                        <p class="mb-0"><strong>Partner minimum payout:</strong> ${{ $partnerMinPayoutAmount ?? 100 }} USD</p>
+                        @endif
                     </div>
                 </div>
             </div>
@@ -109,7 +116,13 @@
         </div>
 
         <div class="card mb-4">
-            <div class="card-header fw-semibold">Subscription plans (name & description per language)</div>
+            <div class="card-header fw-semibold">
+                @if (($adminRole ?? 'super_admin') === 'super_admin')
+                    Subscription plans (name & description per language)
+                @else
+                    Subscription plans — descriptions only
+                @endif
+            </div>
             <div class="card-body p-0">
                 @foreach ($plans ?? [] as $plan)
                 @php
@@ -128,6 +141,7 @@
                         </div>
                         <div class="row g-2 mb-2">
                             <div class="col-12 small fw-semibold text-muted">Name</div>
+                            @if (($adminRole ?? 'super_admin') === 'super_admin')
                             <div class="col-md-4">
                                 <label class="form-label small mb-0">EN</label>
                                 <input type="text" name="name_en" value="{{ old('name_en', $nameTrans['en'] ?? $plan->name) }}" class="form-control form-control-sm" placeholder="Name (English)">
@@ -140,6 +154,11 @@
                                 <label class="form-label small mb-0">RU</label>
                                 <input type="text" name="name_ru" value="{{ old('name_ru', $nameTrans['ru'] ?? '') }}" class="form-control form-control-sm" placeholder="Name (Russian)">
                             </div>
+                            @else
+                            <div class="col-md-4"><span class="small">{{ $nameTrans['en'] ?? $plan->name }}</span> <span class="text-muted small">(EN)</span></div>
+                            <div class="col-md-4"><span class="small">{{ $nameTrans['zh'] ?? '—' }}</span> <span class="text-muted small">(中文)</span></div>
+                            <div class="col-md-4"><span class="small">{{ $nameTrans['ru'] ?? '—' }}</span> <span class="text-muted small">(RU)</span></div>
+                            @endif
                         </div>
                         <div class="row g-2 mb-2">
                             <div class="col-12 small fw-semibold text-muted">Description</div>
@@ -157,11 +176,17 @@
                             </div>
                         </div>
                         <div class="d-flex flex-wrap align-items-center gap-2">
+                            @if (($adminRole ?? 'super_admin') === 'super_admin')
                             <label class="small mb-0">Links limit</label>
                             <input type="number" name="links_limit" value="{{ old('links_limit', $plan->links_limit) }}" min="0" step="1" class="form-control form-control-sm" style="width: 80px;" title="0 = unlimited">
                             <label class="small mb-0">Price (USD)</label>
                             <input type="number" name="price_usd" value="{{ old('price_usd', $plan->price_usd) }}" min="0" step="0.01" class="form-control form-control-sm" style="width: 90px;">
                             <button type="submit" class="btn btn-sm btn-primary">Save plan</button>
+                            @else
+                            <span class="small text-muted">Links limit: {{ $plan->links_limit == 0 ? 'Unlimited' : $plan->links_limit }}</span>
+                            <span class="small text-muted">· Price: ${{ number_format((float) $plan->price_usd, 2) }}</span>
+                            <button type="submit" class="btn btn-sm btn-primary">Save descriptions</button>
+                            @endif
                         </div>
                     </form>
                 </div>
@@ -203,6 +228,7 @@
                                     <td>{{ $user->email ?? '—' }}</td>
                                     <td>{{ $user->name ?? '—' }}</td>
                                     <td>
+                                        @if (($adminRole ?? 'super_admin') === 'super_admin')
                                         <form method="POST" action="{{ route('admin.users.set-partner') }}" class="d-inline-flex align-items-center gap-1">
                                             @csrf
                                             <input type="hidden" name="user_id" value="{{ $user->id }}">
@@ -210,6 +236,9 @@
                                             <input type="number" name="partner_id" value="{{ $user->partner_id }}" min="0" placeholder="0=clear" class="form-control form-control-sm" style="width: 80px;">
                                             <button type="submit" class="btn btn-sm btn-outline-secondary">Set</button>
                                         </form>
+                                        @else
+                                        <span class="small">{{ $user->partner_id ? '#' . $user->partner_id : '—' }}</span>
+                                        @endif
                                     </td>
                                     <td>
                                         @if($user->is_partner)
@@ -220,13 +249,17 @@
                                     </td>
                                     <td>
                                         @if($user->is_partner)
-                                        <form method="POST" action="{{ route('admin.users.set-commission-percent') }}" class="d-inline-flex align-items-center gap-1">
-                                            @csrf
-                                            <input type="hidden" name="user_id" value="{{ $user->id }}">
-                                            <input type="hidden" name="tab" value="users">
-                                            <input type="number" name="commission_percent" step="0.01" min="0" max="100" value="{{ $user->commission_percent ?? '' }}" placeholder="—" class="form-control form-control-sm" style="width: 70px;" title="Leave empty for global default">
-                                            <button type="submit" class="btn btn-sm btn-outline-secondary">Set</button>
-                                        </form>
+                                            @if (($adminRole ?? 'super_admin') === 'super_admin')
+                                            <form method="POST" action="{{ route('admin.users.set-commission-percent') }}" class="d-inline-flex align-items-center gap-1">
+                                                @csrf
+                                                <input type="hidden" name="user_id" value="{{ $user->id }}">
+                                                <input type="hidden" name="tab" value="users">
+                                                <input type="number" name="commission_percent" step="0.01" min="0" max="100" value="{{ $user->commission_percent ?? '' }}" placeholder="—" class="form-control form-control-sm" style="width: 70px;" title="Leave empty for global default">
+                                                <button type="submit" class="btn btn-sm btn-outline-secondary">Set</button>
+                                            </form>
+                                            @else
+                                            <span class="small">{{ $user->commission_percent !== null ? $user->commission_percent . '%' : 'Default' }}</span>
+                                            @endif
                                         @else
                                         —
                                         @endif
