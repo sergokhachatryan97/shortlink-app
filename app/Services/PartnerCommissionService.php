@@ -102,18 +102,23 @@ class PartnerCommissionService
             ->orderByDesc('updated_at')
             ->first();
 
-        if (!$settings || empty(trim($settings->wallet_address ?? ''))) {
-            Log::info('PartnerCommissionService: no valid payout settings for partner route', [
+        $walletAddress = null;
+        if ($settings && $settings->wallet_address !== null && $settings->wallet_address !== '') {
+            $w = trim((string) $settings->wallet_address);
+            $walletAddress = $w !== '' ? $w : null;
+        }
+
+        if ($walletAddress === null) {
+            Log::info('PartnerCommissionService: recording commission without saved payout wallet (partner can add USDT TRC20 in dashboard)', [
                 'partner_id' => $partner->id,
                 'payout_provider' => $payoutProvider,
                 'currency' => $currency,
                 'network' => $network,
             ]);
-            return null;
         }
 
         $percent = (float) ($partner->commission_percent
-            ?? $settings->percent
+            ?? $settings?->percent
             ?? ShortlinkSetting::get('partner_default_commission_percent')
             ?? self::DEFAULT_COMMISSION_PERCENT);
         $commissionAmount = round($sourceAmount * ($percent / 100), 2);
@@ -122,10 +127,16 @@ class PartnerCommissionService
             return null;
         }
 
+        $recordProvider = ($settings && $settings->provider) ? $settings->provider : $payoutProvider;
+
         $payout = DB::transaction(function () use (
             $sourceUser,
             $partner,
             $settings,
+            $recordProvider,
+            $walletAddress,
+            $currency,
+            $network,
             $sourceAmount,
             $percent,
             $commissionAmount,
@@ -136,14 +147,14 @@ class PartnerCommissionService
             $payout = PartnerCommissionPayout::create([
                 'source_user_id' => $sourceUser->id,
                 'partner_user_id' => $partner->id,
-                'provider' => $settings->provider,
+                'provider' => $recordProvider,
                 'source_provider' => $sourceProvider ? strtolower($sourceProvider) : null,
                 'source_amount' => $sourceAmount,
                 'commission_percent' => $percent,
                 'commission_amount' => $commissionAmount,
-                'currency' => $settings->currency ?? 'USDT',
-                'network' => $settings->network,
-                'wallet_address' => $settings->wallet_address,
+                'currency' => $settings?->currency ?? $currency,
+                'network' => $settings?->network ?? $network,
+                'wallet_address' => $walletAddress,
                 'status' => PartnerCommissionPayout::STATUS_PENDING,
                 'source_type' => $sourceType,
                 'source_id' => $sourceId,
@@ -153,7 +164,7 @@ class PartnerCommissionService
                 'payout_id' => $payout->id,
                 'partner_id' => $partner->id,
                 'source_provider' => $sourceProvider,
-                'payout_provider' => $settings->provider,
+                'payout_provider' => $recordProvider,
                 'source_amount' => $sourceAmount,
                 'commission_amount' => $commissionAmount,
             ]);

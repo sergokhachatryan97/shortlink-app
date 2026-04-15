@@ -73,23 +73,29 @@ class AuthController extends Controller
 
     private function resolveReferralPartner(Request $request): ?int
     {
-
         $code = $request->session()->get('referral_code');
-
-        if (!$code) {
-            return null;
-        }
-
         $referralAt = $request->session()->get('referral_code_at');
-        if ($referralAt && (now()->timestamp - $referralAt) > 60 * 60 * 24 * 30) {
+
+        if ($code && $referralAt && (now()->timestamp - (int) $referralAt) > 60 * 60 * 24 * 30) {
+            $code = null;
+        }
+
+        if (! $code) {
+            $code = $request->cookie('referral_code');
+            $referralAt = null;
+        }
+
+        if (! $code) {
             return null;
         }
 
-        $partner = User::where('referral_code', strtoupper($code))
+        $code = strtoupper(trim((string) $code));
+
+        $partner = User::where('referral_code', $code)
             ->where('is_partner', true)
             ->first();
 
-        if (!$partner) {
+        if (! $partner) {
             return null;
         }
 

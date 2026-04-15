@@ -84,7 +84,7 @@
                             <div class="mb-3">
                                 <label class="form-label small">Partner commission %</label>
                                 <input type="number" name="partner_default_commission_percent" step="0.01" min="0" max="100"
-                                       value="{{ $partnerDefaultCommissionPercent ?? 10 }}" class="form-control" style="max-width: 120px;">
+                                                                             value="{{ $partnerDefaultCommissionPercent ?? 10 }}" class="form-control" style="max-width: 120px;">
                                 <small class="text-muted">Commission rate for all partners. Override per partner in User list.</small>
                             </div>
                             <div class="mb-3">
