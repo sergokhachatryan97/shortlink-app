@@ -48,8 +48,17 @@
                     {{ __('messages.partner.available_commission') }} <strong class="cosmic-amount">${{ number_format($availableWithdrawAmount ?? 0, 2) }}</strong> <span class="cosmic-currency">(USDT)</span>
                 </p>
                 @if(!$canRequestWithdrawal)
-                    <p class="cosmic-text-muted small mb-2">{{ __('messages.partner.min_not_reached') }}</p>
-                    <p class="cosmic-text-muted small mb-0">{{ __('messages.partner.min_amount_info', ['min' => number_format($minWithdrawAmount ?? 100, 2)]) }}</p>
+                    @if(($availableWithdrawAmount ?? 0) < 0.01)
+                        <p class="cosmic-text-muted small mb-2">{{ __('messages.partner.no_commission_yet') }}</p>
+                        <ul class="cosmic-text-muted small ps-3 mb-0">
+                            <li>{{ __('messages.partner.no_commission_hint_signup') }}</li>
+                            <li>{{ __('messages.partner.no_commission_hint_pay') }}</li>
+                        </ul>
+                        <p class="cosmic-text-muted small mb-0 mt-2">{{ __('messages.partner.min_amount_info', ['min' => number_format($minWithdrawAmount ?? 100, 2)]) }}</p>
+                    @else
+                        <p class="cosmic-text-muted small mb-2">{{ __('messages.partner.min_not_reached') }}</p>
+                        <p class="cosmic-text-muted small mb-0">{{ __('messages.partner.min_amount_info', ['min' => number_format($minWithdrawAmount ?? 100, 2)]) }}</p>
+                    @endif
                 @elseif(!empty($requestedWithdrawal))
                     <p class="cosmic-text-muted small mb-0">{{ __('messages.partner.withdrawal_pending_request') }}</p>
                 @else
