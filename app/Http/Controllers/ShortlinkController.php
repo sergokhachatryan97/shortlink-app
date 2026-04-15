@@ -449,6 +449,7 @@ class ShortlinkController extends Controller
             'count' => $count,
             'url' => $pending['url'] ?? null,
             'provider_ref' => 'heleket',
+            'payment_kind' => ShortlinkTransaction::KIND_SHORTLINK_PAYMENT,
         ]);
 
         return redirect()->away($payUrl);
@@ -513,6 +514,7 @@ class ShortlinkController extends Controller
             'count' => $count,
             'url' => $pending['url'] ?? null,
             'provider_ref' => 'tron',
+            'payment_kind' => ShortlinkTransaction::KIND_SHORTLINK_PAYMENT,
         ]);
 
         $request->session()->put('shortlink_order_id', $orderId);

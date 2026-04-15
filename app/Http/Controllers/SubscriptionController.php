@@ -80,6 +80,7 @@ class SubscriptionController extends Controller
                     'count' => 0,
                     'url' => null,
                     'provider_ref' => 'subscription:'.$plan->slug,
+                    'payment_kind' => ShortlinkTransaction::KIND_SUBSCRIPTION,
                 ]);
             });
         } catch (InsufficientBalanceException) {
@@ -146,6 +147,7 @@ class SubscriptionController extends Controller
                     'count' => 0,
                     'url' => null,
                     'provider_ref' => 'upgrade:'.$newPlan->slug,
+                    'payment_kind' => ShortlinkTransaction::KIND_SUBSCRIPTION_UPGRADE,
                 ]);
             });
         } catch (InsufficientBalanceException) {

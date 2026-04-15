@@ -23,8 +23,9 @@ class PaymentTest extends TestCase
     private function heleketSignedPayload(array $data): array
     {
         $key = config('services.heleket.payment_key', 'test_secret_key');
-        $sign = md5(base64_encode(json_encode($data, JSON_UNESCAPED_UNICODE)) . $key);
+        $sign = md5(base64_encode(json_encode($data, JSON_UNESCAPED_UNICODE)).$key);
         $data['sign'] = $sign;
+
         return $data;
     }
 
@@ -42,8 +43,9 @@ class PaymentTest extends TestCase
 
         $this->assertDatabaseHas('shortlink_transactions', [
             'amount' => 10,
-            'identifier' => 'user:' . $user->id,
+            'identifier' => 'user:'.$user->id,
             'status' => 'pending',
+            'payment_kind' => ShortlinkTransaction::KIND_BALANCE_TOPUP,
         ]);
     }
 
@@ -63,13 +65,13 @@ class PaymentTest extends TestCase
     {
         $user = User::factory()->create(['balance' => 25]);
 
-        $orderId = 'bal-test-' . uniqid();
+        $orderId = 'bal-test-'.uniqid();
         ShortlinkTransaction::create([
             'order_id' => $orderId,
             'amount' => 25,
             'currency' => 'USD',
             'status' => 'paid',
-            'identifier' => 'user:' . $user->id,
+            'identifier' => 'user:'.$user->id,
             'count' => 0,
             'url' => null,
             'provider_ref' => 'tron:xyz',
@@ -85,13 +87,13 @@ class PaymentTest extends TestCase
     {
         $user = User::factory()->create(['balance' => 0]);
 
-        $orderId = 'bal-pending-' . uniqid();
+        $orderId = 'bal-pending-'.uniqid();
         ShortlinkTransaction::create([
             'order_id' => $orderId,
             'amount' => 25,
             'currency' => 'USD',
             'status' => 'pending',
-            'identifier' => 'user:' . $user->id,
+            'identifier' => 'user:'.$user->id,
             'count' => 0,
             'url' => null,
             'provider_ref' => 'tron_topup',
@@ -115,7 +117,7 @@ class PaymentTest extends TestCase
 
     public function test_payment_tron_success_shows_links_when_webhook_already_generated(): void
     {
-        $orderId = 'sl-test-' . uniqid();
+        $orderId = 'sl-test-'.uniqid();
         $links = ['https://short.link/1', 'https://short.link/2'];
 
         ShortlinkTransaction::create([
@@ -141,7 +143,7 @@ class PaymentTest extends TestCase
 
     public function test_payment_tron_success_shows_pending_when_webhook_not_arrived(): void
     {
-        $orderId = 'sl-pending-' . uniqid();
+        $orderId = 'sl-pending-'.uniqid();
         ShortlinkTransaction::create([
             'order_id' => $orderId,
             'amount' => 0.50,
@@ -160,7 +162,7 @@ class PaymentTest extends TestCase
 
     public function test_payment_status_returns_paid_with_links(): void
     {
-        $orderId = 'sl-status-' . uniqid();
+        $orderId = 'sl-status-'.uniqid();
         $links = ['https://a.com', 'https://b.com'];
         ShortlinkTransaction::create([
             'order_id' => $orderId,
@@ -183,13 +185,13 @@ class PaymentTest extends TestCase
     public function test_coinrush_webhook_marks_transaction_paid(): void
     {
         $user = User::factory()->create(['balance' => 0]);
-        $orderId = 'bal-webhook-' . uniqid();
+        $orderId = 'bal-webhook-'.uniqid();
         ShortlinkTransaction::create([
             'order_id' => $orderId,
             'amount' => 5,
             'currency' => 'USD',
             'status' => 'pending',
-            'identifier' => 'user:' . $user->id,
+            'identifier' => 'user:'.$user->id,
             'count' => 0,
             'url' => null,
             'provider_ref' => 'tron_topup',
@@ -213,7 +215,7 @@ class PaymentTest extends TestCase
     {
         config(['services.heleket.payment_key' => 'test_secret_key']);
 
-        $orderId = 'sl-webhook-' . uniqid();
+        $orderId = 'sl-webhook-'.uniqid();
         ShortlinkTransaction::create([
             'order_id' => $orderId,
             'amount' => 1,
@@ -256,13 +258,13 @@ class PaymentTest extends TestCase
     {
         $user = User::factory()->create(['balance' => 15]);
 
-        $orderId = 'bal-heleket-' . uniqid();
+        $orderId = 'bal-heleket-'.uniqid();
         ShortlinkTransaction::create([
             'order_id' => $orderId,
             'amount' => 15,
             'currency' => 'USD',
             'status' => 'paid',
-            'identifier' => 'user:' . $user->id,
+            'identifier' => 'user:'.$user->id,
             'count' => 0,
             'url' => null,
             'provider_ref' => 'heleket-uuid',
@@ -278,13 +280,13 @@ class PaymentTest extends TestCase
     {
         $user = User::factory()->create(['balance' => 0]);
 
-        $orderId = 'bal-webhook-' . uniqid();
+        $orderId = 'bal-webhook-'.uniqid();
         ShortlinkTransaction::create([
             'order_id' => $orderId,
             'amount' => 12.50,
             'currency' => 'USD',
             'status' => 'pending',
-            'identifier' => 'user:' . $user->id,
+            'identifier' => 'user:'.$user->id,
             'count' => 0,
             'url' => null,
             'provider_ref' => 'tron_topup',
@@ -309,13 +311,13 @@ class PaymentTest extends TestCase
 
         $user = User::factory()->create(['balance' => 0]);
 
-        $orderId = 'bal-heleket-webhook-' . uniqid();
+        $orderId = 'bal-heleket-webhook-'.uniqid();
         ShortlinkTransaction::create([
             'order_id' => $orderId,
             'amount' => 8,
             'currency' => 'USD',
             'status' => 'pending',
-            'identifier' => 'user:' . $user->id,
+            'identifier' => 'user:'.$user->id,
             'count' => 0,
             'url' => null,
             'provider_ref' => 'heleket_topup',
@@ -337,17 +339,49 @@ class PaymentTest extends TestCase
         $this->assertEquals('paid', $tx->status);
     }
 
+    public function test_heleket_webhook_credits_balance_when_provider_ref_has_no_topup_token_but_order_id_is_bal(): void
+    {
+        config(['services.heleket.payment_key' => 'test_secret_key']);
+
+        $user = User::factory()->create(['balance' => 0]);
+
+        $orderId = 'bal-uuidonly-'.uniqid();
+        ShortlinkTransaction::create([
+            'order_id' => $orderId,
+            'amount' => 11,
+            'currency' => 'USD',
+            'status' => 'pending',
+            'identifier' => 'user:'.$user->id,
+            'count' => 0,
+            'url' => null,
+            'provider_ref' => 'gateway-ref-without-topup-substring',
+            'payment_kind' => null,
+        ]);
+
+        $payload = $this->heleketSignedPayload([
+            'order_id' => $orderId,
+            'status' => 'paid',
+            'uuid' => 'gateway-uuid-999',
+        ]);
+
+        $response = $this->postJson('/api/webhooks/payments/heleket', $payload);
+
+        $response->assertOk();
+        $user->refresh();
+        $this->assertEquals(11, (float) $user->balance);
+    }
+
     public function test_coinrush_webhook_does_not_double_credit(): void
     {
         $user = User::factory()->create(['balance' => 0]);
 
-        $orderId = 'bal-idempotent-' . uniqid();
+        $orderId = 'bal-idempotent-'.uniqid();
         ShortlinkTransaction::create([
             'order_id' => $orderId,
             'amount' => 10,
             'currency' => 'USD',
             'status' => 'paid',
-            'identifier' => 'user:' . $user->id,
+            'identifier' => 'user:'.$user->id,
             'count' => 0,
             'url' => null,
             'provider_ref' => 'tron:abc',
@@ -369,7 +403,7 @@ class PaymentTest extends TestCase
         Http::fake(['*shorten*' => Http::response(['https://s2.co/1', 'https://s2.co/2'], 200)]);
         config(['services.heleket.payment_key' => 'test_secret_key']);
 
-        $orderId = 'sl-heleket-' . uniqid();
+        $orderId = 'sl-heleket-'.uniqid();
         ShortlinkTransaction::create([
             'order_id' => $orderId,
             'amount' => 0.20,
@@ -401,7 +435,7 @@ class PaymentTest extends TestCase
     {
         Http::fake(['*shorten*' => Http::response(['https://s1.co/1', 'https://s1.co/2'], 200)]);
 
-        $orderId = 'sl-webhook-' . uniqid();
+        $orderId = 'sl-webhook-'.uniqid();
         ShortlinkTransaction::create([
             'order_id' => $orderId,
             'amount' => 0.20,

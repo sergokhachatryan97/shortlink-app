@@ -66,6 +66,7 @@ class BalanceController extends Controller
             'count' => 0,
             'url' => null,
             'provider_ref' => 'heleket_topup',
+            'payment_kind' => ShortlinkTransaction::KIND_BALANCE_TOPUP,
         ]);
 
         $baseUrl = config('services.heleket.base', 'https://api.heleket.com');
@@ -175,6 +176,7 @@ class BalanceController extends Controller
             'count' => 0,
             'url' => null,
             'provider_ref' => 'tron_topup',
+            'payment_kind' => ShortlinkTransaction::KIND_BALANCE_TOPUP,
         ]);
 
         $request->session()->put('balance_topup_order', $orderId);
