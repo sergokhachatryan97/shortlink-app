@@ -2,10 +2,10 @@
 
 namespace App\Services;
 
-use App\Jobs\SendPartnerPayoutJob;
 use App\Models\PartnerCommissionPayout;
 use App\Models\PartnerPayoutSetting;
 use App\Models\ShortlinkSetting;
+use App\Models\ShortlinkTransaction;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -15,7 +15,8 @@ class PartnerCommissionService
     public const DEFAULT_COMMISSION_PERCENT = 10.00;
 
     public function __construct(
-        protected PayoutRouteResolver $routeResolver
+        protected PayoutRouteResolver $routeResolver,
+        protected BalanceService $balanceService,
     ) {}
 
     /**
@@ -47,9 +48,8 @@ class PartnerCommissionService
     /**
      * Record a partner commission from a referred user's payment.
      *
-     * Source provider (heleket/coinrush) = where the payment came from.
-     * Payout provider = admin-controlled; which system pays the partner.
-     * These are independent: e.g. CoinRush payment can be paid out via Heleket.
+     * When {@see config('partner.referral_credits_to_balance')} is true (default), the partner's
+     * Trastly balance is credited immediately and no withdrawal row stays pending.
      */
     public function recordCommission(
         User $sourceUser,
@@ -63,12 +63,13 @@ class PartnerCommissionService
         }
 
         $partner = $sourceUser->partner;
-        if (!$partner || !$partner->is_partner) {
+        if (! $partner || ! $partner->is_partner) {
             return null;
         }
 
         if ($partner->id === $sourceUser->id) {
             Log::warning('PartnerCommissionService: self-referral prevented', ['user_id' => $sourceUser->id]);
+
             return null;
         }
 
@@ -82,7 +83,7 @@ class PartnerCommissionService
 
         $payoutProvider = $this->resolvePayoutProvider($partner);
         $allowed = config('partner.allowed_payout_providers', ['heleket']);
-        if (!in_array($payoutProvider, $allowed, true)) {
+        if (! in_array($payoutProvider, $allowed, true)) {
             $payoutProvider = 'heleket';
         }
 
@@ -108,7 +109,7 @@ class PartnerCommissionService
             $walletAddress = $w !== '' ? $w : null;
         }
 
-        if ($walletAddress === null) {
+        if ($walletAddress === null && ! (bool) config('partner.referral_credits_to_balance', true)) {
             Log::info('PartnerCommissionService: recording commission without saved payout wallet (partner can add USDT TRC20 in dashboard)', [
                 'partner_id' => $partner->id,
                 'payout_provider' => $payoutProvider,
@@ -129,6 +130,8 @@ class PartnerCommissionService
 
         $recordProvider = ($settings && $settings->provider) ? $settings->provider : $payoutProvider;
 
+        $creditToBalance = (bool) config('partner.referral_credits_to_balance', true);
+
         $payout = DB::transaction(function () use (
             $sourceUser,
             $partner,
@@ -143,7 +146,12 @@ class PartnerCommissionService
             $sourceType,
             $sourceId,
             $sourceProvider,
+            $creditToBalance,
         ) {
+            $status = $creditToBalance
+                ? PartnerCommissionPayout::STATUS_CREDITED_BALANCE
+                : PartnerCommissionPayout::STATUS_PENDING;
+
             $payout = PartnerCommissionPayout::create([
                 'source_user_id' => $sourceUser->id,
                 'partner_user_id' => $partner->id,
@@ -155,7 +163,7 @@ class PartnerCommissionService
                 'currency' => $settings?->currency ?? $currency,
                 'network' => $settings?->network ?? $network,
                 'wallet_address' => $walletAddress,
-                'status' => PartnerCommissionPayout::STATUS_PENDING,
+                'status' => $status,
                 'source_type' => $sourceType,
                 'source_id' => $sourceId,
             ]);
@@ -167,69 +175,29 @@ class PartnerCommissionService
                 'payout_provider' => $recordProvider,
                 'source_amount' => $sourceAmount,
                 'commission_amount' => $commissionAmount,
+                'credited_to_balance' => $creditToBalance,
             ]);
 
-            // Automatic payout disabled: payouts are handled manually by manager.
-            // Preserved for future reuse - uncomment to re-enable auto payout when threshold is reached.
-            // $idsToPayout = $this->checkAndTriggerPayoutForBatch($payout);
+            if ($creditToBalance) {
+                $this->balanceService->incrementBalance(User::class, (int) $partner->id, $commissionAmount);
+
+                ShortlinkTransaction::create([
+                    'order_id' => 'refcom-'.$payout->id,
+                    'amount' => $commissionAmount,
+                    'currency' => 'USD',
+                    'status' => 'paid',
+                    'identifier' => 'user:'.$partner->id,
+                    'count' => 0,
+                    'url' => null,
+                    'provider_ref' => 'referral_commission',
+                    'payment_kind' => ShortlinkTransaction::KIND_PARTNER_REFERRAL,
+                ]);
+            }
 
             return $payout;
         });
 
-        // Automatic payout disabled: do not dispatch SendPartnerPayoutJob.
-        // if (!empty($idsToPayout)) {
-        //     SendPartnerPayoutJob::dispatch($idsToPayout);
-        // }
-
         return $payout;
-    }
-
-    /**
-     * Check if the partner's pending batch meets the minimum and trigger payout.
-     * Uses row locking to prevent duplicate payouts. Returns IDs to dispatch, or empty array.
-     *
-     * @return array<int>
-     */
-    private function checkAndTriggerPayoutForBatch(PartnerCommissionPayout $payout): array
-    {
-        $minPayout = (float) (ShortlinkSetting::get('partner_min_payout_amount') ?? config('partner.default_min_payout_amount', 100));
-        $enabledProviders = config('partner.payout_providers_enabled', ['heleket']);
-        $provider = strtolower($payout->provider ?? '');
-
-        if (!in_array($provider, $enabledProviders, true)) {
-            return [];
-        }
-
-        $batch = PartnerCommissionPayout::where('partner_user_id', $payout->partner_user_id)
-            ->where('provider', $payout->provider)
-            ->where('currency', $payout->currency ?? 'USDT')
-            ->where('network', $payout->network ?? '')
-            ->where('wallet_address', $payout->wallet_address ?? '')
-            ->where('status', PartnerCommissionPayout::STATUS_PENDING)
-            ->lockForUpdate()
-            ->orderBy('id')
-            ->get();
-
-        $total = $batch->sum(fn ($p) => (float) $p->commission_amount);
-
-        if ($total < $minPayout) {
-            return [];
-        }
-
-        $ids = $batch->pluck('id')->all();
-
-        PartnerCommissionPayout::whereIn('id', $ids)->update([
-            'status' => PartnerCommissionPayout::STATUS_PROCESSING,
-        ]);
-
-        Log::info('PartnerCommissionService: payout triggered', [
-            'partner_id' => $payout->partner_user_id,
-            'batch_ids' => $ids,
-            'total' => $total,
-            'min' => $minPayout,
-        ]);
-
-        return $ids;
     }
 
     /**
@@ -238,8 +206,24 @@ class PartnerCommissionService
      */
     public function getAvailableWithdrawAmount(User $partner): float
     {
+        if ((bool) config('partner.referral_credits_to_balance', true)) {
+            return 0.0;
+        }
+
         $sum = PartnerCommissionPayout::where('partner_user_id', $partner->id)
             ->whereIn('status', [PartnerCommissionPayout::STATUS_PENDING, PartnerCommissionPayout::STATUS_REJECTED])
+            ->sum('commission_amount');
+
+        return round((float) $sum, 2);
+    }
+
+    /**
+     * Total referral commission already credited to the partner's balance (all time).
+     */
+    public function getTotalCreditedToBalance(User $partner): float
+    {
+        $sum = PartnerCommissionPayout::where('partner_user_id', $partner->id)
+            ->where('status', PartnerCommissionPayout::STATUS_CREDITED_BALANCE)
             ->sum('commission_amount');
 
         return round((float) $sum, 2);

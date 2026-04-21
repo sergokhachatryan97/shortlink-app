@@ -57,6 +57,9 @@
             <li class="nav-item">
                     <a class="nav-link {{ $activeTab === 'partner-payouts' ? 'active' : '' }}" href="{{ route('admin.dashboard', ['tab' => 'partner-payouts']) }}">Partner payouts</a>
                 </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ route('admin.promo-codes.index') }}">Promo codes</a>
+                </li>
             @endif
         </ul>
 

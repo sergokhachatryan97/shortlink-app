@@ -66,4 +66,16 @@ return [
     */
     'default_min_payout_amount' => 100,
 
+    /*
+    |--------------------------------------------------------------------------
+    | Credit referral commissions to partner balance
+    |--------------------------------------------------------------------------
+    |
+    | When true, partner referral commissions are added to the partner's
+    | Trastly USD balance immediately (no withdrawal request). Set false to
+    | restore the legacy pending / manual withdrawal flow.
+    |
+    */
+    'referral_credits_to_balance' => env('PARTNER_REFERRAL_CREDITS_TO_BALANCE', true),
+
 ];

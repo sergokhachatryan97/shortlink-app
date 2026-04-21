@@ -8,11 +8,19 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class PartnerCommissionPayout extends Model
 {
     public const STATUS_PENDING = 'pending';
+
     public const STATUS_PROCESSING = 'processing';
+
     public const STATUS_REQUESTED = 'requested';
+
     public const STATUS_PAID = 'paid';
+
     public const STATUS_FAILED = 'failed';
+
     public const STATUS_REJECTED = 'rejected';
+
+    /** Commission settled by crediting the partner's in-app USD balance. */
+    public const STATUS_CREDITED_BALANCE = 'credited_balance';
 
     protected $fillable = [
         'source_user_id',
@@ -82,7 +90,12 @@ class PartnerCommissionPayout extends Model
 
     public function isSettled(): bool
     {
-        return in_array($this->status, [self::STATUS_PAID, self::STATUS_FAILED, self::STATUS_REJECTED], true);
+        return in_array($this->status, [self::STATUS_PAID, self::STATUS_FAILED, self::STATUS_REJECTED, self::STATUS_CREDITED_BALANCE], true);
+    }
+
+    public function isCreditedToBalance(): bool
+    {
+        return $this->status === self::STATUS_CREDITED_BALANCE;
     }
 
     /** Whether this record counts toward available withdrawal (pending only). */

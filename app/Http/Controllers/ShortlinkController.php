@@ -6,6 +6,7 @@ use App\Exceptions\InsufficientBalanceException;
 use App\Models\ShortlinkLink;
 use App\Models\ShortlinkSetting;
 use App\Models\ShortlinkTransaction;
+use App\Models\SiteStat;
 use App\Models\SubscriptionPlan;
 use App\Models\User;
 use App\Models\UserSubscription;
@@ -77,6 +78,7 @@ class ShortlinkController extends Controller
             'plans' => $plans,
             'activeSubscription' => $activeSubscription,
             'balance' => $balance,
+            'lifetimeLinksGenerated' => SiteStat::lifetimeLinksGenerated(),
         ]);
     }
 
@@ -150,7 +152,7 @@ class ShortlinkController extends Controller
                     'links' => $links,
                     'download_url' => route('shortlink.download'),
                     'remaining' => 0,
-                ], $this->userStatusPayload($user)));
+                ], $this->userStatusPayload($user), $this->lifetimeStatPayload()));
             } catch (InsufficientBalanceException) {
                 // Fall through to payment redirect below.
             }
@@ -184,7 +186,7 @@ class ShortlinkController extends Controller
             'links' => $links,
             'download_url' => route('shortlink.download'),
             'remaining' => $newRemaining,
-        ], $this->userStatusPayload($user)));
+        ], $this->userStatusPayload($user), $this->lifetimeStatPayload()));
     }
 
     /**
@@ -251,6 +253,7 @@ class ShortlinkController extends Controller
                 'batch_index' => ++$idx,
                 'batch_id' => $batchId,
                 'expires_at' => now()->addDays(30),
+                'from_free_trial_quota' => true,
             ]);
         }
 
@@ -288,7 +291,7 @@ class ShortlinkController extends Controller
             'links' => $links,
             'download_url' => route('shortlink.download'),
             'remaining' => 0,
-        ], $this->userStatusPayload($user)));
+        ], $this->userStatusPayload($user), $this->lifetimeStatPayload()));
     }
 
     /** Build balance + plan payload for frontend (no reload). */
@@ -314,6 +317,12 @@ class ShortlinkController extends Controller
         }
 
         return $payload;
+    }
+
+    /** Current all-time links counter (for AJAX UI refresh). */
+    private function lifetimeStatPayload(): array
+    {
+        return ['lifetime_links_generated' => SiteStat::lifetimeLinksGenerated()];
     }
 
     public function download(Request $request): StreamedResponse
@@ -594,6 +603,8 @@ class ShortlinkController extends Controller
         for ($i = 1; $i <= $count; $i++) {
             $links[] = 'https://short.example/'.$i;
         }
+
+        SiteStat::incrementLifetimeLinksGenerated(count($links));
 
         return redirect()->route('shortlink.index')
             ->with('success', $count.' links generated! Download your file below.')

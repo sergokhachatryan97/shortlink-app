@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Order;
 use App\Models\ShortlinkLink;
 use App\Models\ShortlinkSetting;
+use App\Models\SiteStat;
 use App\Models\User;
 use App\Models\UserSubscription;
 use Illuminate\Support\Facades\DB;
@@ -54,6 +55,8 @@ class ShortlinkEntitlementService
             'created_at' => now(),
             'updated_at' => now(),
         ]);
+
+        SiteStat::forgetLifetimeLinksCache();
     }
 
     /**
@@ -322,6 +325,7 @@ class ShortlinkEntitlementService
                 'batch_index' => $i + 1,
                 'batch_id' => $batchId,
                 'expires_at' => $expiresAt,
+                'from_free_trial_quota' => $i < $trialInOrder,
             ]);
         }
     }

@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\PromoCodeController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\ApiDocsController;
 use App\Http\Controllers\AuthController;
@@ -59,6 +60,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/balance/heleket/success', [BalanceController::class, 'heleketTopupSuccess'])->name('balance.heleket.success');
     Route::get('/balance/tron/success', [BalanceController::class, 'tronTopupSuccess'])->name('balance.tron.success');
     Route::get('/subscription', [SubscriptionController::class, 'index'])->name('subscription.index');
+    Route::post('/subscription/promo/validate', [SubscriptionController::class, 'validatePromo'])->name('subscription.promo.validate');
     Route::post('/subscription/purchase', [SubscriptionController::class, 'purchase'])->name('subscription.purchase');
     Route::post('/subscription/upgrade', [SubscriptionController::class, 'upgrade'])->name('subscription.upgrade');
     Route::post('/partner/activate', [PartnerController::class, 'activate'])->name('partner.activate');
@@ -95,5 +97,12 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::post('/partner-payouts/reject', [AdminController::class, 'rejectPartnerWithdrawal'])
             ->middleware('admin.super')
             ->name('partner-payouts.reject');
+
+        Route::middleware('admin.super')->group(function () {
+            Route::get('/promo-codes', [PromoCodeController::class, 'index'])->name('promo-codes.index');
+            Route::post('/promo-codes', [PromoCodeController::class, 'store'])->name('promo-codes.store');
+            Route::get('/promo-codes/{promoCode}', [PromoCodeController::class, 'show'])->name('promo-codes.show');
+            Route::post('/promo-codes/{promoCode}', [PromoCodeController::class, 'update'])->name('promo-codes.update');
+        });
     });
 });

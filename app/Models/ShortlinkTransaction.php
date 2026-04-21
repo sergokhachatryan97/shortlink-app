@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class ShortlinkTransaction extends Model
 {
@@ -14,6 +15,7 @@ class ShortlinkTransaction extends Model
 
     public const KIND_SUBSCRIPTION_UPGRADE = 'subscription_upgrade';
 
+    public const KIND_PARTNER_REFERRAL = 'partner_referral';
     protected $table = 'shortlink_transactions';
 
     protected $fillable = [
@@ -27,12 +29,22 @@ class ShortlinkTransaction extends Model
         'provider_ref',
         'payment_kind',
         'result_links',
+        'promo_code_id',
+        'subscription_gross_amount',
+        'subscription_discount_amount',
     ];
 
     protected $casts = [
         'amount' => 'decimal:2',
         'result_links' => 'array',
+        'subscription_gross_amount' => 'decimal:2',
+        'subscription_discount_amount' => 'decimal:2',
     ];
+
+    public function promoCode(): BelongsTo
+    {
+        return $this->belongsTo(PromoCode::class);
+    }
 
     /**
      * Shortlink / paid-link flow: positive count and target URL.

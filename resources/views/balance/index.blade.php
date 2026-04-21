@@ -195,7 +195,7 @@
                 <div class="cosmic-tx-row d-flex justify-content-between align-items-center py-3">
                     <div>
                         <span class="cosmic-tx-amount">${{ number_format($tx->amount, 2) }}</span>
-                        <span class="cosmic-text-muted small ms-1">— {{ $tx->provider_ref ?? 'Payment' }}</span>
+                        <span class="cosmic-text-muted small ms-1">— @if(($tx->payment_kind ?? null) === \App\Models\ShortlinkTransaction::KIND_PARTNER_REFERRAL){{ __('messages.balance.tx_referral') }}@else{{ $tx->provider_ref ?? 'Payment' }}@endif</span>
                     </div>
                     <span class="cosmic-badge-status cosmic-badge-{{ $tx->status }}">{{ ucfirst($tx->status) }}</span>
                 </div>

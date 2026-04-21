@@ -50,6 +50,14 @@
             width: 85%;
             margin: auto;
         }
+        .hero-lifetime-stat {
+            text-align: center;
+            font-size: 0.9375rem;
+            font-weight: 600;
+            color: rgba(167, 139, 250, 0.95);
+            letter-spacing: 0.02em;
+            margin-top: 0.75rem;
+        }
         .card-style {
             background: rgba(30, 30, 45, 0.1);
             border-radius: var(--radius);
@@ -273,6 +281,7 @@
         <header class="mb-4 mt-4">
             <h1 class="hero-title mb-1">{{ __('messages.shortlink.title') }}</h1>
             <p class="hero-sub mb-0">{{ __('messages.shortlink.subtitle') }}</p>
+            <p id="hero-lifetime-stat" class="hero-lifetime-stat mb-0">{{ __('messages.shortlink.lifetime_links_stat', ['count' => number_format((int) ($lifetimeLinksGenerated ?? 0))]) }}</p>
         </header>
 
         @if (session('success'))
@@ -501,6 +510,7 @@
             'copied' => __('messages.common.copied'),
             'error' => __('messages.common.error'),
             'try_again' => __('messages.common.try_again'),
+            'lifetime_links_stat' => __('messages.shortlink.lifetime_links_stat', ['count' => '__COUNT__']),
         ];
     @endphp
     <script>
@@ -678,6 +688,19 @@
             return s === '' || s === '-' ? '0' : s;
         }
 
+        function formatLifetimeStatCount(n) {
+            const i = parseInt(n, 10);
+            if (!Number.isFinite(i)) return '0';
+            return new Intl.NumberFormat(undefined, { maximumFractionDigits: 0 }).format(i);
+        }
+
+        function updateLifetimeStatDisplay(count) {
+            const el = document.getElementById('hero-lifetime-stat');
+            const tpl = window.__translations.lifetime_links_stat;
+            if (!el || !tpl) return;
+            el.textContent = tpl.replace('__COUNT__', formatLifetimeStatCount(count));
+        }
+
         document.getElementById('shortlink-form').addEventListener('submit', async (e) => {
             e.preventDefault();
             const btn = document.getElementById('generate-btn');
@@ -710,6 +733,10 @@
                     }
                     if (data.plan_name !== undefined || data.remaining !== undefined) {
                         updatePlanStatus(data);
+                    }
+
+                    if (data.lifetime_links_generated !== undefined) {
+                        updateLifetimeStatDisplay(data.lifetime_links_generated);
                     }
 
                     if (data.links && data.links.length > 0) {

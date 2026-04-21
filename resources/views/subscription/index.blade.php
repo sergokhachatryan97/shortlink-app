@@ -16,6 +16,15 @@
         @if (session('error'))
             <div class="cosmic-alert cosmic-alert-danger mb-4">{{ session('error') }}</div>
         @endif
+        @if ($errors->any())
+            <div class="cosmic-alert cosmic-alert-danger mb-4">
+                <ul class="mb-0 ps-3 small">
+                    @foreach ($errors->all() as $err)
+                        <li>{{ $err }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
 
         @if ($activeSubscription)
             <div class="cosmic-alert cosmic-alert-success mb-4 d-flex align-items-center gap-2">
@@ -50,6 +59,39 @@
                 <a href="{{ route('balance.index') }}" class="btn cosmic-btn-primary">{{ __('messages.subscription.view_transactions') }}</a>
             </div>
         </div>
+
+        @if (! empty($promoPlanOptions))
+        <div class="cosmic-promo-card p-4 mb-4" id="subscription-promo-section">
+            <h2 class="h6 text-white mb-2">{{ __('messages.subscription.promo.section_title') }}</h2>
+            <p class="cosmic-text-muted small mb-3">{{ __('messages.subscription.promo.section_hint') }}</p>
+            <div class="row g-2 align-items-end flex-wrap">
+                <div class="col-12 col-md-5">
+                    <label for="promo-plan-select" class="form-label small text-white-50 mb-1">{{ __('messages.subscription.promo.plan_label') }}</label>
+                    <select id="promo-plan-select" class="form-select form-select-sm cosmic-promo-select">
+                        @foreach ($promoPlanOptions as $opt)
+                            <option value="{{ $opt['id'] }}" data-context="{{ $opt['context'] }}" data-base="{{ $opt['base_price'] }}">{{ $opt['label'] }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="col-12 col-md-4">
+                    <label for="promo-code-input" class="form-label small text-white-50 mb-1 d-none d-md-block">&nbsp;</label>
+                    <input type="text" id="promo-code-input" class="form-control form-control-sm cosmic-promo-input" placeholder="{{ __('messages.subscription.promo.code_placeholder') }}" autocomplete="off" maxlength="64">
+                </div>
+                <div class="col-6 col-md-auto">
+                    <button type="button" class="btn btn-sm cosmic-btn-primary w-100" id="promo-apply-btn">{{ __('messages.subscription.promo.apply') }}</button>
+                </div>
+                <div class="col-6 col-md-auto">
+                    <button type="button" class="btn btn-sm cosmic-btn-plan w-100 d-none" id="promo-remove-btn">{{ __('messages.subscription.promo.remove') }}</button>
+                </div>
+            </div>
+            <div id="promo-feedback" class="small mt-2" role="status"></div>
+            <div id="promo-breakdown" class="d-none mt-3 p-3 rounded" style="background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.12);">
+                <div class="d-flex justify-content-between small mb-1"><span class="cosmic-text-muted">{{ __('messages.subscription.promo.original') }}</span><span class="text-white" id="promo-original"></span></div>
+                <div class="d-flex justify-content-between small mb-1"><span class="cosmic-text-muted" id="promo-discount-label"></span><span class="text-success" id="promo-discount-value"></span></div>
+                <div class="d-flex justify-content-between fw-semibold mt-2 pt-2 border-top border-secondary border-opacity-25"><span class="text-white">{{ __('messages.subscription.promo.final') }}</span><span class="text-white" id="promo-final"></span></div>
+            </div>
+        </div>
+        @endif
 
         @php $maxSortOrder = $plans->max('sort_order'); @endphp
         <div class="row g-4 mb-4">
@@ -112,6 +154,7 @@
                                 <form method="POST" action="{{ route('subscription.upgrade') }}">
                                     @csrf
                                     <input type="hidden" name="plan_id" value="{{ $plan->id }}">
+                                    <input type="hidden" name="promo_code" value="" class="js-subscription-promo-field" autocomplete="off">
                                     <button type="submit" class="btn w-100 cosmic-btn-primary">Upgrade to {{ $plan->getTranslatedName() }}</button>
                                     @if ($upgradePriceDiff > 0)
                                     <p class="cosmic-pay-today small mt-2 mb-0 text-center">Pay ${{ number_format($upgradePriceDiff, 2) }} today</p>
@@ -127,6 +170,7 @@
                                 <form method="POST" action="{{ route('subscription.purchase') }}">
                                     @csrf
                                     <input type="hidden" name="plan_id" value="{{ $plan->id }}">
+                                    <input type="hidden" name="promo_code" value="" class="js-subscription-promo-field" autocomplete="off">
                                     <button type="submit" class="btn w-100 {{ $isRecommended ? 'cosmic-btn-primary' : 'cosmic-btn-plan' }}">Buy {{ $plan->getTranslatedName() }}</button>
                                 </form>
                             @else
@@ -268,6 +312,17 @@
     padding: 10px 16px;
 }
 .cosmic-pay-today { color: rgba(255,255,255,0.6); }
+.cosmic-promo-card {
+    background: rgba(30, 30, 45, 0.85);
+    border: 1px solid rgba(167,139,250,0.35);
+    border-radius: 12px;
+}
+.cosmic-promo-select, .cosmic-promo-input {
+    background: rgba(15,15,25,0.9);
+    border: 1px solid rgba(255,255,255,0.15);
+    color: #fff;
+}
+.cosmic-promo-input::placeholder { color: rgba(255,255,255,0.4); }
 .cosmic-billing-footer { border-top: 1px solid rgba(255,255,255,0.08); }
 .cosmic-link { color: #a78bfa; text-decoration: none; font-size: 0.875rem; }
 .cosmic-link:hover { color: #c4b5fd; }
@@ -275,5 +330,90 @@
 .dropdown-menu-dark .dropdown-item { color: rgba(255,255,255,0.9); }
 .dropdown-menu-dark .dropdown-item:hover { background: rgba(255,255,255,0.1); color: #fff; }
 </style>
+@endpush
+
+@push('scripts')
+@if (! empty($promoPlanOptions))
+<script>
+(function () {
+    const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+    const planSelect = document.getElementById('promo-plan-select');
+    const codeInput = document.getElementById('promo-code-input');
+    const applyBtn = document.getElementById('promo-apply-btn');
+    const removeBtn = document.getElementById('promo-remove-btn');
+    const feedback = document.getElementById('promo-feedback');
+    const breakdown = document.getElementById('promo-breakdown');
+    const hiddenFields = () => document.querySelectorAll('.js-subscription-promo-field');
+    const fmt = (n) => '$' + Number(n).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+    const discountLabelTplPercent = @json(__('messages.subscription.promo.discount_percent'));
+    const discountLabelTplFixed = @json(__('messages.subscription.promo.discount_fixed'));
+
+    function setFeedback(html, ok) {
+        feedback.innerHTML = html;
+        feedback.style.color = ok ? '#86efac' : '#fca5a5';
+    }
+
+    function clearPromoState() {
+        hiddenFields().forEach((el) => { el.value = ''; });
+        codeInput.value = '';
+        breakdown.classList.add('d-none');
+        removeBtn.classList.add('d-none');
+        setFeedback('', true);
+    }
+
+    removeBtn.addEventListener('click', () => clearPromoState());
+
+    applyBtn.addEventListener('click', async () => {
+        const code = (codeInput.value || '').trim();
+        if (!code) {
+            setFeedback(@json(__('messages.subscription.promo.enter_code')), false);
+            return;
+        }
+        const opt = planSelect.selectedOptions[0];
+        const planId = opt.value;
+        const context = opt.getAttribute('data-context');
+        applyBtn.disabled = true;
+        setFeedback(@json(__('messages.common.processing')), true);
+        try {
+            const res = await fetch(@json(route('subscription.promo.validate')), {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': csrf,
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+                credentials: 'same-origin',
+                body: JSON.stringify({ plan_id: planId, promo_code: code, context }),
+            });
+            const data = await res.json();
+            if (!data.valid) {
+                setFeedback(data.message || data.error_code || 'Invalid', false);
+                breakdown.classList.add('d-none');
+                removeBtn.classList.add('d-none');
+                hiddenFields().forEach((el) => { el.value = ''; });
+                return;
+            }
+            setFeedback(data.message || '', true);
+            hiddenFields().forEach((el) => { el.value = code; });
+            removeBtn.classList.remove('d-none');
+            document.getElementById('promo-original').textContent = fmt(data.original_amount);
+            const discLabel = data.discount_type === 'percent'
+                ? discountLabelTplPercent.replace(':value', String(data.discount_value ?? ''))
+                : discountLabelTplFixed.replace(':value', String(data.discount_value ?? ''));
+            document.getElementById('promo-discount-label').textContent = discLabel;
+            document.getElementById('promo-discount-value').textContent = '-' + fmt(data.discount_amount);
+            document.getElementById('promo-final').textContent = fmt(data.final_amount);
+            breakdown.classList.remove('d-none');
+        } catch (e) {
+            setFeedback(@json(__('messages.common.error')), false);
+        } finally {
+            applyBtn.disabled = false;
+        }
+    });
+})();
+@endif
+</script>
 @endpush
 @endsection

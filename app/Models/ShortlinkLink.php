@@ -17,10 +17,12 @@ class ShortlinkLink extends Model
         'batch_index',
         'batch_id',
         'expires_at',
+        'from_free_trial_quota',
     ];
 
     protected $casts = [
         'expires_at' => 'datetime',
+        'from_free_trial_quota' => 'boolean',
     ];
 
     public function scopeNotExpired($query)

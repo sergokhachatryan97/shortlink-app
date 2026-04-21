@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use App\Models\ShortlinkLink;
+use App\Observers\ShortlinkLinkObserver;
 use App\Services\BalanceService;
 use Illuminate\Support\ServiceProvider;
 
@@ -20,6 +22,6 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        ShortlinkLink::observe(ShortlinkLinkObserver::class);
     }
 }

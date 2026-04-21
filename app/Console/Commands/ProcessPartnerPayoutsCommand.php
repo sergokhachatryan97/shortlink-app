@@ -17,6 +17,12 @@ class ProcessPartnerPayoutsCommand extends Command
 
     public function handle(): int
     {
+        if ((bool) config('partner.referral_credits_to_balance', true)) {
+            $this->info('Referral commissions are credited to partner balances; no payout batches to process.');
+
+            return self::SUCCESS;
+        }
+
         $enabledProviders = config('partner.payout_providers_enabled', ['heleket']);
         $minPayoutAmount = (float) (ShortlinkSetting::get('partner_min_payout_amount') ?? config('partner.default_min_payout_amount', 100));
 
@@ -42,20 +48,24 @@ class ProcessPartnerPayoutsCommand extends Command
                             'min' => $minPayoutAmount,
                             'count' => count($b['ids']),
                         ]);
+
                         return false;
                     }
+
                     return true;
                 })
                 ->filter(function ($b) use ($enabledProviders) {
                     $provider = strtolower($b['provider'] ?? '');
-                    if (!in_array($provider, $enabledProviders, true)) {
+                    if (! in_array($provider, $enabledProviders, true)) {
                         Log::info('ProcessPartnerPayoutsCommand: skipping batch - provider not enabled', [
                             'provider' => $provider,
                             'enabled' => $enabledProviders,
                             'count' => count($b['ids']),
                         ]);
+
                         return false;
                     }
+
                     return true;
                 })
                 ->values()
@@ -64,7 +74,7 @@ class ProcessPartnerPayoutsCommand extends Command
 
         $dispatched = 0;
         foreach ($batches as $batch) {
-//            SendPartnerPayoutJob::dispatch($batch['ids']);
+            //            SendPartnerPayoutJob::dispatch($batch['ids']);
             $dispatched++;
         }
 

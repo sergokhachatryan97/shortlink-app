@@ -20,7 +20,7 @@
         @if (!$user->is_partner)
             <div class="cosmic-card p-4 mb-4">
                 <h5 class="cosmic-card-title mb-3">Become a Partner</h5>
-                <p class="cosmic-text-muted mb-4">Activate partner mode to get your unique referral link and earn commissions in USDT (TRC20) when people you refer make payments.</p>
+                <p class="cosmic-text-muted mb-4">{{ __('messages.partner.become_desc') }}</p>
                 <form method="POST" action="{{ route('partner.activate') }}">
                     @csrf
                     <button type="submit" class="btn cosmic-btn-primary">{{ __('messages.partner.activate') }}</button>
@@ -44,6 +44,22 @@
 
             <div class="cosmic-card p-4 mb-4">
                 <h5 class="cosmic-card-title mb-3">{{ __('messages.partner.earned_commission') }}</h5>
+                @if ($referralCreditsToBalance ?? false)
+                    <p class="cosmic-text-muted mb-2">{{ __('messages.partner.referral_credits_balance_intro') }}</p>
+                    <p class="cosmic-text-muted mb-3">
+                        {{ __('messages.partner.referral_credits_total') }}
+                        <strong class="cosmic-amount">${{ number_format($totalReferralCreditedToBalance ?? 0, 2) }}</strong>
+                        <span class="cosmic-currency">USD</span>
+                    </p>
+                    <a href="{{ route('balance.index') }}" class="btn cosmic-btn-primary">{{ __('messages.partner.view_balance') }}</a>
+                    @if (($totalReferralCreditedToBalance ?? 0) < 0.01)
+                        <p class="cosmic-text-muted small mb-0 mt-3">{{ __('messages.partner.no_commission_yet') }}</p>
+                        <ul class="cosmic-text-muted small ps-3 mb-0 mt-2">
+                            <li>{{ __('messages.partner.no_commission_hint_signup') }}</li>
+                            <li>{{ __('messages.partner.no_commission_hint_pay') }}</li>
+                        </ul>
+                    @endif
+                @else
                 <p class="cosmic-text-muted mb-2">
                     {{ __('messages.partner.available_commission') }} <strong class="cosmic-amount">${{ number_format($availableWithdrawAmount ?? 0, 2) }}</strong> <span class="cosmic-currency">(USDT)</span>
                 </p>
@@ -67,9 +83,10 @@
                         {{ __('messages.partner.contact_manager_withdrawal') }}
                     </button>
                 @endif
+                @endif
             </div>
 
-            @if(!empty($requestedWithdrawal) || $lastPaidWithdrawal || $lastRejectedWithdrawal)
+            @if(empty($referralCreditsToBalance) && (!empty($requestedWithdrawal) || $lastPaidWithdrawal || $lastRejectedWithdrawal))
             <div class="cosmic-card p-4 mb-4">
                 <h5 class="cosmic-card-title mb-3">{{ __('messages.partner.withdrawal_status') }}</h5>
                 @if(!empty($requestedWithdrawal))
@@ -144,7 +161,7 @@
 </div>
 
 {{-- Withdrawal request modal: outside container so Bootstrap backdrop and z-index work --}}
-@if($user->is_partner ?? false)
+@if(($user->is_partner ?? false) && empty($referralCreditsToBalance))
 <div class="modal fade cosmic-modal" id="withdrawalRequestModal" tabindex="-1" aria-labelledby="withdrawalRequestModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content cosmic-modal-content">

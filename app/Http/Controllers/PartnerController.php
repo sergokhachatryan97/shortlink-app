@@ -5,23 +5,25 @@ namespace App\Http\Controllers;
 use App\Mail\PartnerWithdrawalRequestMail;
 use App\Models\PartnerCommissionPayout;
 use App\Models\PartnerPayoutSetting;
+use App\Models\User;
 use App\Services\PartnerActivationService;
 use App\Services\PartnerCommissionService;
 use App\Services\PayoutRouteResolver;
 use App\Services\WalletValidationService;
-use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Validation\ValidationException;
+use Illuminate\View\View;
 
 class PartnerController extends Controller
 {
     public function activate(Request $request, PartnerActivationService $activationService): RedirectResponse
     {
         $user = Auth::user();
-        if (!$user) {
+        if (! $user) {
             return redirect()->route('auth.login')->with('error', 'Please sign in to become a partner.');
         }
 
@@ -32,15 +34,15 @@ class PartnerController extends Controller
         return redirect($redirect)->with('success', 'You are now a partner! Share your referral link to earn commissions.');
     }
 
-    public function dashboard(Request $request): \Illuminate\View\View|RedirectResponse
+    public function dashboard(Request $request): View|RedirectResponse
     {
         $user = Auth::user();
-        if (!$user) {
+        if (! $user) {
             return redirect()->route('auth.login');
         }
 
         $referralLink = $user->is_partner && $user->referral_code
-            ? config('app.url') . '/r/' . $user->referral_code
+            ? config('app.url').'/r/'.$user->referral_code
             : null;
 
         $payoutSettings = $user->partnerPayoutSettings;
@@ -54,10 +56,15 @@ class PartnerController extends Controller
         $requestedWithdrawal = null;
         $lastPaidWithdrawal = null;
         $lastRejectedWithdrawal = null;
+        $referralCreditsToBalance = (bool) config('partner.referral_credits_to_balance', true);
+        $totalReferralCreditedToBalance = 0.0;
         if ($user->is_partner) {
+            if ($referralCreditsToBalance) {
+                $totalReferralCreditedToBalance = $commissionService->getTotalCreditedToBalance($user);
+            }
             $availableWithdrawAmount = $commissionService->getAvailableWithdrawAmount($user);
             $minWithdrawAmount = $commissionService->getMinWithdrawAmount();
-            $canRequestWithdrawal = $availableWithdrawAmount >= $minWithdrawAmount;
+            $canRequestWithdrawal = ! $referralCreditsToBalance && $availableWithdrawAmount >= $minWithdrawAmount;
             $requested = PartnerCommissionPayout::where('partner_user_id', $user->id)
                 ->where('status', PartnerCommissionPayout::STATUS_REQUESTED)
                 ->orderByDesc('updated_at')
@@ -100,6 +107,8 @@ class PartnerController extends Controller
             'requestedWithdrawal' => $requestedWithdrawal,
             'lastPaidWithdrawal' => $lastPaidWithdrawal,
             'lastRejectedWithdrawal' => $lastRejectedWithdrawal,
+            'referralCreditsToBalance' => $referralCreditsToBalance,
+            'totalReferralCreditedToBalance' => $totalReferralCreditedToBalance,
         ]);
     }
 
@@ -110,8 +119,12 @@ class PartnerController extends Controller
     ): RedirectResponse {
 
         $user = Auth::user();
-        if (!$user || !$user->is_partner) {
+        if (! $user || ! $user->is_partner) {
             return redirect()->route('partner.dashboard')->with('error', 'Partner mode required.');
+        }
+
+        if ((bool) config('partner.referral_credits_to_balance', true)) {
+            return redirect()->route('partner.dashboard')->with('error', __('messages.partner.withdrawal_disabled_credits_balance'));
         }
 
         $validated = $request->validate([
@@ -124,7 +137,7 @@ class PartnerController extends Controller
 
         try {
             $walletValidator->validateOrFail($wallet, 'USDT', 'TRC20');
-        } catch (\Illuminate\Validation\ValidationException $e) {
+        } catch (ValidationException $e) {
             return redirect()->route('partner.dashboard')
                 ->withErrors($e->errors())
                 ->withInput()
@@ -178,7 +191,7 @@ class PartnerController extends Controller
             ->where('is_partner', true)
             ->first();
 
-        if (!$partner) {
+        if (! $partner) {
             return redirect()->route('shortlink.index')->with('info', 'Invalid referral link.');
         }
 
@@ -194,7 +207,7 @@ class PartnerController extends Controller
     public function updatePayoutSettings(Request $request, WalletValidationService $walletValidator, PayoutRouteResolver $routeResolver): RedirectResponse
     {
         $user = Auth::user();
-        if (!$user || !$user->is_partner) {
+        if (! $user || ! $user->is_partner) {
             return redirect()->route('partner.dashboard')->with('error', 'Partner mode required.');
         }
 
@@ -217,10 +230,11 @@ class PartnerController extends Controller
                 ->where('currency', $currency)
                 ->where('network', $network)
                 ->delete();
+
             return redirect()->route('partner.dashboard')->with('success', 'USDT wallet removed.');
         }
 
-        if (!$routeResolver->isRouteAllowed($provider, $currency, $network)) {
+        if (! $routeResolver->isRouteAllowed($provider, $currency, $network)) {
             return redirect()->route('partner.dashboard')->with('error', 'Invalid payout route for this provider.');
         }
 

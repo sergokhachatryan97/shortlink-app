@@ -43,6 +43,14 @@ class PartnerBackfillCommissionsCommandTest extends TestCase
             'partner_user_id' => $partner->id,
             'source_type' => 'heleket_topup',
             'source_id' => $orderId,
+            'status' => PartnerCommissionPayout::STATUS_CREDITED_BALANCE,
+        ]);
+
+        $partner->refresh();
+        $this->assertGreaterThan(0, (float) $partner->balance);
+        $this->assertDatabaseHas('shortlink_transactions', [
+            'payment_kind' => ShortlinkTransaction::KIND_PARTNER_REFERRAL,
+            'identifier' => 'user:'.$partner->id,
         ]);
     }
 
