@@ -18,19 +18,13 @@ class SiteStat extends Model
 
     protected $fillable = [
         'lifetime_links_generated',
+        'free_trial_links_generated',
     ];
 
     protected $casts = [
         'lifetime_links_generated' => 'integer',
+        'free_trial_links_generated' => 'integer',
     ];
-
-    /**
-     * Sum of links issued under free-trial quota (guest session + persisted trial rows).
-     */
-    public static function totalFreeTrialLinksRecorded(): int
-    {
-        return (int) DB::table('shortlink_free_trial_uses')->sum('links_count');
-    }
 
     /**
      * Cached read: persisted non-trial links (site_stats) plus all free-trial quota generations.
@@ -38,9 +32,14 @@ class SiteStat extends Model
     public static function lifetimeLinksGenerated(): int
     {
         return (int) Cache::remember(self::LIFETIME_LINKS_CACHE_KEY, 86400, function () {
-            $site = (int) self::query()->where('id', self::ROW_ID)->value('lifetime_links_generated');
+            $row = self::query()
+                ->where('id', self::ROW_ID)
+                ->first(['lifetime_links_generated', 'free_trial_links_generated']);
+            if (! $row) {
+                return 0;
+            }
 
-            return $site + self::totalFreeTrialLinksRecorded();
+            return (int) $row->lifetime_links_generated + (int) ($row->free_trial_links_generated ?? 0);
         });
     }
 
@@ -61,6 +60,19 @@ class SiteStat extends Model
         DB::table('site_stats')
             ->where('id', self::ROW_ID)
             ->increment('lifetime_links_generated', $by);
+
+        self::forgetLifetimeLinksCache();
+    }
+
+    public static function incrementFreeTrialLinksGenerated(int $by = 1): void
+    {
+        if ($by < 1) {
+            return;
+        }
+
+        DB::table('site_stats')
+            ->where('id', self::ROW_ID)
+            ->increment('free_trial_links_generated', $by);
 
         self::forgetLifetimeLinksCache();
     }

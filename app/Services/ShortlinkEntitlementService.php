@@ -56,7 +56,7 @@ class ShortlinkEntitlementService
             'updated_at' => now(),
         ]);
 
-        SiteStat::forgetLifetimeLinksCache();
+        SiteStat::incrementFreeTrialLinksGenerated($count);
     }
 
     /**

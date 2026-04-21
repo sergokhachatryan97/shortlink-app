@@ -86,6 +86,7 @@ class LifetimeLinksStatTest extends TestCase
             'created_at' => now(),
             'updated_at' => now(),
         ]);
+        SiteStat::incrementFreeTrialLinksGenerated(1);
 
         $before = SiteStat::lifetimeLinksGenerated();
         $this->assertSame(1, $before);
