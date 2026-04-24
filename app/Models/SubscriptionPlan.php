@@ -15,6 +15,7 @@ class SubscriptionPlan extends Model
         'description_translations',
         'price_usd',
         'links_limit',
+        'daily_links_limit',
         'duration_days',
         'is_active',
         'sort_order',
@@ -25,6 +26,7 @@ class SubscriptionPlan extends Model
         'is_active' => 'boolean',
         'name_translations' => 'array',
         'description_translations' => 'array',
+        'daily_links_limit' => 'integer',
     ];
 
     /** Supported locales for plan name/description. */
@@ -44,6 +46,7 @@ class SubscriptionPlan extends Model
         if (isset($translations['en']) && trim((string) $translations['en']) !== '') {
             return trim((string) $translations['en']);
         }
+
         return (string) ($this->getOriginal('name') ?? '');
     }
 
@@ -59,6 +62,7 @@ class SubscriptionPlan extends Model
             return trim((string) $translations['en']);
         }
         $raw = $this->getOriginal('description');
+
         return $raw !== null ? (string) $raw : null;
     }
 
@@ -70,5 +74,23 @@ class SubscriptionPlan extends Model
     public function isUnlimited(): bool
     {
         return $this->links_limit === 0;
+    }
+
+    /** Max subscription-attributed links per calendar day (app timezone). Null = no daily cap. */
+    public function hasDailyLinksLimit(): bool
+    {
+        return $this->daily_links_limit !== null && (int) $this->daily_links_limit > 0;
+    }
+
+    public static function countSubscriptionLinksToday(int $userSubscriptionId): int
+    {
+        if ($userSubscriptionId <= 0) {
+            return 0;
+        }
+
+        return (int) ShortlinkLink::query()
+            ->where('user_subscription_id', $userSubscriptionId)
+            ->whereDate('created_at', now()->toDateString())
+            ->count();
     }
 }

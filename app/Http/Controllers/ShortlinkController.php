@@ -41,10 +41,14 @@ class ShortlinkController extends Controller
         }
 
         $atPlanLimit = false;
+        $atDailyPlanLimit = false;
         $planName = null;
         $planLimit = self::FREE_TRIAL_LIMIT;
         $planUsed = self::FREE_TRIAL_LIMIT - $remaining;
         $planRemaining = $remaining;
+        $planDailyLimit = null;
+        $planUsedToday = null;
+        $planDailyRemaining = null;
         $pricePerLink = (float) ShortlinkSetting::get('price_per_link', '0.01');
         $user = $request->user();
         if ($user) {
@@ -55,6 +59,15 @@ class ShortlinkController extends Controller
                 $planLimit = (int) $plan->links_limit;
                 $planUsed = ShortlinkLink::where('user_subscription_id', $sub->id)->count();
                 $planRemaining = $plan->isUnlimited() ? null : max(0, $planLimit - $planUsed);
+
+                if ($plan->hasDailyLinksLimit()) {
+                    $planDailyLimit = (int) $plan->daily_links_limit;
+                    $planUsedToday = SubscriptionPlan::countSubscriptionLinksToday((int) $sub->id);
+                    $planDailyRemaining = max(0, $planDailyLimit - $planUsedToday);
+                    if ($planDailyRemaining <= 0) {
+                        $atDailyPlanLimit = true;
+                    }
+                }
 
                 if ($planLimit > 0 && $planUsed >= $planLimit) {
                     $atPlanLimit = true;
@@ -70,11 +83,15 @@ class ShortlinkController extends Controller
             'remaining' => $remaining,
             'links' => $links,
             'atPlanLimit' => $atPlanLimit,
+            'atDailyPlanLimit' => $atDailyPlanLimit,
             'pricePerLink' => $pricePerLink,
             'planName' => $planName,
             'planLimit' => $planLimit,
             'planUsed' => $planUsed,
             'planRemaining' => $planRemaining,
+            'planDailyLimit' => $planDailyLimit,
+            'planUsedToday' => $planUsedToday,
+            'planDailyRemaining' => $planDailyRemaining,
             'plans' => $plans,
             'activeSubscription' => $activeSubscription,
             'balance' => $balance,
@@ -209,6 +226,19 @@ class ShortlinkController extends Controller
         $fromTrial = min($count, $trialRemaining);
         $afterTrial = $count - $fromTrial;
 
+        if ($plan->isUnlimited() && $plan->hasDailyLinksLimit()) {
+            $usedToday = SubscriptionPlan::countSubscriptionLinksToday((int) $sub->id);
+            $roomToday = max(0, (int) $plan->daily_links_limit - $usedToday);
+            if ($afterTrial > $roomToday) {
+                return response()->json(array_merge([
+                    'success' => false,
+                    'error' => 'daily_limit',
+                    'message' => __('messages.shortlink.daily_limit_exceeded', ['remaining' => $roomToday]),
+                    'daily_links_remaining' => $roomToday,
+                ], $this->userStatusPayload($user)), 422);
+            }
+        }
+
         if ($plan->isUnlimited()) {
             $fromPlan = $afterTrial;
             $fromBalance = 0;
@@ -309,6 +339,12 @@ class ShortlinkController extends Controller
             $payload['plan_limit'] = (int) $plan->links_limit;
             $payload['plan_used'] = $currentCount;
             $payload['plan_remaining'] = $plan->isUnlimited() ? null : max(0, (int) $plan->links_limit - $currentCount);
+            if ($plan->hasDailyLinksLimit()) {
+                $usedToday = SubscriptionPlan::countSubscriptionLinksToday((int) $sub->id);
+                $payload['plan_daily_limit'] = (int) $plan->daily_links_limit;
+                $payload['plan_used_today'] = $usedToday;
+                $payload['plan_daily_remaining'] = max(0, (int) $plan->daily_links_limit - $usedToday);
+            }
         } else {
             $payload['plan_name'] = null;
             $payload['plan_limit'] = self::FREE_TRIAL_LIMIT;

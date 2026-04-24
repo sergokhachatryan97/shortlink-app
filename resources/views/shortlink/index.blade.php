@@ -3,6 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    @include('components.favicon')
     <meta name="heleket" content="9701089f" />
     @if (config('services.yandex_metrika.id'))
     <!-- Yandex.Metrika counter -->
@@ -259,10 +260,14 @@
         .pricing-plan-icon.icon-check { background: rgba(255,255,255,0.2); }
         .pricing-card-recommended .pricing-plan-icon { background: rgba(167,139,250,0.4); }
         .pricing-plan-icon.icon-star { background: rgba(255,255,255,0.2); }
+        .pricing-plan-icon.icon-crown {
+            background: linear-gradient(145deg, rgba(251,191,36,0.45), rgba(217,119,6,0.35));
+            color: #fff;
+        }
         .pricing-plan-name-full { color: #fff; font-weight: 600; }
         .pricing-plan-desc { color: rgba(255,255,255,0.8); font-size: 0.9375rem; line-height: 1.5; }
         .pricing-plan-features { display: flex; flex-wrap: wrap; gap: 0.5rem; font-size: 0.8125rem; }
-        .pricing-plan-feature { background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.85); padding: 4px 10px; border-radius: 6px; }
+        .pricing-plan-feature { background: rgba(255,255,255,0.12); color: rgba(255,255,255,0.92); padding: 6px 12px; border-radius: 8px; font-weight: 500; line-height: 1.35; }
         .pricing-plan-price-full { font-size: 1.25rem; font-weight: 700; color: #fff; }
         .pricing-card-recommended .pricing-plan-price-full { font-size: 1.5rem; color: #a78bfa; }
         .pricing-card-current { border-color: rgba(34,197,94,0.5); }
@@ -311,6 +316,12 @@
             <div>
                 <strong>{{ __('messages.shortlink.plan_limit_reached') }}</strong> {{ __('messages.shortlink.plan_limit_desc') }}
                 <span class="d-block mt-1 text-muted small">$<span id="price-per-link">{{ number_format($pricePerLink ?? 0.01, 2) }}</span> {{ __('messages.shortlink.per_link') }}</span>
+            </div>
+        </div>
+        <div id="daily-plan-limit-alert" class="alert alert-warning mb-4 py-3 align-items-center" style="display: {{ ($atDailyPlanLimit ?? false) ? 'flex' : 'none' }};">
+            <span class="me-2">⚠️</span>
+            <div>
+                <strong>{{ __('messages.shortlink.daily_limit_reached_title') }}</strong> {{ __('messages.shortlink.daily_limit_reached_desc') }}
             </div>
         </div>
 
@@ -385,10 +396,10 @@
         </div>
     </div>
 
-    <div class="container mt-5 pt-4" style="max-width: 960px;">
+    <div class="container mt-5 pt-4 px-3" style="max-width: 1200px;">
         @if ($plans ?? null)
         <h5 class="text-center mb-4" style="color: rgba(255,255,255,0.6); font-size: 1rem; font-weight: 500;">{{ __('messages.shortlink.pricing') }}</h5>
-        <div class="row g-4 mb-4 justify-content-center">
+        <div class="row g-4 mb-3 justify-content-center">
             @foreach($plans as $plan)
             @php
                 $hasActivePlan = (bool)($activeSubscription ?? null);
@@ -410,39 +421,33 @@
                 $iconClass = match(strtolower($plan->slug ?? '')) {
                     'starter' => 'icon-lightning',
                     'vip' => 'icon-star',
+                    'unlimited' => 'icon-crown',
                     default => 'icon-check',
                 };
+                $planBillingSuffix = (int) ($plan->duration_days ?? 0) >= 365 ? '/yr' : '/mo';
             @endphp
-            <div class="col-md-4 d-flex">
+            <div class="col-12 col-sm-6 col-xl-3 d-flex">
                 <div class="pricing-card-landing-full w-100 d-flex flex-column {{ $isCurrentPlan ? 'pricing-card-current' : '' }} {{ $isRecommended ? 'pricing-card-recommended' : '' }}">
                     @if ($isRecommended)
                     <div class="pricing-plan-badge">{{ __('messages.shortlink.recommended') }}</div>
                     @endif
                     <div class="pricing-plan-body p-4 d-flex flex-column flex-grow-1">
                         <div class="d-flex align-items-center gap-2 mb-3">
-                            <div class="pricing-plan-icon {{ $iconClass }}">
+                            <div class="pricing-plan-icon {{ $iconClass }}" aria-hidden="true">
                                 @if ($iconClass === 'icon-lightning')
                                 <svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24"><path d="M7 2v11h3v9l7-12h-4l4-8z"/></svg>
                                 @elseif ($iconClass === 'icon-star')
                                 <svg width="28" height="28" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                                @elseif ($iconClass === 'icon-crown')
+                                <svg width="26" height="26" fill="currentColor" viewBox="0 0 24 24"><path d="M5 16L3 5l5.5 5L12 4l3.5 6L21 5l-2 11H5zm2.2 2h9.6l.4 2H7l.2-2z"/></svg>
                                 @else
                                 <svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
                                 @endif
                             </div>
                             <h5 class="pricing-plan-name-full mb-0">{{ $plan->getTranslatedName() }}</h5>
                         </div>
-                        <p class="pricing-plan-desc mb-2">
-                            @if ($plan->isUnlimited())
-                                {{ __('messages.shortlink.unlimited_until') }}
-                            @else
-                                {{ $plan->getTranslatedDescription() }}
-                            @endif
-                        </p>
-                        <div class="pricing-plan-features mb-3">
-                            <span class="pricing-plan-feature">{{ $plan->links_limit ? number_format($plan->links_limit) . ' ' . __('messages.shortlink.links') : __('messages.shortlink.unlimited') . ' ' . __('messages.shortlink.links') }}</span>
-                            <span class="pricing-plan-feature">{{ (int)$plan->duration_days }} {{ __('messages.shortlink.days') }}</span>
-                        </div>
-                        <p class="pricing-plan-price-full mb-3">${{ number_format($plan->price_usd, 2) }}{{ strtolower($plan->slug ?? '') === 'vip' ? '/yr' : '/mo' }}</p>
+                        <x-subscription-plan-pills :plan="$plan" pill-class="pricing-plan-feature" class="pricing-plan-features" />
+                        <p class="pricing-plan-price-full mb-3 mt-auto">${{ number_format($plan->price_usd, 2) }}{{ $planBillingSuffix }}</p>
                         <div class="mt-auto pt-2">
                             @if ($isCurrentPlan)
                                 <button type="button" class="btn pricing-btn-active w-100" disabled>{{ __('messages.shortlink.active') }}</button>
@@ -457,7 +462,7 @@
                                         @endif
                                     </form>
                                 @else
-                                    <a href="{{ route('balance.index', ['amount' => $addFundsAmount]) }}" class="btn pricing-btn-add-funds w-100">{{ __('messages.shortlink.add_funds') }}</a>
+                                    <a href="{{ route('balance.index', ['amount' => $addFundsAmount]) }}" class="btn pricing-btn-add-funds w-100">{{ __('messages.subscription.cta_top_up_for_upgrade', ['amount' => number_format($addFundsAmount, 2)]) }}</a>
                                 @endif
                             @elseif ($hasActivePlan)
                                 <button type="button" class="btn pricing-btn-disabled w-100" disabled>{{ __('messages.shortlink.downgrade_na') }}</button>
@@ -469,7 +474,7 @@
                                         <button type="submit" class="btn w-100 {{ $isRecommended ? 'pricing-btn-primary' : 'pricing-btn-plan' }}">{{ __('messages.shortlink.buy', ['name' => $plan->getTranslatedName()]) }}</button>
                                     </form>
                                 @else
-                                    <a href="{{ route('balance.index', ['amount' => $addFundsAmount]) }}" class="btn pricing-btn-add-funds w-100">{{ __('messages.shortlink.add_funds') }}</a>
+                                    <a href="{{ route('balance.index', ['amount' => $addFundsAmount]) }}" class="btn pricing-btn-add-funds w-100">{{ __('messages.subscription.cta_top_up_for_plan', ['amount' => number_format($addFundsAmount, 2)]) }}</a>
                                 @endif
                             @endif
                         </div>
@@ -478,6 +483,7 @@
             </div>
             @endforeach
         </div>
+        <p class="small text-center mb-0 px-2 mx-auto" style="max-width: 42rem; color: rgba(255,255,255,0.55); line-height: 1.5;">{{ __('messages.subscription.pricing_footnote') }}</p>
         @endif
     </div>
 
@@ -555,6 +561,9 @@
                 'plan_used' => $planUsed ?? 0,
                 'plan_remaining' => $planRemaining ?? $remaining ?? 50,
                 'remaining' => $remaining ?? 50,
+                'plan_daily_limit' => $planDailyLimit ?? null,
+                'plan_used_today' => $planUsedToday ?? null,
+                'plan_daily_remaining' => $planDailyRemaining ?? null,
             ];
         @endphp
         const initialPlan = @json($initialPlanData);
@@ -577,6 +586,9 @@
             const planLimit = data.plan_limit ?? 50;
             const planUsed = data.plan_used ?? 0;
             const remaining = data.remaining ?? data.plan_remaining ?? 0;
+            const planDailyLimit = data.plan_daily_limit != null ? parseInt(data.plan_daily_limit, 10) : null;
+            const planUsedToday = data.plan_used_today != null ? parseInt(data.plan_used_today, 10) : null;
+            const planDailyRemaining = data.plan_daily_remaining != null ? parseInt(data.plan_daily_remaining, 10) : null;
 
             const planText = document.getElementById('plan-text');
             const linksLabel = document.getElementById('links-label');
@@ -584,9 +596,14 @@
             const progressBar = progressFill?.closest('.progress-bar-custom');
 
             if (planName) {
-                const usedText = planLimit > 0 ? planUsed + ' / ' + planLimit + ' used' : 'Unlimited';
+                let usedText;
+                if (planDailyLimit != null && planDailyLimit > 0 && planUsedToday != null && planDailyRemaining != null) {
+                    usedText = planUsedToday + ' / ' + planDailyLimit + ' today (subscription)';
+                } else {
+                    usedText = planLimit > 0 ? planUsed + ' / ' + planLimit + ' used' : 'Unlimited';
+                }
                 if (planText) planText.innerHTML = 'Plan: ' + escapeHtml(planName) + ' — ' + usedText;
-                if (linksLabel) linksLabel.innerHTML = 'Plan: ' + escapeHtml(planName) + ' (' + planUsed + (planLimit > 0 ? ' / ' + planLimit : '') + ')';
+                if (linksLabel) linksLabel.innerHTML = 'Plan: ' + escapeHtml(planName) + ' (' + usedText + ')';
             } else {
                 const remEl = document.getElementById('remaining');
                 const rem2El = document.getElementById('remaining-2');
@@ -596,15 +613,25 @@
             }
 
             if (progressBar && progressFill) {
-                const pct = planLimit > 0 ? (planName ? (planUsed / planLimit) : (remaining / 50)) * 100 : 0;
+                let pct = 0;
+                if (planName && planDailyLimit != null && planDailyLimit > 0 && planUsedToday != null) {
+                    pct = (planUsedToday / planDailyLimit) * 100;
+                } else if (planLimit > 0) {
+                    pct = (planName ? (planUsed / planLimit) : (remaining / 50)) * 100;
+                }
                 progressFill.style.width = Math.min(100, pct) + '%';
             }
 
             const planLimitAlert = document.getElementById('plan-limit-alert');
             if (planLimitAlert) {
-                // Only show when plan limit is fully exhausted; hide when they still have remaining links
                 const atPlanLimit = planName && planLimit > 0 && planUsed >= planLimit;
                 planLimitAlert.style.display = atPlanLimit ? 'flex' : 'none';
+            }
+            const dailyPlanLimitAlert = document.getElementById('daily-plan-limit-alert');
+            if (dailyPlanLimitAlert) {
+                const atDaily = planName && planDailyLimit != null && planDailyLimit > 0
+                    && planDailyRemaining != null && planDailyRemaining <= 0;
+                dailyPlanLimitAlert.style.display = atDaily ? 'flex' : 'none';
             }
         }
 
@@ -735,6 +762,14 @@
                 });
 
                 const data = await res.json();
+
+                if (!res.ok && data.error === 'daily_limit') {
+                    alert(data.message || 'Daily limit reached.');
+                    if (data.plan_name !== undefined || data.remaining !== undefined) {
+                        updatePlanStatus(data);
+                    }
+                    return;
+                }
 
                 if (data.requires_payment && data.redirect) {
                     window.location.href = data.redirect;

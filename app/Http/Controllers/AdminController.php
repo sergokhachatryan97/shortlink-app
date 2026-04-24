@@ -205,6 +205,7 @@ class AdminController extends Controller
 
         $rules = [
             'links_limit' => ['required', 'integer', 'min:0'],
+            'daily_links_limit' => ['nullable', 'integer', 'min:0'],
             'price_usd' => ['required', 'numeric', 'min:0', 'max:9999.99'],
         ];
         foreach ($locales as $locale) {
@@ -219,12 +220,19 @@ class AdminController extends Controller
             $nameTranslations[$locale] = trim($validated["name_{$locale}"] ?? '');
             $descriptionTranslations[$locale] = trim($validated["description_{$locale}"] ?? '');
         }
+        $dailyCap = $validated['daily_links_limit'] ?? null;
+        $dailyCap = $dailyCap === '' || $dailyCap === null ? null : (int) $dailyCap;
+        if ($dailyCap !== null && $dailyCap === 0) {
+            $dailyCap = null;
+        }
+
         $plan->update([
             'name_translations' => $nameTranslations,
             'description_translations' => $descriptionTranslations,
             'name' => $nameTranslations['en'] ?: $plan->name,
             'description' => $descriptionTranslations['en'] ?: $plan->description,
             'links_limit' => $validated['links_limit'],
+            'daily_links_limit' => $dailyCap,
             'price_usd' => $validated['price_usd'],
         ]);
 

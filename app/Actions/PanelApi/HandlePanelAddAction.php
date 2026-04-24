@@ -83,6 +83,23 @@ class HandlePanelAddAction
             }
         }
 
+        if (! empty($panelQuota['daily_cap_exceeded'])) {
+            $err = [
+                'error' => __('messages.shortlink.daily_limit_exceeded', [
+                    'remaining' => (int) ($panelQuota['daily_links_remaining'] ?? 0),
+                ]),
+                'daily_links_remaining' => (int) ($panelQuota['daily_links_remaining'] ?? 0),
+            ];
+            if ($linkedUser) {
+                $subSnap = $this->entitlement->subscriptionOrderSnapshot($linkedUser, $panelQuota, $requestedQuantity);
+                if ($subSnap !== null) {
+                    $err['subscription'] = $subSnap;
+                }
+            }
+
+            return $this->withSubscriptionExpiredNotice($linkedUser, $err);
+        }
+
         $freeTrialRemainingBeforeOrder = null;
         if ($linkedUser && $panelQuota['user_subscription_id'] === null) {
             $freeTrialRemainingBeforeOrder = $this->entitlement->getRemainingFreeTrial(

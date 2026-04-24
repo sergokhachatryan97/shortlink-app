@@ -6,6 +6,7 @@ use App\Models\Order;
 use App\Models\ShortlinkLink;
 use App\Models\ShortlinkSetting;
 use App\Models\SiteStat;
+use App\Models\SubscriptionPlan;
 use App\Models\User;
 use App\Models\UserSubscription;
 use Illuminate\Support\Facades\DB;
@@ -101,6 +102,25 @@ class ShortlinkEntitlementService
 
         $plan = $sub->plan;
         $currentCount = ShortlinkLink::where('user_subscription_id', $sub->id)->count();
+        $usedTodaySub = $plan->hasDailyLinksLimit()
+            ? SubscriptionPlan::countSubscriptionLinksToday((int) $sub->id)
+            : null;
+
+        if ($plan->isUnlimited() && $plan->hasDailyLinksLimit()) {
+            $roomToday = max(0, (int) $plan->daily_links_limit - $usedTodaySub);
+            if ($afterTrial > $roomToday) {
+                return [
+                    'effective_quantity' => $count,
+                    'free_quantity' => 0,
+                    'paid_quantity' => $count,
+                    'user_subscription_id' => $sub->id,
+                    'trial_quantity_this_order' => 0,
+                    'plan_quantity_this_order' => 0,
+                    'daily_cap_exceeded' => true,
+                    'daily_links_remaining' => $roomToday,
+                ];
+            }
+        }
 
         if ($plan->isUnlimited()) {
             $fromPlan = $afterTrial;
@@ -118,6 +138,10 @@ class ShortlinkEntitlementService
             'user_subscription_id' => $sub->id,
             'trial_quantity_this_order' => $fromTrial,
             'plan_quantity_this_order' => $fromPlan,
+            'daily_cap_exceeded' => false,
+            'daily_links_remaining' => $usedTodaySub !== null
+                ? max(0, (int) $plan->daily_links_limit - $usedTodaySub)
+                : null,
         ];
     }
 
@@ -146,6 +170,10 @@ class ShortlinkEntitlementService
         if ($sub) {
             $plan = $sub->plan;
             $used = ShortlinkLink::query()->where('user_subscription_id', $sub->id)->count();
+            $usedToday = $plan->hasDailyLinksLimit()
+                ? SubscriptionPlan::countSubscriptionLinksToday((int) $sub->id)
+                : null;
+            $dailyLimit = $plan->hasDailyLinksLimit() ? (int) $plan->daily_links_limit : null;
 
             return [
                 'subscription' => [
@@ -155,6 +183,11 @@ class ShortlinkEntitlementService
                     'links_used' => $used,
                     'links_remaining' => $plan->isUnlimited() ? null : max(0, (int) $plan->links_limit - $used),
                     'unlimited' => $plan->isUnlimited(),
+                    'daily_links_limit' => $dailyLimit,
+                    'links_used_today' => $usedToday,
+                    'daily_links_remaining' => $dailyLimit !== null && $usedToday !== null
+                        ? max(0, $dailyLimit - $usedToday)
+                        : null,
                     'ends_at' => $sub->ends_at?->toIso8601String(),
                 ],
                 'free_trial' => null,
@@ -229,7 +262,15 @@ class ShortlinkEntitlementService
         $pricePerLink = (float) ShortlinkSetting::get('price_per_link', '0.01');
         $limit = $plan->isUnlimited() ? null : (int) $plan->links_limit;
         $remaining = $plan->isUnlimited() ? null : max(0, $limit - $used);
-        $allowanceDepleted = ! $plan->isUnlimited() && $remaining !== null && $remaining <= 0;
+        $usedToday = $plan->hasDailyLinksLimit()
+            ? SubscriptionPlan::countSubscriptionLinksToday((int) $sub->id)
+            : null;
+        $dailyLimit = $plan->hasDailyLinksLimit() ? (int) $plan->daily_links_limit : null;
+        $dailyRemaining = $dailyLimit !== null && $usedToday !== null
+            ? max(0, $dailyLimit - $usedToday)
+            : null;
+        $allowanceDepleted = (! $plan->isUnlimited() && $remaining !== null && $remaining <= 0)
+            || ($plan->isUnlimited() && $plan->hasDailyLinksLimit() && $dailyRemaining !== null && $dailyRemaining <= 0);
 
         $trialThis = (int) ($panelQuota['trial_quantity_this_order'] ?? 0);
         $planThis = (int) ($panelQuota['plan_quantity_this_order'] ?? 0);
@@ -244,6 +285,9 @@ class ShortlinkEntitlementService
             'links_used' => $used,
             'links_remaining' => $remaining,
             'unlimited' => $plan->isUnlimited(),
+            'daily_links_limit' => $dailyLimit,
+            'links_used_today' => $usedToday,
+            'daily_links_remaining' => $dailyRemaining,
             'current_period_ends_at' => $sub->ends_at?->toIso8601String(),
             'plan_allowance_depleted' => $allowanceDepleted,
             'requested_quantity' => $requestedQuantity,
@@ -264,6 +308,13 @@ class ShortlinkEntitlementService
             $snapshot['links_remaining'] = $plan->isUnlimited() ? null : max(0, (int) $plan->links_limit - $usedAfter);
             $snapshot['plan_allowance_depleted'] = ! $plan->isUnlimited()
                 && (int) $plan->links_limit <= $usedAfter;
+            if ($plan->hasDailyLinksLimit()) {
+                $usedAfterToday = SubscriptionPlan::countSubscriptionLinksToday((int) $sub->id);
+                $snapshot['links_used_today'] = $usedAfterToday;
+                $snapshot['daily_links_remaining'] = max(0, (int) $plan->daily_links_limit - $usedAfterToday);
+                $snapshot['plan_allowance_depleted'] = $snapshot['plan_allowance_depleted']
+                    || $snapshot['daily_links_remaining'] <= 0;
+            }
         }
 
         return $snapshot;

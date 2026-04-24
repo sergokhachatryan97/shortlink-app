@@ -3,6 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    @include('components.favicon')
     <title>Admin - Shortlink</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
@@ -139,7 +140,11 @@
                         <div class="d-flex flex-wrap align-items-start gap-3 mb-2">
                             <strong class="text-nowrap">{{ $plan->slug }}</strong>
                             @if ($plan->links_limit == 0)
-                                <span class="badge bg-secondary">Unlimited</span>
+                                @if ($plan->hasDailyLinksLimit())
+                                    <span class="badge bg-info text-dark">Unlimited + daily cap</span>
+                                @else
+                                    <span class="badge bg-secondary">Unlimited</span>
+                                @endif
                             @endif
                         </div>
                         <div class="row g-2 mb-2">
@@ -182,11 +187,13 @@
                             @if (($adminRole ?? 'super_admin') === 'super_admin')
                             <label class="small mb-0">Links limit</label>
                             <input type="number" name="links_limit" value="{{ old('links_limit', $plan->links_limit) }}" min="0" step="1" class="form-control form-control-sm" style="width: 80px;" title="0 = unlimited">
+                            <label class="small mb-0">Daily cap</label>
+                            <input type="number" name="daily_links_limit" value="{{ old('daily_links_limit', $plan->daily_links_limit) }}" min="0" step="1" class="form-control form-control-sm" style="width: 90px;" title="Empty = no daily cap (only for unlimited period plans)">
                             <label class="small mb-0">Price (USD)</label>
                             <input type="number" name="price_usd" value="{{ old('price_usd', $plan->price_usd) }}" min="0" step="0.01" class="form-control form-control-sm" style="width: 90px;">
                             <button type="submit" class="btn btn-sm btn-primary">Save plan</button>
                             @else
-                            <span class="small text-muted">Links limit: {{ $plan->links_limit == 0 ? 'Unlimited' : $plan->links_limit }}</span>
+                            <span class="small text-muted">Links limit: {{ $plan->links_limit == 0 ? 'Unlimited' : $plan->links_limit }}@if ($plan->hasDailyLinksLimit()) · Daily: {{ number_format((int) $plan->daily_links_limit) }}@endif</span>
                             <span class="small text-muted">· Price: ${{ number_format((float) $plan->price_usd, 2) }}</span>
                             <button type="submit" class="btn btn-sm btn-primary">Save descriptions</button>
                             @endif

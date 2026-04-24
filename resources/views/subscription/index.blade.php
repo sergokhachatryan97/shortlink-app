@@ -4,7 +4,7 @@
 
 @section('content')
 <div class="cosmic-page-section">
-    <div class="container cosmic-container" style="max-width: 960px;">
+    <div class="container cosmic-container" style="max-width: 1180px;">
         <div class="cosmic-page-header mb-4">
             <h1 class="cosmic-page-title">{{ __('messages.subscription.billing') }}</h1>
             <p class="cosmic-page-subtitle mb-0">{{ __('messages.subscription.billing_sub') }}</p>
@@ -93,8 +93,7 @@
         </div>
         @endif
 
-        @php $maxSortOrder = $plans->max('sort_order'); @endphp
-        <div class="row g-4 mb-4">
+        <div class="row g-4 mb-3 justify-content-center cosmic-pricing-grid">
             @foreach($plans as $plan)
             @php
                 $hasActivePlan = (bool) $activeSubscription;
@@ -116,65 +115,62 @@
                 $iconClass = match(strtolower($plan->slug ?? '')) {
                     'starter' => 'icon-lightning',
                     'vip' => 'icon-star',
+                    'unlimited' => 'icon-crown',
                     default => 'icon-check',
                 };
+                $planBillingSuffix = (int) ($plan->duration_days ?? 0) >= 365 ? '/yr' : '/mo';
             @endphp
-            <div class="col-md-4">
-                <div class="cosmic-plan-card {{ $isCurrentPlan ? 'cosmic-plan-current' : '' }} {{ $isRecommended ? 'cosmic-plan-recommended' : '' }}">
+            <div class="col-12 col-sm-6 col-xl-3 d-flex">
+                <div class="cosmic-plan-card w-100 {{ $isCurrentPlan ? 'cosmic-plan-current' : '' }} {{ $isRecommended ? 'cosmic-plan-recommended' : '' }}">
                     @if ($isRecommended)
-                    <div class="cosmic-plan-badge">★ Recommended</div>
+                    <div class="cosmic-plan-badge">{{ __('messages.shortlink.recommended') }}</div>
                     @endif
-                    <div class="cosmic-plan-body p-4">
+                    <div class="cosmic-plan-body p-4 d-flex flex-column flex-grow-1">
                         <div class="d-flex align-items-center gap-2 mb-3">
-                            <div class="cosmic-plan-icon {{ $iconClass }}">
+                            <div class="cosmic-plan-icon {{ $iconClass }}" aria-hidden="true">
                                 @if ($iconClass === 'icon-lightning')
                                 <svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24"><path d="M7 2v11h3v9l7-12h-4l4-8z"/></svg>
                                 @elseif ($iconClass === 'icon-star')
                                 <svg width="28" height="28" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                                @elseif ($iconClass === 'icon-crown')
+                                <svg width="26" height="26" fill="currentColor" viewBox="0 0 24 24"><path d="M5 16L3 5l5.5 5L12 4l3.5 6L21 5l-2 11H5zm2.2 2h9.6l.4 2H7l.2-2z"/></svg>
                                 @else
                                 <svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
                                 @endif
                             </div>
                             <h5 class="cosmic-plan-name mb-0">{{ $plan->getTranslatedName() }}</h5>
                         </div>
-                        <p class="cosmic-plan-desc mb-3">
-                            @if ($plan->isUnlimited())
-                                <strong>Unlimited links</strong><br>
-                                <span class="cosmic-text-muted">until subscription ends</span>
-                            @else
-                                {{ $plan->getTranslatedDescription() }}
-                            @endif
-                        </p>
-                        <p class="cosmic-plan-price mb-3">${{ number_format($plan->price_usd, 2) }}{{ strtolower($plan->slug ?? '') === 'vip' ? '/yr' : '/mo' }}</p>
+                        <x-subscription-plan-pills :plan="$plan" pill-class="cosmic-plan-feature" class="cosmic-plan-features-pills" />
+                        <p class="cosmic-plan-price mb-3 mt-auto">${{ number_format($plan->price_usd, 2) }}{{ $planBillingSuffix }}</p>
 
                         @if ($isCurrentPlan)
-                            <button type="button" class="btn cosmic-btn-plan w-100" disabled>Active</button>
+                            <button type="button" class="btn cosmic-btn-plan w-100" disabled>{{ __('messages.shortlink.active') }}</button>
                         @elseif ($canUpgrade)
                             @if ($canAffordUpgrade)
                                 <form method="POST" action="{{ route('subscription.upgrade') }}">
                                     @csrf
                                     <input type="hidden" name="plan_id" value="{{ $plan->id }}">
                                     <input type="hidden" name="promo_code" value="" class="js-subscription-promo-field" autocomplete="off">
-                                    <button type="submit" class="btn w-100 cosmic-btn-primary">Upgrade to {{ $plan->getTranslatedName() }}</button>
+                                    <button type="submit" class="btn w-100 cosmic-btn-primary">{{ __('messages.shortlink.upgrade_to', ['name' => $plan->getTranslatedName()]) }}</button>
                                     @if ($upgradePriceDiff > 0)
-                                    <p class="cosmic-pay-today small mt-2 mb-0 text-center">Pay ${{ number_format($upgradePriceDiff, 2) }} today</p>
+                                    <p class="cosmic-pay-today small mt-2 mb-0 text-center">{{ __('messages.shortlink.pay_today', ['amount' => number_format($upgradePriceDiff, 2)]) }}</p>
                                     @endif
                                 </form>
                             @else
-                                <a href="{{ route('balance.index', ['amount' => $addFundsAmount]) }}" class="btn cosmic-btn-add-funds w-100 cursor-pointer">Add funds</a>
+                                <a href="{{ route('balance.index', ['amount' => $addFundsAmount]) }}" class="btn cosmic-btn-add-funds w-100 cursor-pointer">{{ __('messages.subscription.cta_top_up_for_upgrade', ['amount' => number_format($addFundsAmount, 2)]) }}</a>
                             @endif
                         @elseif ($hasActivePlan)
-                            <button type="button" class="btn cosmic-btn-disabled w-100" disabled>Downgrade not available</button>
+                            <button type="button" class="btn cosmic-btn-disabled w-100" disabled>{{ __('messages.shortlink.downgrade_na') }}</button>
                         @else
                             @if ($canBuyWithBalance)
                                 <form method="POST" action="{{ route('subscription.purchase') }}">
                                     @csrf
                                     <input type="hidden" name="plan_id" value="{{ $plan->id }}">
                                     <input type="hidden" name="promo_code" value="" class="js-subscription-promo-field" autocomplete="off">
-                                    <button type="submit" class="btn w-100 {{ $isRecommended ? 'cosmic-btn-primary' : 'cosmic-btn-plan' }}">Buy {{ $plan->getTranslatedName() }}</button>
+                                    <button type="submit" class="btn w-100 {{ $isRecommended ? 'cosmic-btn-primary' : 'cosmic-btn-plan' }}">{{ __('messages.shortlink.buy', ['name' => $plan->getTranslatedName()]) }}</button>
                                 </form>
                             @else
-                                <a href="{{ route('balance.index', ['amount' => $addFundsAmount]) }}" class="btn cosmic-btn-add-funds w-100">Add funds</a>
+                                <a href="{{ route('balance.index', ['amount' => $addFundsAmount]) }}" class="btn cosmic-btn-add-funds w-100">{{ __('messages.subscription.cta_top_up_for_plan', ['amount' => number_format($addFundsAmount, 2)]) }}</a>
                             @endif
                         @endif
                     </div>
@@ -182,6 +178,8 @@
             </div>
             @endforeach
         </div>
+
+        <p class="cosmic-pricing-footnote small text-center mb-4 px-2 mx-auto" style="max-width: 42rem;">{{ __('messages.subscription.pricing_footnote') }}</p>
 
         <div class="cosmic-billing-footer mt-4 pt-3">
             <p class="cosmic-text-muted small mb-2">When your subscription ends, generated links are deleted. Renew now to keep your short links active.</p>
@@ -278,6 +276,26 @@
 .cosmic-plan-icon.icon-check { background: rgba(255,255,255,0.2); }
 .cosmic-plan-recommended .cosmic-plan-icon { background: rgba(167,139,250,0.4); }
 .cosmic-plan-icon.icon-star { background: rgba(255,255,255,0.2); }
+.cosmic-plan-icon.icon-crown {
+    background: linear-gradient(145deg, rgba(251,191,36,0.45), rgba(217,119,6,0.35));
+    color: #fff;
+}
+.cosmic-pricing-grid { max-width: 1200px; margin-left: auto; margin-right: auto; }
+.cosmic-pricing-footnote { color: rgba(255,255,255,0.6); line-height: 1.5; }
+.cosmic-plan-features-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+.cosmic-plan-feature {
+    background: rgba(255,255,255,0.1);
+    color: rgba(255,255,255,0.92);
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    line-height: 1.35;
+}
 .cosmic-plan-name { color: #fff; font-weight: 600; }
 .cosmic-plan-desc { color: rgba(255,255,255,0.8); font-size: 0.9375rem; line-height: 1.5; }
 .cosmic-plan-price { font-size: 1.25rem; font-weight: 700; color: #fff; }
