@@ -66,4 +66,8 @@ return [
         'bot_username' => env('TELEGRAM_BOT_USERNAME'),
     ],
 
+    'yandex_metrika' => [
+        'id' => env('YANDEX_METRIKA_ID'),
+    ],
+
 ];
