@@ -76,6 +76,14 @@ class SubscriptionPlan extends Model
         return $this->links_limit === 0;
     }
 
+    public function dailyPriceUsd(): float
+    {
+        $days = max(1, (int) ($this->duration_days ?? 0));
+        $price = (float) ($this->price_usd ?? 0);
+
+        return $price / $days;
+    }
+
     /** Max subscription-attributed links per calendar day (app timezone). Null = no daily cap. */
     public function hasDailyLinksLimit(): bool
     {

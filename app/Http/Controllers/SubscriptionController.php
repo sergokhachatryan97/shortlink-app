@@ -87,9 +87,10 @@ class SubscriptionController extends Controller
             return null;
         }
         $daysRemaining = max(0, now()->diffInDays($active->ends_at, false));
-        $currentDuration = max(1, (int) $currentPlan->duration_days);
-        $fullDiff = (float) $newPlan->price_usd - (float) $currentPlan->price_usd;
-        $priceDiff = round($fullDiff * ($daysRemaining / $currentDuration), 2);
+        // Upgrades start a fresh period on the new plan.
+        // Charge: full new plan price minus credit for unused time on current plan.
+        $credit = round(((float) $currentPlan->dailyPriceUsd()) * $daysRemaining, 2);
+        $priceDiff = round(((float) $newPlan->price_usd) - $credit, 2);
 
         return $priceDiff > 0 ? $priceDiff : null;
     }
@@ -288,8 +289,12 @@ class SubscriptionController extends Controller
                     $this->balanceService->decrementBalance(User::class, (int) $user->id, $quote->finalAmount);
                 }
 
+                $startsAt = now();
+                $endsAt = $startsAt->copy()->addDays((int) $newPlan->duration_days);
                 $activeSubscription->update([
                     'subscription_plan_id' => $newPlan->id,
+                    'starts_at' => $startsAt,
+                    'ends_at' => $endsAt,
                 ]);
 
                 $orderId = 'upg-'.uniqid();

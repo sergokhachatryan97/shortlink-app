@@ -106,9 +106,8 @@
                     if ($canUpgrade) {
                         $currentPlan = $activeSubscription->plan;
                         $daysRemaining = max(0, now()->diffInDays($activeSubscription->ends_at, false));
-                        $currentDuration = max(1, (int)$currentPlan->duration_days);
-                        $fullDiff = (float)$plan->price_usd - (float)$currentPlan->price_usd;
-                        $upgradePriceDiff = round($fullDiff * ($daysRemaining / $currentDuration), 2);
+                        $credit = round(((float) $currentPlan->dailyPriceUsd()) * $daysRemaining, 2);
+                        $upgradePriceDiff = round(((float) $plan->price_usd) - $credit, 2);
                     }
                     $canAffordUpgrade = $canUpgrade && ($balance ?? 0) >= $upgradePriceDiff;
                     $canBuyWithBalance = !$hasActivePlan && ($balance ?? 0) >= (float)$plan->price_usd;
