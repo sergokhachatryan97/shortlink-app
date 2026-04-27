@@ -7,6 +7,17 @@
     @include('components.favicon')
     @stack('head')
     <title>@yield('title', 'Shortlink')</title>
+    @if (config('services.google_tag_manager.id'))
+    <!-- Google Tag Manager -->
+    <script>
+        (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+        new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+        j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+        'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+        })(window,document,'script','dataLayer','{{ config('services.google_tag_manager.id') }}');
+    </script>
+    <!-- End Google Tag Manager -->
+    @endif
     @if (config('services.yandex_metrika.id'))
     <!-- Yandex.Metrika counter -->
     <script type="text/javascript">
@@ -65,6 +76,12 @@
     @stack('styles')
 </head>
 <body class="{{ request()->routeIs('links.*') || request()->routeIs('contact.index') || request()->routeIs('subscription.index') || request()->routeIs('profile.*') || request()->routeIs('balance.*') || request()->routeIs('partner.*') || request()->routeIs('api.docs*') || request()->routeIs('shortlink.payment') ? 'cosmic-page-body' : '' }}">
+    @if (config('services.google_tag_manager.id'))
+    <!-- Google Tag Manager (noscript) -->
+    <noscript><iframe src="https://www.googletagmanager.com/ns.html?id={{ config('services.google_tag_manager.id') }}"
+    height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+    <!-- End Google Tag Manager (noscript) -->
+    @endif
     @include('components.navbar')
     <main class="main-content d-flex flex-column" style="min-height: calc(100vh - var(--navbar-height) - 80px);">
         @yield('content')

@@ -4,6 +4,17 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     @include('components.favicon')
+    @if (config('services.google_tag_manager.id'))
+    <!-- Google Tag Manager -->
+    <script>
+        (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+        new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+        j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+        'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+        })(window,document,'script','dataLayer','{{ config('services.google_tag_manager.id') }}');
+    </script>
+    <!-- End Google Tag Manager -->
+    @endif
     <meta name="heleket" content="9701089f" />
     @if (config('services.yandex_metrika.id'))
     <!-- Yandex.Metrika counter -->
@@ -296,6 +307,12 @@
     </style>
 </head>
 <body class="min-vh-100 landing-page">
+    @if (config('services.google_tag_manager.id'))
+    <!-- Google Tag Manager (noscript) -->
+    <noscript><iframe src="https://www.googletagmanager.com/ns.html?id={{ config('services.google_tag_manager.id') }}"
+    height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+    <!-- End Google Tag Manager (noscript) -->
+    @endif
     @include('components.navbar')
     <div class="container" style="max-width: 600px;">
         <header class="mb-4 mt-4">
