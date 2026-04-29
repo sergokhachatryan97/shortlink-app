@@ -15,6 +15,17 @@
     </script>
     <!-- End Google Tag Manager -->
     @endif
+    @if (config('services.google_analytics.measurement_id'))
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id={{ e(config('services.google_analytics.measurement_id')) }}"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+
+        gtag('config', @json(config('services.google_analytics.measurement_id')));
+    </script>
+    @endif
     <meta name="heleket" content="9701089f" />
     @if (config('services.yandex_metrika.id'))
     <!-- Yandex.Metrika counter -->
