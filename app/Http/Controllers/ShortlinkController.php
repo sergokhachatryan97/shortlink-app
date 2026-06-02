@@ -555,11 +555,13 @@ class ShortlinkController extends Controller
             : max($pricePerLink, round(max(0, $count - $remaining) * $pricePerLink, 2));
 
         $orderId = 'sl-'.uniqid();
+        $rateService = app(\App\Services\CurrencyRateService::class);
+        $amountRub = number_format($rateService->convertUsdToRub($amount), 2, '.', '');
 
         ShortlinkTransaction::create([
             'order_id' => $orderId,
             'amount' => $amount,
-            'currency' => 'RUB',
+            'currency' => 'USD',
             'status' => 'pending',
             'identifier' => $pending['identifier'] ?? null,
             'count' => $count,
@@ -575,7 +577,7 @@ class ShortlinkController extends Controller
 
         $payment = $client->createPayment([
             'amount' => [
-                'value' => number_format($amount, 2, '.', ''),
+                'value' => $amountRub,
                 'currency' => 'RUB',
             ],
             'confirmation' => [
@@ -583,7 +585,7 @@ class ShortlinkController extends Controller
                 'return_url' => route('shortlink.payment-yookassa-success', ['order_id' => $orderId]),
             ],
             'capture' => true,
-            'description' => "Payment for {$count} short links",
+            'description' => "Payment for {$count} short links (\${$amount} USD)",
             'metadata' => [
                 'order_id' => $orderId,
             ],
@@ -593,10 +595,10 @@ class ShortlinkController extends Controller
                 ],
                 'items' => [
                     [
-                        'description' => 'Генерация коротких ссылок',
+                        'description' => "Генерация коротких ссылок ({$count} шт.)",
                         'quantity' => 1,
                         'amount' => [
-                            'value' => number_format($amount, 2, '.', ''),
+                            'value' => $amountRub,
                             'currency' => 'RUB',
                         ],
                         'vat_code' => 1,

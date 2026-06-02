@@ -45,6 +45,7 @@ return [
     'yookassa' => [
         'shop_id' => env('YOOKASSA_SHOP_ID'),
         'secret_key' => env('YOOKASSA_SECRET_KEY'),
+        'usd_to_rub' => (float) env('YOOKASSA_USD_TO_RUB_RATE', 90),
     ],
 
     'admin' => [

@@ -43,8 +43,9 @@
                     <p class="cosmic-pay-label mb-1">Quantity</p>
                     <p class="cosmic-pay-value mb-3">{{ $count }} links</p>
                     <p class="cosmic-pay-label mb-1">Price per link</p>
-                    <p class="cosmic-pay-value mb-3">{{ number_format($pricePerLink ?? 0.001, 3) }} RUB</p>
-                    <p class="cosmic-pay-total mb-0">{{ number_format($amount, 2) }} RUB</p>
+                    <p class="cosmic-pay-value mb-3">${{ number_format($pricePerLink ?? 0.001, 3) }}</p>
+                    <p class="cosmic-pay-total mb-0">${{ number_format($amount, 2) }}</p>
+                    <p class="cosmic-text-muted small mb-0">{{ number_format($amount * app(\App\Services\CurrencyRateService::class)->usdToRub(), 2) }} ₽</p>
                     <p class="cosmic-text-muted small mt-3 mb-0">After payment, your links will be generated automatically.</p>
                 </div>
             </div>

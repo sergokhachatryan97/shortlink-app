@@ -168,11 +168,13 @@ class BalanceController extends Controller
 
         $orderId = 'bal-'.uniqid();
         $user = Auth::user();
+        $rateService = app(\App\Services\CurrencyRateService::class);
+        $amountRub = number_format($rateService->convertUsdToRub((float) $amount), 2, '.', '');
 
         ShortlinkTransaction::create([
             'order_id' => $orderId,
             'amount' => $amount,
-            'currency' => 'RUB',
+            'currency' => 'USD',
             'status' => 'pending',
             'identifier' => 'user:'.$user->id,
             'count' => 0,
@@ -186,7 +188,7 @@ class BalanceController extends Controller
 
         $payment = $client->createPayment([
             'amount' => [
-                'value' => $amount,
+                'value' => $amountRub,
                 'currency' => 'RUB',
             ],
             'confirmation' => [
@@ -194,7 +196,7 @@ class BalanceController extends Controller
                 'return_url' => route('balance.yookassa.success', ['order_id' => $orderId]),
             ],
             'capture' => true,
-            'description' => 'Balance top-up',
+            'description' => "Balance top-up \${$amount} USD",
             'metadata' => [
                 'order_id' => $orderId,
             ],
@@ -204,10 +206,10 @@ class BalanceController extends Controller
                 ],
                 'items' => [
                     [
-                        'description' => 'Пополнение баланса',
+                        'description' => "Пополнение баланса \${$amount} USD",
                         'quantity' => 1,
                         'amount' => [
-                            'value' => $amount,
+                            'value' => $amountRub,
                             'currency' => 'RUB',
                         ],
                         'vat_code' => 1,

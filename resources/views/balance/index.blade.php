@@ -68,8 +68,7 @@
             </div>
 
             <div class="addfunds-summary mb-4">
-                <div class="d-flex justify-content-between mb-1"><span class="cosmic-text-muted">{{ __('messages.balance.you_pay') }}</span> <span class="cosmic-text-muted"  id="summary-pay">$0.00</span></div>
-{{--                <div class="d-flex justify-content-between mb-1"><span class="cosmic-text-muted">{{ __('messages.balance.network_fee') }}</span> <span class="cosmic-text-muted">{{ __('messages.balance.network_fee_val') }}</span></div>--}}
+                <div class="d-flex justify-content-between mb-1"><span class="cosmic-text-muted">{{ __('messages.balance.you_pay') }}</span> <span class="cosmic-text-muted"><span id="summary-pay">$0.00</span> <span class="small" id="summary-rub">(0.00 ₽)</span></span></div>
                 <div class="d-flex justify-content-between addfunds-total"><span class="cosmic-text-muted">{{ __('messages.balance.total') }}</span> <span id="summary-total" class="cosmic-text-muted">$0.10</span></div>
             </div>
 
@@ -298,12 +297,14 @@
 (function() {
     const amountInput = document.getElementById('amount');
     const summaryPay = document.getElementById('summary-pay');
+    const summaryRub = document.getElementById('summary-rub');
     const summaryTotal = document.getElementById('summary-total');
-    const networkFee = 0.10;
+    const usdToRub = {{ app(\App\Services\CurrencyRateService::class)->usdToRub() }};
     function updateSummary() {
         const amt = parseFloat(amountInput.value) || 0;
         summaryPay.textContent = '$' + amt.toFixed(2);
-        summaryTotal.textContent = '$' + (amt + networkFee).toFixed(2);
+        summaryRub.textContent = '(' + (amt * usdToRub).toFixed(2) + ' ₽)';
+        summaryTotal.textContent = '$' + amt.toFixed(2);
     }
     amountInput.addEventListener('input', updateSummary);
     document.querySelectorAll('.addfunds-quick-btn').forEach(function(btn) {
