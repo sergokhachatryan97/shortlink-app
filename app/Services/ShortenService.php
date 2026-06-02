@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\Http;
 
 class ShortenService
 {
-    private string $baseUrl = 'https://share.loldev.lol';
+    private string $baseUrl = 'http://162.55.199.246:8809/';
 
     /**
      * Generate shortened links via external API.
