@@ -407,6 +407,7 @@ class ShortlinkController extends Controller
         }
 
         $heleketAvailable = config('services.heleket.merchant') && config('services.heleket.payment_key');
+        $yookassaAvailable = config('services.yookassa.shop_id') && config('services.yookassa.secret_key');
 
         return view('shortlink.payment', [
             'url' => $pending['url'],
@@ -417,8 +418,7 @@ class ShortlinkController extends Controller
             'remaining' => $remaining,
             'freeTrialExhausted' => $freeTrialExhausted,
             'reason' => $reason,
-            'coinrushStoreKey' => config('services.coinrush.store_key'),
-            'coinrushApiUrl' => config('services.coinrush.api_url', 'https://coinrush.link/store'),
+            'yookassaAvailable' => $yookassaAvailable,
             'heleketAvailable' => $heleketAvailable,
         ]);
     }
@@ -533,11 +533,17 @@ class ShortlinkController extends Controller
             ->with('payment_provider', 'heleket');
     }
 
-    public function prepareTronPayment(Request $request): JsonResponse
+    public function prepareYooKassaPayment(Request $request)
     {
         $pending = $request->session()->get('shortlink_pending');
         if (! $pending) {
-            return response()->json(['error' => 'Session expired'], 400);
+            return redirect()->route('shortlink.index')->with('error', 'Session expired. Please try again.');
+        }
+
+        $shopId = config('services.yookassa.shop_id');
+        $secretKey = config('services.yookassa.secret_key');
+        if (! $shopId || ! $secretKey) {
+            return back()->with('error', 'YooKassa is not configured.');
         }
 
         $count = (int) $pending['count'];
@@ -553,24 +559,65 @@ class ShortlinkController extends Controller
         ShortlinkTransaction::create([
             'order_id' => $orderId,
             'amount' => $amount,
-            'currency' => 'USD',
+            'currency' => 'RUB',
             'status' => 'pending',
             'identifier' => $pending['identifier'] ?? null,
             'count' => $count,
             'url' => $pending['url'] ?? null,
-            'provider_ref' => 'tron',
+            'provider_ref' => 'yookassa',
             'payment_kind' => ShortlinkTransaction::KIND_SHORTLINK_PAYMENT,
         ]);
 
+        $client = new \YooKassa\Client();
+        $client->setAuth($shopId, $secretKey);
+
+        $userEmail = $request->user()?->email ?? 'customer@trastly.com';
+
+        $payment = $client->createPayment([
+            'amount' => [
+                'value' => number_format($amount, 2, '.', ''),
+                'currency' => 'RUB',
+            ],
+            'confirmation' => [
+                'type' => 'redirect',
+                'return_url' => route('shortlink.payment-yookassa-success', ['order_id' => $orderId]),
+            ],
+            'capture' => true,
+            'description' => "Payment for {$count} short links",
+            'metadata' => [
+                'order_id' => $orderId,
+            ],
+            'receipt' => [
+                'customer' => [
+                    'email' => $userEmail,
+                ],
+                'items' => [
+                    [
+                        'description' => 'Генерация коротких ссылок',
+                        'quantity' => 1,
+                        'amount' => [
+                            'value' => number_format($amount, 2, '.', ''),
+                            'currency' => 'RUB',
+                        ],
+                        'vat_code' => 1,
+                        'payment_subject' => 'service',
+                        'payment_mode' => 'full_payment',
+                    ],
+                ],
+            ],
+        ], uniqid('', true));
+
+        $confirmationUrl = $payment->getConfirmation()->getConfirmationUrl();
+
         $request->session()->put('shortlink_order_id', $orderId);
 
-        return response()->json(['order_id' => $orderId, 'amount' => $amount]);
+        return redirect()->away($confirmationUrl);
     }
 
     /**
      * UI-only. Never mutates payment state. Reads transaction status from DB (webhook is source of truth).
      */
-    public function paymentTronSuccess(Request $request)
+    public function paymentYooKassaSuccess(Request $request)
     {
         $orderId = $request->query('order_id');
         if (! $orderId) {
@@ -597,7 +644,7 @@ class ShortlinkController extends Controller
         return redirect()->route('shortlink.index')
             ->with('success', count($tx->result_links).' links generated! Download your file below.')
             ->with('download_ready', true)
-            ->with('payment_provider', 'tron');
+            ->with('payment_provider', 'yookassa');
     }
 
     /**
@@ -645,7 +692,7 @@ class ShortlinkController extends Controller
         return redirect()->route('shortlink.index')
             ->with('success', $count.' links generated! Download your file below.')
             ->with('download_ready', true)
-            ->with('payment_provider', 'tron')
+            ->with('payment_provider', 'yookassa')
             ->with('shortlink_result', $links);
     }
 }

@@ -2,10 +2,6 @@
 
 @section('title', 'Complete Payment — Trastly')
 
-@push('head')
-<meta name="heleket" content="9701089f" />
-@endpush
-
 @section('content')
 <div class="cosmic-page-section">
     <div class="container cosmic-container" style="max-width: 960px;">
@@ -29,10 +25,9 @@
             <div class="cosmic-alert cosmic-alert-danger mb-4">{{ session('error') }}</div>
         @endif
 
-        @php($tronAvailable = !empty($coinrushStoreKey ?? null))
-        @if(!$tronAvailable && !($heleketAvailable ?? false))
+        @if(!($yookassaAvailable ?? false) && !($heleketAvailable ?? false))
             <div class="cosmic-alert cosmic-alert-info mb-4">
-                Configure <code class="cosmic-code">COINRUSH_STORE_KEY</code> or <code class="cosmic-code">HELEKET_MERCHANT</code> / <code class="cosmic-code">HELEKET_PAYMENT_KEY</code> in <code class="cosmic-code">.env</code> to enable payments.
+                Configure <code class="cosmic-code">YOOKASSA_SHOP_ID</code> / <code class="cosmic-code">YOOKASSA_SECRET_KEY</code> or <code class="cosmic-code">HELEKET_MERCHANT</code> / <code class="cosmic-code">HELEKET_PAYMENT_KEY</code> in <code class="cosmic-code">.env</code> to enable payments.
             </div>
         @endif
 
@@ -48,26 +43,29 @@
                     <p class="cosmic-pay-label mb-1">Quantity</p>
                     <p class="cosmic-pay-value mb-3">{{ $count }} links</p>
                     <p class="cosmic-pay-label mb-1">Price per link</p>
-                    <p class="cosmic-pay-value mb-3">${{ number_format($pricePerLink ?? 0.001, 3) }} USD</p>
-                    <p class="cosmic-pay-total mb-0">${{ number_format($amount, 3) }}</p>
+                    <p class="cosmic-pay-value mb-3">{{ number_format($pricePerLink ?? 0.001, 3) }} RUB</p>
+                    <p class="cosmic-pay-total mb-0">{{ number_format($amount, 2) }} RUB</p>
                     <p class="cosmic-text-muted small mt-3 mb-0">After payment, your links will be generated automatically.</p>
                 </div>
             </div>
 
             <div class="col-md-4">
                 <div class="cosmic-pay-card cosmic-pay-option h-100 p-4 d-flex flex-column">
-                    <h5 class="cosmic-card-title mb-2">Pay with Tron (USDT / TRX)</h5>
-                    <div class="cosmic-pay-icon cosmic-pay-icon-tron mb-3">
-                        <img src="{{ asset('images/tron-logo.png') }}" alt="Tron" width="32" height="32">
+                    <h5 class="cosmic-card-title mb-2">Pay with YooKassa</h5>
+                    <div class="cosmic-pay-icon cosmic-pay-icon-yookassa mb-3">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
                     </div>
-                    <p class="cosmic-text-muted small mb-3">Fast USDT or TRX payment on Tron network</p>
-                    <div class="cosmic-check-row"><span class="cosmic-check-mark">✓</span> Secure and quick on-chain payment</div>
-                    <div class="cosmic-check-row is-muted"><span class="cosmic-check-mark">✓</span> Low fees</div>
+                    <p class="cosmic-text-muted small mb-3">Bank cards, SBP, e-wallets and more</p>
+                    <div class="cosmic-check-row"><span class="cosmic-check-mark">✓</span> Visa, Mastercard, MIR</div>
+                    <div class="cosmic-check-row"><span class="cosmic-check-mark">✓</span> SBP, YooMoney</div>
                     <div class="mt-auto pt-3">
-                        @if($tronAvailable)
-                            <button type="button" id="btn-tron" class="btn cosmic-btn-primary w-100">Continue with Tron</button>
+                        @if($yookassaAvailable ?? false)
+                            <form method="POST" action="{{ route('shortlink.payment-yookassa-prepare') }}">
+                                @csrf
+                                <button type="submit" class="btn cosmic-btn-primary w-100">Pay with YooKassa</button>
+                            </form>
                         @else
-                            <button type="button" class="btn cosmic-btn-disabled w-100" disabled>Continue with Tron</button>
+                            <button type="button" class="btn cosmic-btn-disabled w-100" disabled>Pay with YooKassa</button>
                         @endif
                     </div>
                 </div>
@@ -97,11 +95,11 @@
         <div class="cosmic-pay-footer cosmic-card p-4 d-flex flex-wrap align-items-center justify-content-between gap-3">
             <div class="d-flex align-items-center gap-2">
                 <span class="cosmic-secure-check">✓</span>
-                <span class="cosmic-card-title mb-0 fw-normal" style="font-size:0.9375rem;">Secure payment via CoinRush (Tron) and Heleket</span>
+                <span class="cosmic-card-title mb-0 fw-normal" style="font-size:0.9375rem;">Secure payment via YooKassa and Heleket</span>
             </div>
             <p class="cosmic-text-muted small mb-0">You will return to Trastly after payment.</p>
             <div class="d-flex align-items-center gap-2 ms-md-auto">
-                <span class="cosmic-logo-pill cosmic-logo-cr">CR</span>
+                <span class="cosmic-logo-pill cosmic-logo-yk">YK</span>
                 <span class="cosmic-logo-pill cosmic-logo-heleket">H</span>
             </div>
         </div>
@@ -139,7 +137,7 @@
 .cosmic-pay-value { color: rgba(255,255,255,0.92); font-size: 0.9375rem; margin-bottom: 0; }
 .cosmic-pay-total { font-size: 1.5rem; font-weight: 700; background: linear-gradient(135deg, #a78bfa, #818cf8); -webkit-background-clip: text; background-clip: text; color: transparent; }
 .cosmic-pay-icon { width: 48px; height: 48px; border-radius: 10px; display: flex; align-items: center; justify-content: center; }
-.cosmic-pay-icon-tron { background: rgba(167,139,250,0.2); }
+.cosmic-pay-icon-yookassa { background: rgba(167,139,250,0.2); color: #a78bfa; }
 .cosmic-pay-icon-heleket { background: rgba(239,68,68,0.2); color: #fca5a5; font-weight: 700; font-size: 1.25rem; }
 .cosmic-check-row { display: flex; align-items: center; gap: 8px; font-size: 0.875rem; color: rgba(255,255,255,0.88); margin-bottom: 6px; }
 .cosmic-check-row.is-muted { color: rgba(255,255,255,0.55); }
@@ -153,38 +151,7 @@
 .cosmic-pay-footer { border-color: rgba(167,139,250,0.2); }
 .cosmic-secure-check { color: #4ade80; }
 .cosmic-logo-pill { width: 32px; height: 32px; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.75rem; }
-.cosmic-logo-cr { background: linear-gradient(135deg, #6366f1, #8b5cf6); color: #fff; }
+.cosmic-logo-yk { background: linear-gradient(135deg, #6366f1, #8b5cf6); color: #fff; }
 .cosmic-logo-heleket { background: linear-gradient(135deg, #dc2626, #ef4444); color: #fff; }
 </style>
-@endpush
-
-@push('scripts')
-@if($tronAvailable)
-<script src="{{ asset('js/tron-payment.js') }}"></script>
-<script>
-document.getElementById('btn-tron')?.addEventListener('click', async function() {
-    const btn = this;
-    const storeKey = @json($coinrushStoreKey ?? '');
-    const apiUrl = @json($coinrushApiUrl ?? 'https://coinrush.link/store');
-    const successUrl = @json(route('shortlink.payment-tron-success'));
-    const prepareUrl = @json(route('shortlink.payment-tron-prepare'));
-    const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || document.querySelector('input[name="_token"]')?.value;
-    if (!window.TronPayment) { alert('Payment widget failed to load. Please refresh.'); return; }
-    btn.disabled = true; btn.textContent = 'Preparing...';
-    let orderId, amount;
-    try {
-        const res = await fetch(prepareUrl, { method: 'POST', headers: { 'X-CSRF-TOKEN': csrf || '', 'Accept': 'application/json', 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }, body: JSON.stringify({}), credentials: 'same-origin' });
-        const data = await res.json();
-        if (!res.ok || !data.order_id) throw new Error(data.error || data.message || 'Failed');
-        orderId = data.order_id; amount = data.amount;
-    } catch (e) {
-        btn.disabled = false; btn.textContent = 'Continue with Tron';
-        alert(e.message || 'Failed to prepare payment.'); return;
-    }
-    btn.disabled = false; btn.textContent = 'Continue with Tron';
-    TronPayment.init({ storeKey, apiUrl });
-    TronPayment.openPayment({ transactionId: orderId, amount, asset: 'USDT', onSuccess: () => { window.location.href = successUrl + '?order_id=' + orderId; }, onError: (e) => alert(e?.message || 'Payment failed.'), onCancel: () => {} });
-});
-</script>
-@endif
 @endpush

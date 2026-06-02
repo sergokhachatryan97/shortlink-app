@@ -19,6 +19,7 @@ class BalanceController extends Controller
     {
         $user = Auth::user();
         $heleketAvailable = config('services.heleket.merchant') && config('services.heleket.payment_key');
+        $yookassaAvailable = config('services.yookassa.shop_id') && config('services.yookassa.secret_key');
         $prefillAmount = $request->query('amount');
         if ($prefillAmount !== null) {
             $prefillAmount = max(0.10, min(10000, (float) $prefillAmount));
@@ -119,7 +120,7 @@ class BalanceController extends Controller
     /**
      * UI-only. Never mutates payment state. Webhook credits balance.
      */
-    public function tronTopupSuccess(Request $request): RedirectResponse
+    public function yookassaTopupSuccess(Request $request): RedirectResponse
     {
         return $this->topupSuccessRedirect($request);
     }
@@ -153,15 +154,16 @@ class BalanceController extends Controller
             ->with('success', 'Balance topped up: $'.number_format($tx->amount, 2));
     }
 
-    public function prepareTopup(Request $request): JsonResponse
+    public function initiateYookassaTopup(Request $request): RedirectResponse
     {
-        $data = $request->validate(['amount' => 'required|numeric|min:0.1|max:10000']);
-        $amount = (float) $data['amount'];
-        if ($amount < 0.10) {
-            return response()->json(['error' => 'Minimum top-up is $0.10'], 400);
-        }
-        if ($amount > 10000) {
-            return response()->json(['error' => 'Maximum top-up is $10,000'], 400);
+        $validated = $request->validate(['amount' => 'required|numeric|min:0.1|max:10000']);
+        $amount = (float) $validated['amount'];
+        $amount = number_format($amount, 2, '.', '');
+
+        $shopId = config('services.yookassa.shop_id');
+        $secretKey = config('services.yookassa.secret_key');
+        if (! $shopId || ! $secretKey) {
+            return redirect()->route('balance.index')->with('error', 'YooKassa is not configured.');
         }
 
         $orderId = 'bal-'.uniqid();
@@ -170,18 +172,55 @@ class BalanceController extends Controller
         ShortlinkTransaction::create([
             'order_id' => $orderId,
             'amount' => $amount,
-            'currency' => 'USD',
+            'currency' => 'RUB',
             'status' => 'pending',
             'identifier' => 'user:'.$user->id,
             'count' => 0,
             'url' => null,
-            'provider_ref' => 'tron_topup',
+            'provider_ref' => 'yookassa_topup',
             'payment_kind' => ShortlinkTransaction::KIND_BALANCE_TOPUP,
         ]);
 
-        $request->session()->put('balance_topup_order', $orderId);
+        $client = new \YooKassa\Client();
+        $client->setAuth($shopId, $secretKey);
 
-        return response()->json(['order_id' => $orderId, 'amount' => $amount]);
+        $payment = $client->createPayment([
+            'amount' => [
+                'value' => $amount,
+                'currency' => 'RUB',
+            ],
+            'confirmation' => [
+                'type' => 'redirect',
+                'return_url' => route('balance.yookassa.success', ['order_id' => $orderId]),
+            ],
+            'capture' => true,
+            'description' => 'Balance top-up',
+            'metadata' => [
+                'order_id' => $orderId,
+            ],
+            'receipt' => [
+                'customer' => [
+                    'email' => $user->email ?? 'customer@trastly.com',
+                ],
+                'items' => [
+                    [
+                        'description' => 'Пополнение баланса',
+                        'quantity' => 1,
+                        'amount' => [
+                            'value' => $amount,
+                            'currency' => 'RUB',
+                        ],
+                        'vat_code' => 1,
+                        'payment_subject' => 'service',
+                        'payment_mode' => 'full_payment',
+                    ],
+                ],
+            ],
+        ], uniqid('', true));
+
+        $confirmationUrl = $payment->getConfirmation()->getConfirmationUrl();
+
+        return redirect()->away($confirmationUrl);
     }
 
     /**

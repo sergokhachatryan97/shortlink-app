@@ -46,17 +46,17 @@
             <div class="mb-4">
                 <label class="cosmic-label mb-2">{{ __('messages.balance.payment_method') }}</label>
                 <div class="addfunds-methods d-flex gap-3 flex-wrap">
-                    <div class="addfunds-method addfunds-method-tron active" data-method="tron">
+                    <div class="addfunds-method addfunds-method-yookassa active" data-method="yookassa">
                         <span class="addfunds-method-badge">{{ __('messages.shortlink.recommended') }}</span>
                         <div class="d-flex align-items-center gap-2 mb-2">
-                            <div class="addfunds-method-icon addfunds-icon-tron">
-                                <img src="{{ asset('images/tron-logo.png') }}" alt="Tron" width="24" height="24">
+                            <div class="addfunds-method-icon addfunds-icon-yookassa">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
                             </div>
-                            <span class="cosmic-card-title mb-0">{{ __('messages.balance.pay_tron') }}</span>
+                            <span class="cosmic-card-title mb-0">YooKassa</span>
                         </div>
-                        <p class="cosmic-text-muted small mb-2">{{ __('messages.balance.tron_desc') }}</p>
-                        <div class="addfunds-check">{{ __('messages.balance.tron_feature1') }}</div>
-                        <div class="addfunds-check">{{ __('messages.balance.tron_feature2') }}</div>
+                        <p class="cosmic-text-muted small mb-2">Bank cards, SBP, e-wallets</p>
+                        <div class="addfunds-check">Visa, Mastercard, MIR</div>
+                        <div class="addfunds-check">SBP, YooMoney</div>
                     </div>
                     <div class="addfunds-method addfunds-method-heleket" data-method="heleket">
                         <div class="d-flex align-items-center gap-2 mb-2">
@@ -78,10 +78,14 @@
             <div class="addfunds-secure mb-4">{{ __('messages.balance.secure') }}</div>
 
             <div class="d-flex justify-content-end gap-2">
-                @if(config('services.coinrush.store_key'))
-                <button type="button" class="btn cosmic-btn-primary addfunds-pay-btn active" id="topup-btn" data-method="tron">Pay with Tron</button>
+                @if(config('services.yookassa.shop_id') && config('services.yookassa.secret_key'))
+                <form method="POST" action="{{ route('balance.yookassa.initiate') }}" id="yookassa-form" class="d-inline">
+                    @csrf
+                    <input type="hidden" name="amount" id="yookassa-amount">
+                    <button type="submit" class="btn cosmic-btn-primary addfunds-pay-btn active" id="topup-btn" data-method="yookassa">Pay with YooKassa</button>
+                </form>
                 @else
-                <button type="button" class="btn cosmic-btn-disabled" disabled>Pay with Tron</button>
+                <button type="button" class="btn cosmic-btn-disabled" disabled>Pay with YooKassa</button>
                 @endif
                 @if ($heleketAvailable ?? false)
                 <form method="POST" action="{{ route('balance.heleket.initiate') }}" id="heleket-form" class="d-inline">
@@ -249,7 +253,7 @@
 .addfunds-method.active { border-color: rgba(167,139,250,0.6); box-shadow: 0 0 0 2px rgba(167,139,250,0.2); }
 .addfunds-method-badge { position: absolute; top: 8px; right: 8px; font-size: 0.7rem; color: #f59e0b; }
 .addfunds-method-icon { width: 40px; height: 40px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 700; }
-.addfunds-icon-tron { background: rgba(167,139,250,0.2); }
+.addfunds-icon-yookassa { background: rgba(167,139,250,0.2); color: #a78bfa; }
 .addfunds-icon-heleket { background: rgba(239,68,68,0.2); color: #fca5a5; }
 .addfunds-check { font-size: 0.875rem; color: rgba(255,255,255,0.85); }
 .addfunds-summary { padding: 1rem; background: rgba(0,0,0,0.15); border-radius: 10px; }
@@ -335,56 +339,14 @@
             setActiveMethod(this.dataset.method);
         });
     });
-    var defaultMethod = document.getElementById('topup-btn') && !document.getElementById('topup-btn').disabled ? 'tron' : 'heleket';
+    var defaultMethod = document.getElementById('topup-btn') && !document.getElementById('topup-btn').disabled ? 'yookassa' : 'heleket';
     setActiveMethod(defaultMethod);
 })();
 document.getElementById('heleket-form')?.addEventListener('submit', function() {
     document.getElementById('heleket-amount').value = document.getElementById('amount').value;
 });
-</script>
-@if(config('services.coinrush.store_key'))
-<script src="{{ asset('js/tron-payment.js') }}"></script>
-<script>
-document.getElementById('topup-btn')?.addEventListener('click', async function() {
-    const btn = this;
-    const amount = parseFloat(document.getElementById('amount').value);
-    if (isNaN(amount) || amount < 0.10 || amount > 10000) {
-        alert('Please enter amount between $0.10 and $10,000');
-        return;
-    }
-    const prepareUrl = '{{ route("balance.topup.prepare") }}';
-    const successUrl = '{{ route("balance.tron.success") }}';
-    const storeKey = @json(config('services.coinrush.store_key'));
-    const apiUrl = @json(config('services.coinrush.api_url', 'https://coinrush.link/store'));
-    const csrf = document.querySelector('meta[name="csrf-token"]')?.content || document.querySelector('input[name="_token"]')?.value;
-    btn.disabled = true;
-    let orderId;
-    try {
-        const res = await fetch(prepareUrl, {
-            method: 'POST',
-            headers: { 'X-CSRF-TOKEN': csrf, 'Accept': 'application/json', 'Content-Type': 'application/json' },
-            body: JSON.stringify({ amount }),
-            credentials: 'same-origin'
-        });
-        const data = await res.json();
-        if (!res.ok || !data.order_id) throw new Error(data.error || 'Failed');
-        orderId = data.order_id;
-    } catch (err) {
-        btn.disabled = false;
-        alert(err.message);
-        return;
-    }
-    if (!window.TronPayment) { alert('Widget not loaded'); btn.disabled = false; return; }
-    TronPayment.init({ storeKey, apiUrl });
-    TronPayment.openPayment({
-        transactionId: orderId,
-        amount,
-        asset: 'USDT',
-        onSuccess: () => { window.location.href = successUrl + '?order_id=' + orderId; },
-        onError: (e) => { alert(e?.message); btn.disabled = false; },
-        onCancel: () => { btn.disabled = false; }
-    });
+document.getElementById('yookassa-form')?.addEventListener('submit', function() {
+    document.getElementById('yookassa-amount').value = document.getElementById('amount').value;
 });
 </script>
-@endif
 @endsection

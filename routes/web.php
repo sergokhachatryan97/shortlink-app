@@ -34,8 +34,8 @@ Route::get('/payment', [ShortlinkController::class, 'payment'])->name('shortlink
 Route::post('/payment/initiate', [ShortlinkController::class, 'initiatePayment'])->name('shortlink.payment.initiate');
 Route::get('/payment/success', [ShortlinkController::class, 'paymentSuccess'])->name('shortlink.payment-success');
 Route::get('/payment/status', [ShortlinkController::class, 'paymentStatus'])->name('shortlink.payment-status');
-Route::post('/payment/tron/prepare', [ShortlinkController::class, 'prepareTronPayment'])->name('shortlink.payment-tron-prepare');
-Route::get('/payment/tron/success', [ShortlinkController::class, 'paymentTronSuccess'])->name('shortlink.payment-tron-success');
+Route::post('/payment/yookassa/prepare', [ShortlinkController::class, 'prepareYooKassaPayment'])->name('shortlink.payment-yookassa-prepare');
+Route::get('/payment/yookassa/success', [ShortlinkController::class, 'paymentYooKassaSuccess'])->name('shortlink.payment-yookassa-success');
 
 Route::get('/login', [AuthController::class, 'showLoginForm'])->name('auth.login');
 Route::post('/login', [AuthController::class, 'login'])->name('login');
@@ -55,10 +55,10 @@ Route::middleware('auth')->group(function () {
     Route::get('/links/download', [LinksController::class, 'download'])->name('links.download');
     Route::get('/links/copy', [LinksController::class, 'copyAll'])->name('links.copy');
     Route::get('/balance', [BalanceController::class, 'index'])->name('balance.index');
-    Route::post('/balance/topup/prepare', [BalanceController::class, 'prepareTopup'])->name('balance.topup.prepare');
+    Route::post('/balance/yookassa/initiate', [BalanceController::class, 'initiateYookassaTopup'])->name('balance.yookassa.initiate');
     Route::post('/balance/heleket/initiate', [BalanceController::class, 'initiateHeleketTopup'])->name('balance.heleket.initiate');
     Route::get('/balance/heleket/success', [BalanceController::class, 'heleketTopupSuccess'])->name('balance.heleket.success');
-    Route::get('/balance/tron/success', [BalanceController::class, 'tronTopupSuccess'])->name('balance.tron.success');
+    Route::get('/balance/yookassa/success', [BalanceController::class, 'yookassaTopupSuccess'])->name('balance.yookassa.success');
     Route::get('/subscription', [SubscriptionController::class, 'index'])->name('subscription.index');
     Route::post('/subscription/promo/validate', [SubscriptionController::class, 'validatePromo'])->name('subscription.promo.validate');
     Route::post('/subscription/purchase', [SubscriptionController::class, 'purchase'])->name('subscription.purchase');

@@ -42,10 +42,9 @@ return [
         'payout_api_key' => env('HELEKET_PAYOUT_API_KEY'),
     ],
 
-    'coinrush' => [
-        'store_key' => env('COINRUSH_STORE_KEY'),
-        'api_url' => env('COINRUSH_API_URL', 'https://coinrush.link/store'),
-        'payout_api_key' => env('COINRUSH_PAYOUT_API_KEY'),
+    'yookassa' => [
+        'shop_id' => env('YOOKASSA_SHOP_ID'),
+        'secret_key' => env('YOOKASSA_SECRET_KEY'),
     ],
 
     'admin' => [
