@@ -51,21 +51,19 @@
 
             <div class="col-md-4">
                 <div class="cosmic-pay-card cosmic-pay-option h-100 p-4 d-flex flex-column">
-                    <h5 class="cosmic-card-title mb-2">Pay with YooKassa</h5>
+                    <h5 class="cosmic-card-title mb-2">RU Bank Cards, SBP, SberPay</h5>
                     <div class="cosmic-pay-icon cosmic-pay-icon-yookassa mb-3">
                         <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
                     </div>
-                    <p class="cosmic-text-muted small mb-3">Bank cards, SBP, e-wallets and more</p>
-                    <div class="cosmic-check-row"><span class="cosmic-check-mark">✓</span> Visa, Mastercard, MIR</div>
-                    <div class="cosmic-check-row"><span class="cosmic-check-mark">✓</span> SBP, YooMoney</div>
+                    <p class="cosmic-text-muted small mb-3">Visa, Mastercard, MIR, SBP, SberPay</p>
                     <div class="mt-auto pt-3">
                         @if($yookassaAvailable ?? false)
                             <form method="POST" action="{{ route('shortlink.payment-yookassa-prepare') }}">
                                 @csrf
-                                <button type="submit" class="btn cosmic-btn-primary w-100">Pay with YooKassa</button>
+                                <button type="submit" class="btn cosmic-btn-primary w-100">Pay with Bank Card / SBP</button>
                             </form>
                         @else
-                            <button type="button" class="btn cosmic-btn-disabled w-100" disabled>Pay with YooKassa</button>
+                            <button type="button" class="btn cosmic-btn-disabled w-100" disabled>Pay with Bank Card / SBP</button>
                         @endif
                     </div>
                 </div>
@@ -95,7 +93,7 @@
         <div class="cosmic-pay-footer cosmic-card p-4 d-flex flex-wrap align-items-center justify-content-between gap-3">
             <div class="d-flex align-items-center gap-2">
                 <span class="cosmic-secure-check">✓</span>
-                <span class="cosmic-card-title mb-0 fw-normal" style="font-size:0.9375rem;">Secure payment via YooKassa and Heleket</span>
+                <span class="cosmic-card-title mb-0 fw-normal" style="font-size:0.9375rem;">Secure payment</span>
             </div>
             <p class="cosmic-text-muted small mb-0">You will return to Trastly after payment.</p>
             <div class="d-flex align-items-center gap-2 ms-md-auto">

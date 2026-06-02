@@ -124,6 +124,6 @@ return [
     ],
 
     'support_email' => env('SUPPORT_EMAIL', 'Trastly.org@gmail.com'),
-    'support_telegram' => env('SUPPORT_TELEGRAM', 'https://t.me/Just_tg'),
+    'support_telegram' => env('SUPPORT_TELEGRAM', 'https://t.me/trastly_admin'),
 
 ];

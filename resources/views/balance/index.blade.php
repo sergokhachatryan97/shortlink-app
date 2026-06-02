@@ -52,11 +52,9 @@
                             <div class="addfunds-method-icon addfunds-icon-yookassa">
                                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
                             </div>
-                            <span class="cosmic-card-title mb-0">YooKassa</span>
+                            <span class="cosmic-card-title mb-0">RU Bank Cards, SBP, SberPay</span>
                         </div>
-                        <p class="cosmic-text-muted small mb-2">Bank cards, SBP, e-wallets</p>
-                        <div class="addfunds-check">Visa, Mastercard, MIR</div>
-                        <div class="addfunds-check">SBP, YooMoney</div>
+                        <p class="cosmic-text-muted small mb-2">Visa, Mastercard, MIR, SBP, SberPay</p>
                     </div>
                     <div class="addfunds-method addfunds-method-heleket" data-method="heleket">
                         <div class="d-flex align-items-center gap-2 mb-2">
@@ -82,10 +80,10 @@
                 <form method="POST" action="{{ route('balance.yookassa.initiate') }}" id="yookassa-form" class="d-inline">
                     @csrf
                     <input type="hidden" name="amount" id="yookassa-amount">
-                    <button type="submit" class="btn cosmic-btn-primary addfunds-pay-btn active" id="topup-btn" data-method="yookassa">Pay with YooKassa</button>
+                    <button type="submit" class="btn cosmic-btn-primary addfunds-pay-btn active" id="topup-btn" data-method="yookassa">Pay with Bank Card / SBP</button>
                 </form>
                 @else
-                <button type="button" class="btn cosmic-btn-disabled" disabled>Pay with YooKassa</button>
+                <button type="button" class="btn cosmic-btn-disabled" disabled>Pay with Bank Card / SBP</button>
                 @endif
                 @if ($heleketAvailable ?? false)
                 <form method="POST" action="{{ route('balance.heleket.initiate') }}" id="heleket-form" class="d-inline">
@@ -97,7 +95,7 @@
             </div>
         </div>
 
-        <div class="cosmic-card p-4 mb-4">
+        <div class="cosmic-card p-4 mb-4 cosmic-plans-section">
             <h5 class="cosmic-card-title mb-3">{{ __('messages.balance.subscription_plans') }}</h5>
             <p class="cosmic-text-muted small mb-4">{{ __('messages.balance.subscription_desc') }}</p>
             <div class="row g-4 justify-content-center">
@@ -126,7 +124,7 @@
                     };
                     $planBillingSuffix = (int) ($plan->duration_days ?? 0) >= 365 ? '/yr' : '/mo';
                 @endphp
-                <div class="col-12 col-sm-6 col-xl-3 d-flex">
+                <div class="col-12 col-sm-6 d-flex">
                     <div class="cosmic-plan-card-balance w-100 d-flex flex-column {{ $isCurrentPlan ? 'cosmic-plan-current' : '' }} {{ $isRecommended ? 'cosmic-plan-recommended' : '' }}">
                         @if ($isRecommended)
                         <div class="cosmic-plan-badge">{{ __('messages.shortlink.recommended') }}</div>
@@ -289,6 +287,8 @@
 .cosmic-plan-card-balance.cosmic-plan-recommended .cosmic-plan-price { font-size: 1.5rem; color: #a78bfa; }
 .cosmic-plan-card-balance .cosmic-btn-disabled { background: rgba(30,30,45,0.5); border: 1px solid rgba(255,255,255,0.1); color: rgba(255,255,255,0.5); border-radius: 10px; font-weight: 600; padding: 10px 16px; }
 .cosmic-plan-card-balance .cosmic-pay-today { color: rgba(255,255,255,0.6); }
+.cosmic-plans-section { max-width: none; margin-left: -60px; margin-right: -60px; padding-left: 2rem; padding-right: 2rem; }
+@media (max-width: 767px) { .cosmic-plans-section { margin-left: 0; margin-right: 0; } }
 .addfunds-pay-btn { display: none !important; }
 .addfunds-pay-btn.active { display: inline-flex !important; }
 </style>
