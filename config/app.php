@@ -123,7 +123,7 @@ return [
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
 
-    'support_email' => env('SUPPORT_EMAIL', 'Trastly.org@gmail.com'),
+    'support_email' => env('SUPPORT_EMAIL', 'support@trastly.org'),
     'support_telegram' => env('SUPPORT_TELEGRAM', 'https://t.me/trastly_admin'),
 
 ];
