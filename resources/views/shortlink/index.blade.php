@@ -359,11 +359,17 @@
                 <input type="hidden" name="fingerprint" id="fingerprint" value="">
 
                 <div class="mb-4">
-                    <label for="url" class="form-label fw-medium">{{ __('messages.shortlink.destination_url') }}</label>
-                    <div class="input-group">
-                        <input type="url" id="url" name="url" required placeholder="https://example.com"
-                               class="form-control">
-                    </div>
+                    <label for="url" class="form-label fw-medium d-flex align-items-center justify-content-between">
+                        {{ __('messages.shortlink.destination_url') }}
+                        @auth
+                        <a href="#" id="btn-utm" class="text-decoration-none d-inline-flex align-items-center gap-1" style="color: #a78bfa; font-size: 0.8125rem; font-weight: 500;">
+                            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101"/><path d="M10.172 13.828a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
+                            UTM Builder
+                        </a>
+                        <script>document.getElementById('btn-utm')?.addEventListener('click',function(e){e.preventDefault();var u=document.getElementById('url').value.trim();window.location.href='{{ route("utm.index") }}'+(u?'?url='+encodeURIComponent(u):'');});</script>
+                        @endauth
+                    </label>
+                    <input type="url" id="url" name="url" required placeholder="https://example.com" class="form-control">
                 </div>
 
                 <div class="mb-4">

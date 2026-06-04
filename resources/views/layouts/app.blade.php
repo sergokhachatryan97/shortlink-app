@@ -86,7 +86,7 @@
     </style>
     @stack('styles')
 </head>
-<body class="{{ request()->routeIs('links.*') || request()->routeIs('contact.index') || request()->routeIs('subscription.index') || request()->routeIs('profile.*') || request()->routeIs('balance.*') || request()->routeIs('partner.*') || request()->routeIs('api.docs*') || request()->routeIs('shortlink.payment') ? 'cosmic-page-body' : '' }}">
+<body class="{{ 'cosmic-page-body' }}">
     @if (config('services.google_tag_manager.id'))
     <!-- Google Tag Manager (noscript) -->
     <noscript><iframe src="https://www.googletagmanager.com/ns.html?id={{ config('services.google_tag_manager.id') }}"

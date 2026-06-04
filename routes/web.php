@@ -11,6 +11,7 @@ use App\Http\Controllers\PartnerController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ShortlinkController;
 use App\Http\Controllers\SubscriptionController;
+use App\Http\Controllers\UtmBuilderController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/locale/{locale}', function (string $locale) {
@@ -69,6 +70,15 @@ Route::middleware('auth')->group(function () {
     Route::post('/partner/withdrawal-request', [PartnerController::class, 'submitWithdrawalRequest'])->name('partner.withdrawal-request');
     Route::get('/dashboard/api', [ApiDocsController::class, 'index'])->name('api.docs');
     Route::post('/dashboard/api/regenerate', [ApiDocsController::class, 'regenerate'])->name('api.docs.regenerate');
+    Route::get('/utm', [UtmBuilderController::class, 'index'])->name('utm.index');
+    Route::post('/utm/generate', [UtmBuilderController::class, 'generate'])->name('utm.generate');
+    Route::post('/utm/shorten', [UtmBuilderController::class, 'shorten'])->name('utm.shorten');
+    Route::get('/utm/campaigns', [UtmBuilderController::class, 'campaigns'])->name('utm.campaigns');
+    Route::post('/utm/csv-import', [UtmBuilderController::class, 'csvImport'])->name('utm.csv-import');
+    Route::post('/utm/presets', [UtmBuilderController::class, 'storePreset'])->name('utm.presets.store');
+    Route::put('/utm/presets/{preset}', [UtmBuilderController::class, 'updatePreset'])->name('utm.presets.update');
+    Route::delete('/utm/presets/{preset}', [UtmBuilderController::class, 'deletePreset'])->name('utm.presets.delete');
+    Route::get('/utm/reuse/{utmLink}', [UtmBuilderController::class, 'reuse'])->name('utm.reuse');
 });
 
 Route::prefix('admin')->name('admin.')->group(function () {

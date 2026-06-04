@@ -17,6 +17,9 @@
                     <a class="nav-link {{ request()->routeIs('links.*') ? 'active fw-600' : '' }}" href="{{ route('links.index') }}">{{ __('messages.nav.my_links') }}</a>
                 </li>
                 <li class="nav-item">
+                    <a class="nav-link {{ request()->routeIs('utm.*') ? 'active fw-600' : '' }}" href="{{ route('utm.index') }}">UTM Builder</a>
+                </li>
+                <li class="nav-item">
                     <a class="nav-link {{ request()->routeIs('subscription.index') ? 'active fw-600' : '' }}" href="{{ route('subscription.index') }}">{{ __('messages.nav.pricing') }}</a>
                 </li>
                 <li class="nav-item">
