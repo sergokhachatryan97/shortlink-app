@@ -7,18 +7,18 @@
     <div class="container utm-container">
         <a href="{{ route('shortlink.index') }}" class="utm-back-link d-inline-flex align-items-center gap-2 mb-3 text-decoration-none">
             <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
-            Back to Generator
+            {{ __('messages.utm.back_to_generator') }}
         </a>
         <div class="utm-page-header mb-4">
-            <h1 class="utm-page-title">UTM Link Builder</h1>
-            <p class="utm-page-subtitle mb-0">Create UTM-tagged links for your marketing campaigns.</p>
+            <h1 class="utm-page-title">{{ __('messages.utm.title') }}</h1>
+            <p class="utm-page-subtitle mb-0">{{ __('messages.utm.subtitle') }}</p>
         </div>
 
         {{-- Presets Bar --}}
         @if($presets->count())
         <div class="utm-card p-3 mb-4">
             <div class="d-flex align-items-center justify-content-between mb-2">
-                <span class="utm-label">Presets</span>
+                <span class="utm-label">{{ __('messages.utm.presets') }}</span>
             </div>
             <div class="d-flex gap-2 flex-wrap">
                 @foreach($presets as $preset)
@@ -38,7 +38,7 @@
                 @csrf
                 {{-- Target URL --}}
                 <div class="mb-4">
-                    <label for="utm-url" class="utm-label">Target URL <span class="text-danger">*</span></label>
+                    <label for="utm-url" class="utm-label">{{ __('messages.utm.target_url') }} <span class="text-danger">*</span></label>
                     <input type="url" id="utm-url" name="url" required placeholder="https://example.com/product" class="form-control utm-input" value="{{ request('url') }}">
                 </div>
 
@@ -91,7 +91,7 @@
                 <div class="mb-3">
                     <button type="button" class="btn btn-sm utm-toggle-advanced" id="toggle-advanced">
                         <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7"/></svg>
-                        Additional parameters
+                        {{ __('messages.utm.additional_params') }}
                     </button>
                 </div>
 
@@ -102,7 +102,7 @@
                             <label for="utm-content" class="utm-label">utm_content</label>
                             <div class="input-group">
                                 <input type="text" id="utm-content" name="utm_content" placeholder="banner_3" class="form-control utm-input">
-                                <button type="button" class="btn utm-macro-btn dropdown-toggle" data-bs-toggle="dropdown">Macro</button>
+                                <button type="button" class="btn utm-macro-btn dropdown-toggle" data-bs-toggle="dropdown">{{ __('messages.utm.macro') }}</button>
                                 <ul class="dropdown-menu dropdown-menu-dark utm-macro-menu" data-target="utm-content">
                                     <li class="dropdown-header">Yandex Direct</li>
                                     <li><a class="dropdown-item utm-macro-item" data-value="{campaign_id}">{campaign_id}</a></li>
@@ -131,7 +131,7 @@
                             <label for="utm-term" class="utm-label">utm_term</label>
                             <div class="input-group">
                                 <input type="text" id="utm-term" name="utm_term" placeholder="{keyword}" class="form-control utm-input">
-                                <button type="button" class="btn utm-macro-btn dropdown-toggle" data-bs-toggle="dropdown">Macro</button>
+                                <button type="button" class="btn utm-macro-btn dropdown-toggle" data-bs-toggle="dropdown">{{ __('messages.utm.macro') }}</button>
                                 <ul class="dropdown-menu dropdown-menu-dark utm-macro-menu" data-target="utm-term">
                                     <li class="dropdown-header">Yandex Direct</li>
                                     <li><a class="dropdown-item utm-macro-item" data-value="{keyword}">{keyword}</a></li>
@@ -150,35 +150,35 @@
 
                 {{-- Source domain warning --}}
                 <div id="source-warning" class="alert alert-warning py-2 small mb-3" style="display:none;">
-                    utm_source should indicate the traffic source (Google, Facebook, etc.), not your own website.
+                    {{ __('messages.utm.source_warning') }}
                 </div>
 
                 {{-- Preview --}}
                 <div class="utm-preview-box mb-4">
                     <div class="d-flex align-items-center justify-content-between mb-2">
-                        <span class="utm-label mb-0">Preview</span>
-                        <button type="button" id="copy-preview" class="btn btn-sm utm-copy-btn">Copy</button>
+                        <span class="utm-label mb-0">{{ __('messages.utm.preview') }}</span>
+                        <button type="button" id="copy-preview" class="btn btn-sm utm-copy-btn">{{ __('messages.utm.copy') }}</button>
                     </div>
                     <div id="utm-preview" class="utm-preview-url">https://example.com</div>
                 </div>
 
                 {{-- Actions --}}
                 <div class="d-flex gap-2 flex-wrap">
-                    <button type="submit" class="btn utm-btn-primary">Generate UTM Link</button>
-                    <button type="button" id="btn-shorten" class="btn utm-btn-secondary" style="display:none;">Shorten with Trastly</button>
-                    <button type="button" id="btn-save-preset" class="btn utm-btn-outline">Save as Preset</button>
+                    <button type="submit" class="btn utm-btn-primary">{{ __('messages.utm.generate') }}</button>
+                    <button type="button" id="btn-shorten" class="btn utm-btn-secondary" style="display:none;">{{ __('messages.utm.shorten') }}</button>
+                    <button type="button" id="btn-save-preset" class="btn utm-btn-outline">{{ __('messages.utm.save_preset') }}</button>
                 </div>
 
                 {{-- Result --}}
                 <div id="utm-result" class="utm-result-box mt-3" style="display:none;">
                     <div class="d-flex align-items-center gap-2">
                         <input type="text" id="utm-result-url" class="form-control utm-input" readonly>
-                        <button type="button" id="copy-result" class="btn utm-btn-primary">Copy</button>
+                        <button type="button" id="copy-result" class="btn utm-btn-primary">{{ __('messages.utm.copy') }}</button>
                     </div>
                     <div id="utm-short-result" class="mt-2" style="display:none;">
                         <div class="d-flex align-items-center gap-2">
                             <input type="text" id="utm-short-url" class="form-control utm-input" readonly>
-                            <button type="button" id="copy-short" class="btn utm-btn-primary">Copy</button>
+                            <button type="button" id="copy-short" class="btn utm-btn-primary">{{ __('messages.utm.copy') }}</button>
                         </div>
                     </div>
                 </div>
@@ -187,20 +187,20 @@
 
         {{-- CSV Import --}}
         <div class="utm-card p-4 mb-4">
-            <h5 class="utm-card-title mb-3">CSV Import</h5>
-            <p class="utm-text-muted small mb-3">Upload a CSV with columns: url, utm_source, utm_medium, utm_campaign, utm_content, utm_term</p>
+            <h5 class="utm-card-title mb-3">{{ __('messages.utm.csv_import') }}</h5>
+            <p class="utm-text-muted small mb-3">{{ __('messages.utm.csv_desc') }}</p>
             <form id="csv-form" enctype="multipart/form-data">
                 @csrf
                 <div class="d-flex gap-2 align-items-center">
                     <input type="file" name="csv_file" accept=".csv,.txt" class="form-control utm-input" style="max-width:320px;" required>
-                    <button type="submit" class="btn utm-btn-secondary">Import</button>
+                    <button type="submit" class="btn utm-btn-secondary">{{ __('messages.utm.import') }}</button>
                 </div>
             </form>
             <div id="csv-results" class="mt-3" style="display:none;">
-                <p class="utm-text-muted small"><span id="csv-count">0</span> links generated</p>
+                <p class="utm-text-muted small"><span id="csv-count">0</span> {{ __('messages.utm.links_generated') }}</p>
                 <div class="table-responsive" style="max-height:300px;overflow-y:auto;">
                     <table class="table table-sm utm-table">
-                        <thead><tr><th>Original URL</th><th>Final URL</th></tr></thead>
+                        <thead><tr><th>{{ __('messages.utm.original_url') }}</th><th>{{ __('messages.utm.final_url') }}</th></tr></thead>
                         <tbody id="csv-results-body"></tbody>
                     </table>
                 </div>
@@ -209,21 +209,21 @@
 
         {{-- History --}}
         <div class="utm-card p-4">
-            <h5 class="utm-card-title mb-3">History</h5>
+            <h5 class="utm-card-title mb-3">{{ __('messages.utm.history') }}</h5>
 
             <form method="GET" action="{{ route('utm.index') }}" class="d-flex gap-2 flex-wrap mb-3">
-                <input type="text" name="search" value="{{ request('search') }}" placeholder="Search URL or campaign..." class="form-control utm-input" style="max-width:220px;">
+                <input type="text" name="search" value="{{ request('search') }}" placeholder="{{ __('messages.utm.search_placeholder') }}" class="form-control utm-input" style="max-width:220px;">
                 <select name="campaign" class="form-select utm-input" style="max-width:180px;">
-                    <option value="">All campaigns</option>
+                    <option value="">{{ __('messages.utm.all_campaigns') }}</option>
                     @foreach($campaigns as $c)
                     <option value="{{ $c }}" {{ request('campaign') === $c ? 'selected' : '' }}>{{ $c }}</option>
                     @endforeach
                 </select>
                 <input type="date" name="date_from" value="{{ request('date_from') }}" class="form-control utm-input" style="max-width:150px;">
                 <input type="date" name="date_to" value="{{ request('date_to') }}" class="form-control utm-input" style="max-width:150px;">
-                <button type="submit" class="btn utm-btn-secondary">Filter</button>
+                <button type="submit" class="btn utm-btn-secondary">{{ __('messages.utm.filter') }}</button>
                 @if(request()->hasAny(['search','campaign','date_from','date_to']))
-                <a href="{{ route('utm.index') }}" class="btn utm-btn-outline">Clear</a>
+                <a href="{{ route('utm.index') }}" class="btn utm-btn-outline">{{ __('messages.utm.clear') }}</a>
                 @endif
             </form>
 
@@ -232,11 +232,11 @@
                 <table class="table table-sm utm-table">
                     <thead>
                         <tr>
-                            <th>Date</th>
-                            <th>Campaign</th>
-                            <th>Source / Medium</th>
-                            <th>Final URL</th>
-                            <th>Short</th>
+                            <th>{{ __('messages.utm.date') }}</th>
+                            <th>{{ __('messages.utm.campaign') }}</th>
+                            <th>{{ __('messages.utm.source_medium') }}</th>
+                            <th>{{ __('messages.utm.final_url') }}</th>
+                            <th>{{ __('messages.utm.short') }}</th>
                             <th></th>
                         </tr>
                     </thead>
@@ -255,7 +255,7 @@
                                 @endif
                             </td>
                             <td>
-                                <button type="button" class="btn btn-sm utm-btn-outline utm-reuse-btn" data-id="{{ $link->id }}">Reuse</button>
+                                <button type="button" class="btn btn-sm utm-btn-outline utm-reuse-btn" data-id="{{ $link->id }}">{{ __('messages.utm.reuse') }}</button>
                             </td>
                         </tr>
                         @endforeach
@@ -264,7 +264,7 @@
             </div>
             {{ $history->links() }}
             @else
-            <p class="utm-text-muted mb-0">No UTM links yet.</p>
+            <p class="utm-text-muted mb-0">{{ __('messages.utm.no_links_yet') }}</p>
             @endif
         </div>
     </div>
@@ -436,7 +436,7 @@ input[type="date"].utm-input::-webkit-calendar-picker-indicator { filter: invert
     function copyText(text, btn) {
         navigator.clipboard.writeText(text).then(() => {
             const orig = btn.textContent;
-            btn.textContent = 'Copied!';
+            btn.textContent = @json(__('messages.utm.copied'));
             setTimeout(() => btn.textContent = orig, 1500);
         });
     }
@@ -448,7 +448,7 @@ input[type="date"].utm-input::-webkit-calendar-picker-indicator { filter: invert
     document.getElementById('utm-form')?.addEventListener('submit', async function(e) {
         e.preventDefault();
         const btn = this.querySelector('[type="submit"]');
-        btn.disabled = true; btn.textContent = 'Generating...';
+        btn.disabled = true; btn.textContent = @json(__('messages.utm.generating'));
         try {
             const body = {};
             ['url','utm_source','utm_medium','utm_campaign','utm_content','utm_term'].forEach(k => {
@@ -467,13 +467,13 @@ input[type="date"].utm-input::-webkit-calendar-picker-indicator { filter: invert
             document.getElementById('utm-result').style.display = 'block';
             document.getElementById('btn-shorten').style.display = 'inline-flex';
         } catch (err) { alert(err.message); }
-        finally { btn.disabled = false; btn.textContent = 'Generate UTM Link'; }
+        finally { btn.disabled = false; btn.textContent = @json(__('messages.utm.generate')); }
     });
 
     // Shorten
     document.getElementById('btn-shorten')?.addEventListener('click', async function() {
         if (!lastGeneratedId) return;
-        this.disabled = true; this.textContent = 'Shortening...';
+        this.disabled = true; this.textContent = @json(__('messages.utm.shortening'));
         try {
             const res = await fetch('{{ route("utm.shorten") }}', {
                 method: 'POST',
@@ -486,12 +486,12 @@ input[type="date"].utm-input::-webkit-calendar-picker-indicator { filter: invert
                 document.getElementById('utm-short-result').style.display = 'block';
             }
         } catch (err) { alert(err.message); }
-        finally { this.disabled = false; this.textContent = 'Shorten with Trastly'; }
+        finally { this.disabled = false; this.textContent = @json(__('messages.utm.shorten')); }
     });
 
     // Save preset
     document.getElementById('btn-save-preset')?.addEventListener('click', async function() {
-        const name = prompt('Preset name:');
+        const name = prompt(@json(__('messages.utm.preset_name')));
         if (!name) return;
         const body = { name };
         ['utm_source','utm_medium','utm_campaign','utm_content','utm_term'].forEach(k => {
@@ -526,7 +526,7 @@ input[type="date"].utm-input::-webkit-calendar-picker-indicator { filter: invert
     document.querySelectorAll('.utm-preset-del').forEach(del => {
         del.addEventListener('click', async function(e) {
             e.stopPropagation();
-            if (!confirm('Delete this preset?')) return;
+            if (!confirm(@json(__('messages.utm.delete_preset')))) return;
             await fetch('/utm/presets/' + this.dataset.presetId, {
                 method: 'DELETE',
                 headers: { 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' },
@@ -561,7 +561,7 @@ input[type="date"].utm-input::-webkit-calendar-picker-indicator { filter: invert
         e.preventDefault();
         const formData = new FormData(this);
         const btn = this.querySelector('[type="submit"]');
-        btn.disabled = true; btn.textContent = 'Importing...';
+        btn.disabled = true; btn.textContent = @json(__('messages.utm.importing'));
         try {
             const res = await fetch('{{ route("utm.csv-import") }}', {
                 method: 'POST',
@@ -580,7 +580,7 @@ input[type="date"].utm-input::-webkit-calendar-picker-indicator { filter: invert
             });
             document.getElementById('csv-results').style.display = 'block';
         } catch (err) { alert(err.message); }
-        finally { btn.disabled = false; btn.textContent = 'Import'; }
+        finally { btn.disabled = false; btn.textContent = @json(__('messages.utm.import')); }
     });
 })();
 </script>

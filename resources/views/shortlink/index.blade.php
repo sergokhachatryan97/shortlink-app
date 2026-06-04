@@ -364,7 +364,7 @@
                         @auth
                         <a href="#" id="btn-utm" class="text-decoration-none d-inline-flex align-items-center gap-1" style="color: #a78bfa; font-size: 0.8125rem; font-weight: 500;">
                             <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101"/><path d="M10.172 13.828a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
-                            UTM Builder
+                            {{ __('messages.utm.utm_builder_link') }}
                         </a>
                         <script>document.getElementById('btn-utm')?.addEventListener('click',function(e){e.preventDefault();var u=document.getElementById('url').value.trim();window.location.href='{{ route("utm.index") }}'+(u?'?url='+encodeURIComponent(u):'');});</script>
                         @endauth
