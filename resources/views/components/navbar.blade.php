@@ -1,7 +1,7 @@
 <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom fixed-top" style="box-shadow: 0 1px 2px rgba(0,0,0,.05);">
     <div class="container">
         <a class="navbar-brand d-flex align-items-center gap-2 p-0" href="{{ route('shortlink.index') }}">
-            <img src="{{ asset('brand/trastly-star-icon.svg') }}" alt="" class="navbar-star-logo" height="32" width="32">
+            <img src="{{ asset('images/logo-new.png') }}" alt="Trastly" class="navbar-star-logo" height="32" width="32" style="border-radius:8px;">
             <span class="navbar-brand-text">Trastly</span>
         </a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">

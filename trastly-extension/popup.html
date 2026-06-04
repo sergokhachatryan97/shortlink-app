@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=420, initial-scale=1">
+  <link rel="stylesheet" href="style.css">
+  <title>Trastly UTM Builder</title>
+</head>
+<body>
+  <!-- Header -->
+  <header class="header">
+    <div class="header-brand">
+      <span class="logo">T</span>
+      <div>
+        <div class="brand-name">Trastly</div>
+        <div class="brand-sub">UTM Builder & Shortener</div>
+      </div>
+    </div>
+    <div class="mode-switch">
+      <button class="mode-btn active" data-mode="fast">Fast</button>
+      <button class="mode-btn" data-mode="advanced">Advanced</button>
+    </div>
+  </header>
+
+  <main class="main" id="main">
+    <!-- Page Info -->
+    <div class="page-info" id="page-info">
+      <span class="page-domain" id="page-domain"></span>
+      <span class="page-title-text" id="page-title-text"></span>
+    </div>
+
+    <!-- Target URL -->
+    <div class="field">
+      <label>Target URL</label>
+      <input type="url" id="target-url" placeholder="https://example.com/product">
+    </div>
+
+    <!-- Channel Templates -->
+    <div class="field" id="templates-section">
+      <label>Channel Template</label>
+      <div class="tags" id="channel-tags">
+        <button class="tag" data-source="google" data-medium="cpc">Google Ads</button>
+        <button class="tag" data-source="yandex" data-medium="cpc">Yandex Direct</button>
+        <button class="tag" data-source="facebook" data-medium="social">Facebook</button>
+        <button class="tag" data-source="telegram" data-medium="social">Telegram</button>
+        <button class="tag" data-source="newsletter" data-medium="email">Email</button>
+        <button class="tag" data-source="vk" data-medium="social">VK</button>
+        <button class="tag" data-source="banner" data-medium="banner">Banner</button>
+        <button class="tag" data-source="influencer" data-medium="social">Influencer</button>
+      </div>
+    </div>
+
+    <!-- UTM Fields -->
+    <div class="field">
+      <label>utm_source <span class="req">*</span></label>
+      <input type="text" id="utm-source" placeholder="google">
+      <div class="tags small-tags">
+        <button class="qtag" data-field="utm-source" data-value="google">google</button>
+        <button class="qtag" data-field="utm-source" data-value="yandex">yandex</button>
+        <button class="qtag" data-field="utm-source" data-value="vk">vk</button>
+        <button class="qtag" data-field="utm-source" data-value="facebook">facebook</button>
+        <button class="qtag" data-field="utm-source" data-value="telegram">telegram</button>
+      </div>
+      <div class="cleanup-hint" id="source-hint"></div>
+    </div>
+
+    <div class="field">
+      <label>utm_medium <span class="req">*</span></label>
+      <input type="text" id="utm-medium" placeholder="cpc">
+      <div class="tags small-tags">
+        <button class="qtag" data-field="utm-medium" data-value="cpc">cpc</button>
+        <button class="qtag" data-field="utm-medium" data-value="cpm">cpm</button>
+        <button class="qtag" data-field="utm-medium" data-value="social">social</button>
+        <button class="qtag" data-field="utm-medium" data-value="email">email</button>
+        <button class="qtag" data-field="utm-medium" data-value="banner">banner</button>
+      </div>
+      <div class="cleanup-hint" id="medium-hint"></div>
+    </div>
+
+    <div class="field">
+      <label>utm_campaign <span class="req">*</span></label>
+      <input type="text" id="utm-campaign" placeholder="summer_sale">
+      <div class="cleanup-hint" id="campaign-hint"></div>
+    </div>
+
+    <!-- Advanced fields -->
+    <div id="advanced-fields" style="display:none;">
+      <div class="field">
+        <div class="label-row">
+          <label>utm_content</label>
+          <div class="macro-dropdown">
+            <button class="macro-btn" id="content-macro-btn">Macro &#9662;</button>
+            <div class="macro-menu" id="content-macro-menu">
+              <div class="macro-header">Yandex Direct</div>
+              <button class="macro-item" data-value="{campaign_id}">{campaign_id}</button>
+              <button class="macro-item" data-value="{position_type}">{position_type}</button>
+              <div class="macro-header">Facebook</div>
+              <button class="macro-item" data-value="{{campaign.name}}">{{campaign.name}}</button>
+              <button class="macro-item" data-value="{{adset.name}}">{{adset.name}}</button>
+              <button class="macro-item" data-value="{{ad.name}}">{{ad.name}}</button>
+              <div class="macro-header">myTarget</div>
+              <button class="macro-item" data-value="{{campaign_id}}">{{campaign_id}}</button>
+              <button class="macro-item" data-value="{{banner_id}}">{{banner_id}}</button>
+            </div>
+          </div>
+        </div>
+        <input type="text" id="utm-content" placeholder="banner_3">
+        <div class="tags small-tags">
+          <button class="qtag" data-field="utm-content" data-value="button_red">button_red</button>
+          <button class="qtag" data-field="utm-content" data-value="banner_3">banner_3</button>
+          <button class="qtag" data-field="utm-content" data-value="video_a">video_a</button>
+        </div>
+        <div class="cleanup-hint" id="content-hint"></div>
+      </div>
+
+      <div class="field">
+        <div class="label-row">
+          <label>utm_term</label>
+          <div class="macro-dropdown">
+            <button class="macro-btn" id="term-macro-btn">Macro &#9662;</button>
+            <div class="macro-menu" id="term-macro-menu">
+              <div class="macro-header">Yandex Direct</div>
+              <button class="macro-item" data-value="{keyword}">{keyword}</button>
+              <div class="macro-header">Facebook</div>
+              <button class="macro-item" data-value="{{campaign.name}}">{{campaign.name}}</button>
+              <div class="macro-header">myTarget</div>
+              <button class="macro-item" data-value="{{geo}}">{{geo}}</button>
+            </div>
+          </div>
+        </div>
+        <input type="text" id="utm-term" placeholder="{keyword}">
+        <div class="cleanup-hint" id="term-hint"></div>
+      </div>
+
+      <!-- Settings inline -->
+      <div class="settings-inline">
+        <label class="checkbox-label"><input type="checkbox" id="set-cleanup" checked> Smart Cleanup</label>
+        <label class="checkbox-label"><input type="checkbox" id="set-translit" checked> Transliteration</label>
+        <select id="set-separator" class="mini-select">
+          <option value="_">underscore (_)</option>
+          <option value="-">hyphen (-)</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Source Warning -->
+    <div class="warning" id="source-warning" style="display:none;">utm_source should indicate the traffic source, not your own website.</div>
+
+    <!-- Quality Score -->
+    <div class="quality-box" id="quality-box">
+      <div class="quality-bar"><div class="quality-fill" id="quality-fill"></div></div>
+      <span class="quality-text" id="quality-text">UTM Quality: 0%</span>
+    </div>
+
+    <!-- Preview -->
+    <div class="preview-box">
+      <label>Final URL Preview</label>
+      <div class="preview-url" id="preview-url">—</div>
+    </div>
+
+    <!-- Validation errors -->
+    <div class="errors" id="errors" style="display:none;"></div>
+
+    <!-- Actions -->
+    <div class="actions">
+      <button class="btn-primary" id="btn-copy-utm">Copy UTM URL</button>
+      <button class="btn-accent" id="btn-shorten">Shorten with Trastly</button>
+    </div>
+
+    <!-- Copy format buttons -->
+    <div class="copy-formats" id="copy-formats" style="display:none;">
+      <button class="btn-small" id="copy-markdown">Markdown</button>
+      <button class="btn-small" id="copy-html">HTML</button>
+      <button class="btn-small" id="copy-telegram">Telegram</button>
+    </div>
+
+    <!-- Short URL result -->
+    <div class="short-result" id="short-result" style="display:none;">
+      <label>Short URL</label>
+      <div class="short-url-row">
+        <input type="text" id="short-url-value" readonly>
+        <button class="btn-small" id="btn-copy-short">Copy</button>
+      </div>
+    </div>
+
+    <!-- Presets -->
+    <div id="presets-section" style="display:none;">
+      <div class="section-header">
+        <label>Presets</label>
+        <button class="btn-tiny" id="btn-save-preset">+ Save</button>
+      </div>
+      <div class="presets-list" id="presets-list"></div>
+    </div>
+
+    <!-- Recent Links -->
+    <div id="history-section">
+      <div class="section-header">
+        <label>Recent Links</label>
+        <button class="btn-tiny" id="btn-clear-history">Clear</button>
+      </div>
+      <div class="history-list" id="history-list"></div>
+    </div>
+
+    <!-- Settings -->
+    <div id="settings-section" style="display:none;">
+      <div class="section-header"><label>Settings</label></div>
+      <div class="field">
+        <label>API Endpoint</label>
+        <input type="url" id="set-api-url" placeholder="https://trastly.org">
+      </div>
+      <div class="field">
+        <label>API Key</label>
+        <input type="text" id="set-api-key" placeholder="Your Trastly API Key">
+      </div>
+      <button class="btn-small" id="btn-save-settings">Save Settings</button>
+    </div>
+
+    <!-- Settings toggle -->
+    <div class="footer-toggle">
+      <button class="link-btn" id="btn-toggle-settings">Settings</button>
+      <button class="link-btn" id="btn-toggle-presets">Presets</button>
+    </div>
+  </main>
+
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

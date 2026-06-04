@@ -11,3 +11,4 @@ Route::post('/webhooks/payments/yookassa', [YooKassaWebhookController::class, 'h
 Route::post('/webhooks/heleket/payout', [HeleketPayoutWebhookController::class, 'handle']);
 Route::get('/v2', PanelApiController::class)
     ->middleware(['auth.external_panel', 'rate.external_panel']);
+Route::post('/ext/shorten', [\App\Http\Controllers\Api\ExtensionController::class, 'shorten']);
