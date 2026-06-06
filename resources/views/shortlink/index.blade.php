@@ -369,7 +369,7 @@
                         <script>document.getElementById('btn-utm')?.addEventListener('click',function(e){e.preventDefault();var u=document.getElementById('url').value.trim();window.location.href='{{ route("utm.index") }}'+(u?'?url='+encodeURIComponent(u):'');});</script>
                         @endauth
                     </label>
-                    <input type="url" id="url" name="url" required placeholder="https://example.com" class="form-control">
+                    <input type="text" id="url" name="url" required placeholder="https://example.com" class="form-control" value="https://">
                 </div>
 
                 <div class="mb-4">
@@ -781,6 +781,13 @@
             const btn = document.getElementById('generate-btn');
             const fpInput = document.getElementById('fingerprint');
             if (!fpInput.value) fpInput.value = simpleFingerprint();
+
+            const urlInput = document.getElementById('url');
+            let urlVal = urlInput.value.trim();
+            if (urlVal && !/^https?:\/\//i.test(urlVal)) {
+                urlVal = 'https://' + urlVal;
+                urlInput.value = urlVal;
+            }
 
             btn.disabled = true;
             btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>' + (window.__translations.processing || 'Processing');
