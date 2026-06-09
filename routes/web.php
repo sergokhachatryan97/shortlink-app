@@ -47,6 +47,7 @@ Route::get('/auth/google/callback', [AuthController::class, 'handleGoogleCallbac
 Route::get('/auth/telegram', [AuthController::class, 'telegram'])->name('auth.telegram');
 Route::post('/auth/logout', [AuthController::class, 'logout'])->name('auth.logout');
 Route::get('/contact', [ContactController::class, 'index'])->name('contact.index');
+Route::get('/privacy', fn () => view('privacy'))->name('privacy');
 Route::get('/r/{code}', [PartnerController::class, 'referralRedirect'])->name('referral.redirect');
 
 Route::middleware('auth')->group(function () {
