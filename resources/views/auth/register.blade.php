@@ -132,7 +132,7 @@
             {{ __('messages.auth.back') }}
         </a>
         <a href="{{ route('shortlink.index') }}" class="auth-logo text-decoration-none">
-            <img src="{{ asset('brand/trastly-star-icon.svg') }}" alt="" class="auth-logo-img">
+            <img src="{{ asset('images/logo-new.png') }}" alt="Trastly" class="auth-logo-img" style="border-radius:8px;">
             <span>Trastly</span>
         </a>
         <h1 class="auth-title">{{ __('messages.auth.create_account') }}</h1>
