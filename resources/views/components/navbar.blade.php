@@ -34,6 +34,9 @@
                 <li class="nav-item">
                     <a class="nav-link {{ request()->routeIs('contact.index') ? 'active fw-600' : '' }}" href="{{ route('contact.index') }}">{{ __('messages.nav.contact') }}</a>
                 </li>
+                <li class="nav-item">
+                    <a class="nav-link {{ request()->routeIs('terms') ? 'active fw-600' : '' }}" href="{{ route('terms') }}">Terms</a>
+                </li>
                 @endauth
                 @guest
                 <li class="nav-item">
