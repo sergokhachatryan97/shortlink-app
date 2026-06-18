@@ -119,6 +119,7 @@
                         'starter' => 'icon-lightning',
                         'vip' => 'icon-star',
                         'unlimited' => 'icon-crown',
+                        'white-label' => 'icon-api',
                         default => 'icon-check',
                     };
                     $planBillingSuffix = (int) ($plan->duration_days ?? 0) >= 365 ? '/yr' : '/mo';
@@ -137,6 +138,8 @@
                                     <svg width="28" height="28" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
                                     @elseif ($iconClass === 'icon-crown')
                                     <svg width="26" height="26" fill="currentColor" viewBox="0 0 24 24"><path d="M5 16L3 5l5.5 5L12 4l3.5 6L21 5l-2 11H5zm2.2 2h9.6l.4 2H7l.2-2z"/></svg>
+                                    @elseif ($iconClass === 'icon-api')
+                                    <svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24"><path d="M14 12l-2 2-2-2 2-2 2 2zm-2-6l2.12 2.12 2.5-2.5L12 1 7.38 5.62l2.5 2.5L12 6zm-6 6l2.12-2.12-2.5-2.5L1 12l4.62 4.62 2.5-2.5L6 12zm12 0l-2.12 2.12 2.5 2.5L23 12l-4.62-4.62-2.5 2.5L18 12zm-6 6l-2.12-2.12-2.5 2.5L12 23l4.62-4.62-2.5-2.5L12 18z"/></svg>
                                     @else
                                     <svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
                                     @endif
@@ -268,6 +271,10 @@
 .cosmic-plan-card-balance .cosmic-plan-icon.icon-star { background: rgba(255,255,255,0.2); }
 .cosmic-plan-card-balance .cosmic-plan-icon.icon-crown {
     background: linear-gradient(145deg, rgba(251,191,36,0.45), rgba(217,119,6,0.35));
+    color: #fff;
+}
+.cosmic-plan-card-balance .cosmic-plan-icon.icon-api {
+    background: linear-gradient(145deg, rgba(99,102,241,0.45), rgba(139,92,246,0.35));
     color: #fff;
 }
 .cosmic-plan-features-pills { display: flex; flex-wrap: wrap; gap: 0.5rem; }

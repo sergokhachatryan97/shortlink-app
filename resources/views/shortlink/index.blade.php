@@ -248,30 +248,48 @@
         }
         .pricing-plan-name { color: rgba(255,255,255,0.6); font-size: 0.875rem; font-weight: 500; }
         .pricing-plan-price { color: #fff; font-size: 1.5rem; font-weight: 700; }
+        /* Pricing scroll container */
+        .pricing-scroll-wrap { position: relative; }
+        .pricing-scroll { display: flex; gap: 16px; overflow-x: auto; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; padding: 12px 4px 16px; scrollbar-width: none; }
+        .pricing-scroll::-webkit-scrollbar { display: none; }
+        .pricing-scroll-item { scroll-snap-align: start; flex: 0 0 260px; min-width: 260px; }
+        @media (min-width: 992px) { .pricing-scroll-item { flex: 0 0 calc(20% - 13px); min-width: 220px; } }
+        .pricing-scroll-arrow { position: absolute; top: 50%; transform: translateY(-50%); width: 32px; height: 32px; border-radius: 50%; background: rgba(99,102,241,0.9); border: none; color: #fff; font-size: 16px; cursor: pointer; z-index: 2; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(0,0,0,0.3); transition: opacity 0.2s; }
+        .pricing-scroll-arrow:hover { background: #6366f1; }
+        .pricing-scroll-arrow.left { left: -12px; }
+        .pricing-scroll-arrow.right { right: -12px; }
+        @media (min-width: 1200px) { .pricing-scroll-arrow { display: none; } }
+
         .pricing-card-landing-full {
             background: rgba(30, 30, 45, 0.7);
-            border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 16px;
             position: relative;
             overflow: visible;
+            transition: border-color 0.25s, transform 0.25s, box-shadow 0.25s;
         }
-        .pricing-card-landing-full.pricing-card-recommended { border-color: rgba(167,139,250,0.5); box-shadow: 0 0 20px rgba(167,139,250,0.2); }
+        .pricing-card-landing-full:hover { border-color: rgba(167,139,250,0.3); transform: translateY(-4px); box-shadow: 0 12px 40px rgba(0,0,0,0.3); }
+        .pricing-card-landing-full.pricing-card-recommended { border-color: rgba(167,139,250,0.5); box-shadow: 0 0 24px rgba(167,139,250,0.15); }
+        .pricing-card-landing-full.pricing-card-recommended:hover { box-shadow: 0 0 32px rgba(167,139,250,0.25), 0 12px 40px rgba(0,0,0,0.3); }
         .pricing-plan-badge {
             position: absolute;
-            top: -8px;
-            right: 16px;
+            top: -10px;
+            left: 50%;
+            transform: translateX(-50%);
             background: linear-gradient(135deg, #6366f1, #8b5cf6);
             color: #fff;
-            font-size: 0.75rem;
+            font-size: 0.7rem;
             font-weight: 600;
-            padding: 6px 12px;
+            padding: 4px 14px;
             border-radius: 20px;
+            white-space: nowrap;
+            box-shadow: 0 4px 12px rgba(99,102,241,0.3);
         }
         .pricing-plan-body { display: flex; flex-direction: column; }
         .pricing-plan-icon {
-            width: 48px;
-            height: 48px;
-            border-radius: 50%;
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -279,29 +297,36 @@
             flex-shrink: 0;
         }
         .pricing-plan-icon.icon-lightning,
-        .pricing-plan-icon.icon-check { background: rgba(255,255,255,0.2); }
-        .pricing-card-recommended .pricing-plan-icon { background: rgba(167,139,250,0.4); }
-        .pricing-plan-icon.icon-star { background: rgba(255,255,255,0.2); }
+        .pricing-plan-icon.icon-check { background: rgba(255,255,255,0.12); }
+        .pricing-card-recommended .pricing-plan-icon { background: rgba(167,139,250,0.3); }
+        .pricing-plan-icon.icon-star { background: rgba(255,255,255,0.12); }
         .pricing-plan-icon.icon-crown {
-            background: linear-gradient(145deg, rgba(251,191,36,0.45), rgba(217,119,6,0.35));
-            color: #fff;
+            background: linear-gradient(145deg, rgba(251,191,36,0.35), rgba(217,119,6,0.25));
+            color: #fbbf24;
         }
-        .pricing-plan-name-full { color: #fff; font-weight: 600; }
+        .pricing-plan-icon.icon-api {
+            background: linear-gradient(145deg, rgba(99,102,241,0.35), rgba(139,92,246,0.25));
+            color: #a78bfa;
+        }
+        .pricing-plan-name-full { color: #fff; font-weight: 700; font-size: 1rem; }
         .pricing-plan-desc { color: rgba(255,255,255,0.8); font-size: 0.9375rem; line-height: 1.5; }
-        .pricing-plan-features { display: flex; flex-wrap: wrap; gap: 0.5rem; font-size: 0.8125rem; }
-        .pricing-plan-feature { background: rgba(255,255,255,0.12); color: rgba(255,255,255,0.92); padding: 6px 12px; border-radius: 8px; font-weight: 500; line-height: 1.35; }
-        .pricing-plan-price-full { font-size: 1.25rem; font-weight: 700; color: #fff; }
-        .pricing-card-recommended .pricing-plan-price-full { font-size: 1.5rem; color: #a78bfa; }
+        .pricing-plan-features { display: flex; flex-wrap: wrap; gap: 6px; font-size: 0.75rem; margin-bottom: 0.75rem; }
+        .pricing-plan-feature { background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.85); padding: 4px 10px; border-radius: 6px; font-weight: 500; line-height: 1.35; }
+        .pricing-plan-divider { height: 1px; background: rgba(255,255,255,0.06); margin: 0.5rem 0; }
+        .pricing-plan-price-full { font-size: 1.5rem; font-weight: 800; color: #fff; }
+        .pricing-plan-price-full small { font-size: 0.75rem; font-weight: 500; color: rgba(255,255,255,0.5); }
+        .pricing-card-recommended .pricing-plan-price-full { color: #a78bfa; }
         .pricing-card-current { border-color: rgba(34,197,94,0.5); }
-        .pricing-btn-primary { background: linear-gradient(135deg, #6366f1, #8b5cf6); border: none; color: #fff !important; font-weight: 600; padding: 10px 24px; border-radius: 10px; }
-        .pricing-btn-primary:hover { opacity: 0.95; color: #fff !important; }
-        .pricing-btn-plan { background: rgba(30,30,45,0.9); border: 1px solid rgba(255,255,255,0.2); color: #fff; border-radius: 8px; font-weight: 600; }
-        .pricing-btn-plan:hover { background: rgba(40,40,60,0.9); color: #fff; }
-        .pricing-btn-add-funds { background: transparent; border: 1px solid rgba(167,139,250,0.5); color: #a78bfa; border-radius: 8px; font-weight: 600; text-decoration: none; display: block; text-align: center; padding: 10px 16px; font-size: 0.875rem; }
-        .pricing-btn-add-funds:hover { background: rgba(167,139,250,0.2); color: #c4b5fd; }
-        .pricing-btn-active { background: rgba(34,197,94,0.25); border: 1px solid rgba(34,197,94,0.5); color: #86efac; border-radius: 8px; font-weight: 600; cursor: default; }
-        .pricing-btn-disabled { background: rgba(30,30,45,0.5); border: 1px solid rgba(255,255,255,0.1); color: rgba(255,255,255,0.5); border-radius: 10px; font-weight: 600; padding: 10px 16px; }
-        .pricing-pay-today { color: rgba(255,255,255,0.6); }
+        .pricing-card-current:hover { border-color: rgba(34,197,94,0.6); }
+        .pricing-btn-primary { background: linear-gradient(135deg, #6366f1, #8b5cf6); border: none; color: #fff !important; font-weight: 600; padding: 10px 24px; border-radius: 10px; transition: opacity 0.15s, transform 0.15s; }
+        .pricing-btn-primary:hover { opacity: 0.95; color: #fff !important; transform: translateY(-1px); }
+        .pricing-btn-plan { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.15); color: #fff; border-radius: 10px; font-weight: 600; transition: all 0.15s; }
+        .pricing-btn-plan:hover { background: rgba(255,255,255,0.12); color: #fff; border-color: rgba(255,255,255,0.25); }
+        .pricing-btn-add-funds { background: transparent; border: 1px solid rgba(167,139,250,0.4); color: #a78bfa; border-radius: 10px; font-weight: 600; text-decoration: none; display: block; text-align: center; padding: 10px 16px; font-size: 0.875rem; transition: all 0.15s; }
+        .pricing-btn-add-funds:hover { background: rgba(167,139,250,0.15); color: #c4b5fd; border-color: rgba(167,139,250,0.6); }
+        .pricing-btn-active { background: rgba(34,197,94,0.15); border: 1px solid rgba(34,197,94,0.4); color: #86efac; border-radius: 10px; font-weight: 600; cursor: default; }
+        .pricing-btn-disabled { background: rgba(30,30,45,0.5); border: 1px solid rgba(255,255,255,0.08); color: rgba(255,255,255,0.4); border-radius: 10px; font-weight: 600; padding: 10px 16px; }
+        .pricing-pay-today { color: rgba(255,255,255,0.5); }
         .pricing-view-btn {
             background: rgba(30, 30, 45, 0.9);
             border: 1px solid rgba(255,255,255,0.2);
@@ -433,7 +458,10 @@
     <div class="container mt-5 pt-4 px-3" style="max-width: 1200px;">
         @if ($plans ?? null)
         <h5 class="text-center mb-4" style="color: rgba(255,255,255,0.6); font-size: 1rem; font-weight: 500;">{{ __('messages.shortlink.pricing') }}</h5>
-        <div class="row g-4 mb-3 justify-content-center">
+        <div class="pricing-scroll-wrap">
+        <button class="pricing-scroll-arrow left" id="pricing-arrow-left">&lsaquo;</button>
+        <button class="pricing-scroll-arrow right" id="pricing-arrow-right">&rsaquo;</button>
+        <div class="pricing-scroll" id="pricing-scroll">
             @foreach($plans as $plan)
             @php
                 $hasActivePlan = (bool)($activeSubscription ?? null);
@@ -455,11 +483,12 @@
                     'starter' => 'icon-lightning',
                     'vip' => 'icon-star',
                     'unlimited' => 'icon-crown',
+                    'white-label' => 'icon-api',
                     default => 'icon-check',
                 };
                 $planBillingSuffix = (int) ($plan->duration_days ?? 0) >= 365 ? '/yr' : '/mo';
             @endphp
-            <div class="col-12 col-sm-6 col-xl-3 d-flex">
+            <div class="pricing-scroll-item d-flex">
                 <div class="pricing-card-landing-full w-100 d-flex flex-column {{ $isCurrentPlan ? 'pricing-card-current' : '' }} {{ $isRecommended ? 'pricing-card-recommended' : '' }}">
                     @if ($isRecommended)
                     <div class="pricing-plan-badge">{{ __('messages.shortlink.recommended') }}</div>
@@ -473,6 +502,8 @@
                                 <svg width="28" height="28" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
                                 @elseif ($iconClass === 'icon-crown')
                                 <svg width="26" height="26" fill="currentColor" viewBox="0 0 24 24"><path d="M5 16L3 5l5.5 5L12 4l3.5 6L21 5l-2 11H5zm2.2 2h9.6l.4 2H7l.2-2z"/></svg>
+                                @elseif ($iconClass === 'icon-api')
+                                <svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24"><path d="M14 12l-2 2-2-2 2-2 2 2zm-2-6l2.12 2.12 2.5-2.5L12 1 7.38 5.62l2.5 2.5L12 6zm-6 6l2.12-2.12-2.5-2.5L1 12l4.62 4.62 2.5-2.5L6 12zm12 0l-2.12 2.12 2.5 2.5L23 12l-4.62-4.62-2.5 2.5L18 12zm-6 6l-2.12-2.12-2.5 2.5L12 23l4.62-4.62-2.5-2.5L12 18z"/></svg>
                                 @else
                                 <svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
                                 @endif
@@ -480,7 +511,8 @@
                             <h5 class="pricing-plan-name-full mb-0">{{ $plan->getTranslatedName() }}</h5>
                         </div>
                         <x-subscription-plan-pills :plan="$plan" pill-class="pricing-plan-feature" class="pricing-plan-features" />
-                        <p class="pricing-plan-price-full mb-3 mt-auto">${{ number_format($plan->price_usd, 2) }}{{ $planBillingSuffix }}</p>
+                        <div class="pricing-plan-divider"></div>
+                        <p class="pricing-plan-price-full mb-3 mt-auto">${{ number_format($plan->price_usd, 2) }} <small>{{ $planBillingSuffix }}</small></p>
                         <div class="mt-auto pt-2">
                             @if ($isCurrentPlan)
                                 <button type="button" class="btn pricing-btn-active w-100" disabled>{{ __('messages.shortlink.active') }}</button>
@@ -516,7 +548,8 @@
             </div>
             @endforeach
         </div>
-        <p class="small text-center mb-0 px-2 mx-auto" style="max-width: 42rem; color: rgba(255,255,255,0.55); line-height: 1.5;">{{ __('messages.subscription.pricing_footnote') }}</p>
+        </div>
+        <p class="small text-center mb-0 px-2 mx-auto mt-3" style="max-width: 42rem; color: rgba(255,255,255,0.55); line-height: 1.5;">{{ __('messages.subscription.pricing_footnote') }}</p>
         @endif
     </div>
 
@@ -602,6 +635,17 @@
         const initialPlan = @json($initialPlanData);
         const pricePerLink = {{ $pricePerLink ?? 0.01 }};
         updatePlanStatus(initialPlan);
+
+        // Pricing scroll arrows
+        (function() {
+            const scroll = document.getElementById('pricing-scroll');
+            const left = document.getElementById('pricing-arrow-left');
+            const right = document.getElementById('pricing-arrow-right');
+            if (scroll && left && right) {
+                left.addEventListener('click', () => scroll.scrollBy({ left: -280, behavior: 'smooth' }));
+                right.addEventListener('click', () => scroll.scrollBy({ left: 280, behavior: 'smooth' }));
+            }
+        })();
 
         document.getElementById('qty-minus').addEventListener('click', () => {
             const el = document.getElementById('count');

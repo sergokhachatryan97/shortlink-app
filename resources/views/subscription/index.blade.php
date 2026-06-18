@@ -93,7 +93,10 @@
         </div>
         @endif
 
-        <div class="row g-4 mb-3 justify-content-center cosmic-pricing-grid">
+        <div class="cosmic-scroll-wrap">
+        <button class="cosmic-scroll-arrow left" id="plan-arrow-left">&lsaquo;</button>
+        <button class="cosmic-scroll-arrow right" id="plan-arrow-right">&rsaquo;</button>
+        <div class="cosmic-scroll" id="plan-scroll">
             @foreach($plans as $plan)
             @php
                 $hasActivePlan = (bool) $activeSubscription;
@@ -115,11 +118,12 @@
                     'starter' => 'icon-lightning',
                     'vip' => 'icon-star',
                     'unlimited' => 'icon-crown',
+                    'white-label' => 'icon-api',
                     default => 'icon-check',
                 };
                 $planBillingSuffix = (int) ($plan->duration_days ?? 0) >= 365 ? '/yr' : '/mo';
             @endphp
-            <div class="col-12 col-sm-6 col-xl-3 d-flex">
+            <div class="cosmic-scroll-item d-flex">
                 <div class="cosmic-plan-card w-100 {{ $isCurrentPlan ? 'cosmic-plan-current' : '' }} {{ $isRecommended ? 'cosmic-plan-recommended' : '' }}">
                     @if ($isRecommended)
                     <div class="cosmic-plan-badge">{{ __('messages.shortlink.recommended') }}</div>
@@ -133,6 +137,8 @@
                                 <svg width="28" height="28" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
                                 @elseif ($iconClass === 'icon-crown')
                                 <svg width="26" height="26" fill="currentColor" viewBox="0 0 24 24"><path d="M5 16L3 5l5.5 5L12 4l3.5 6L21 5l-2 11H5zm2.2 2h9.6l.4 2H7l.2-2z"/></svg>
+                                @elseif ($iconClass === 'icon-api')
+                                <svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24"><path d="M14 12l-2 2-2-2 2-2 2 2zm-2-6l2.12 2.12 2.5-2.5L12 1 7.38 5.62l2.5 2.5L12 6zm-6 6l2.12-2.12-2.5-2.5L1 12l4.62 4.62 2.5-2.5L6 12zm12 0l-2.12 2.12 2.5 2.5L23 12l-4.62-4.62-2.5 2.5L18 12zm-6 6l-2.12-2.12-2.5 2.5L12 23l4.62-4.62-2.5-2.5L12 18z"/></svg>
                                 @else
                                 <svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
                                 @endif
@@ -176,6 +182,7 @@
                 </div>
             </div>
             @endforeach
+        </div>
         </div>
 
         <p class="cosmic-pricing-footnote small text-center mb-4 px-2 mx-auto" style="max-width: 42rem;">{{ __('messages.subscription.pricing_footnote') }}</p>
@@ -240,20 +247,26 @@
 .cosmic-btn-primary:hover { opacity: 0.95; color: #fff !important; }
 .cosmic-plan-card {
     background: rgba(30, 30, 45, 0.7);
-    border: 1px solid rgba(255,255,255,0.1);
-    border-radius: 12px;
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 16px;
     position: relative;
     overflow: visible;
+    transition: border-color 0.25s, transform 0.25s, box-shadow 0.25s;
 }
+.cosmic-plan-card:hover { border-color: rgba(167,139,250,0.3); transform: translateY(-4px); box-shadow: 0 12px 40px rgba(0,0,0,0.3); }
 .cosmic-plan-recommended {
     border-color: rgba(167,139,250,0.5);
-    box-shadow: 0 0 20px rgba(167,139,250,0.2);
+    box-shadow: 0 0 24px rgba(167,139,250,0.15);
 }
+.cosmic-plan-recommended:hover { box-shadow: 0 0 32px rgba(167,139,250,0.25), 0 12px 40px rgba(0,0,0,0.3); }
 .cosmic-plan-current { border-color: rgba(34,197,94,0.5); }
 .cosmic-plan-badge {
     position: absolute;
-    top: -8px;
-    right: 16px;
+    top: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+    white-space: nowrap;
+    box-shadow: 0 4px 12px rgba(99,102,241,0.3);
     background: linear-gradient(135deg, #6366f1, #8b5cf6);
     color: #fff;
     font-size: 0.75rem;
@@ -263,8 +276,8 @@
 }
 .cosmic-plan-body { display: flex; flex-direction: column; }
 .cosmic-plan-icon {
-    width: 48px; height: 48px;
-    border-radius: 50%;
+    width: 44px; height: 44px;
+    border-radius: 12px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -277,9 +290,23 @@
 .cosmic-plan-icon.icon-star { background: rgba(255,255,255,0.2); }
 .cosmic-plan-icon.icon-crown {
     background: linear-gradient(145deg, rgba(251,191,36,0.45), rgba(217,119,6,0.35));
-    color: #fff;
+    color: #fbbf24;
 }
-.cosmic-pricing-grid { max-width: 1200px; margin-left: auto; margin-right: auto; }
+.cosmic-plan-icon.icon-api {
+    background: linear-gradient(145deg, rgba(99,102,241,0.35), rgba(139,92,246,0.25));
+    color: #a78bfa;
+}
+/* Scroll container */
+.cosmic-scroll-wrap { position: relative; }
+.cosmic-scroll { display: flex; gap: 16px; overflow-x: auto; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; padding: 12px 4px 16px; scrollbar-width: none; }
+.cosmic-scroll::-webkit-scrollbar { display: none; }
+.cosmic-scroll-item { scroll-snap-align: start; flex: 0 0 260px; min-width: 260px; }
+@media (min-width: 992px) { .cosmic-scroll-item { flex: 0 0 calc(20% - 13px); min-width: 210px; } }
+.cosmic-scroll-arrow { position: absolute; top: 50%; transform: translateY(-50%); width: 32px; height: 32px; border-radius: 50%; background: rgba(99,102,241,0.9); border: none; color: #fff; font-size: 16px; cursor: pointer; z-index: 2; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
+.cosmic-scroll-arrow:hover { background: #6366f1; }
+.cosmic-scroll-arrow.left { left: -12px; }
+.cosmic-scroll-arrow.right { right: -12px; }
+@media (min-width: 1200px) { .cosmic-scroll-arrow { display: none; } }
 .cosmic-pricing-footnote { color: rgba(255,255,255,0.6); line-height: 1.5; }
 .cosmic-plan-features-pills {
     display: flex;
@@ -350,6 +377,17 @@
 @endpush
 
 @push('scripts')
+<script>
+(function() {
+    var scroll = document.getElementById('plan-scroll');
+    var left = document.getElementById('plan-arrow-left');
+    var right = document.getElementById('plan-arrow-right');
+    if (scroll && left && right) {
+        left.addEventListener('click', function() { scroll.scrollBy({ left: -280, behavior: 'smooth' }); });
+        right.addEventListener('click', function() { scroll.scrollBy({ left: 280, behavior: 'smooth' }); });
+    }
+})();
+</script>
 @if (! empty($promoPlanOptions))
 <script>
 (function () {
