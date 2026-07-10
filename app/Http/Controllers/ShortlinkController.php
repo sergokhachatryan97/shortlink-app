@@ -530,7 +530,12 @@ class ShortlinkController extends Controller
         return redirect()->route('shortlink.index')
             ->with('success', count($tx->result_links).' links generated! Download your file below.')
             ->with('download_ready', true)
-            ->with('payment_provider', 'heleket');
+            ->with('payment_provider', 'heleket')
+            ->with('google_ads_conversion', [
+                'value' => (float) $tx->amount,
+                'transaction_id' => $tx->order_id,
+                'currency' => 'USD',
+            ]);
     }
 
     public function prepareYooKassaPayment(Request $request)
@@ -646,7 +651,12 @@ class ShortlinkController extends Controller
         return redirect()->route('shortlink.index')
             ->with('success', count($tx->result_links).' links generated! Download your file below.')
             ->with('download_ready', true)
-            ->with('payment_provider', 'yookassa');
+            ->with('payment_provider', 'yookassa')
+            ->with('google_ads_conversion', [
+                'value' => (float) $tx->amount,
+                'transaction_id' => $tx->order_id,
+                'currency' => 'USD',
+            ]);
     }
 
     /**

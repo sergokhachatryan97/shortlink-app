@@ -24,6 +24,9 @@
         gtag('js', new Date());
 
         gtag('config', @json(config('services.google_analytics.measurement_id')));
+        @if (config('services.google_ads.id'))
+        gtag('config', @json(config('services.google_ads.id')));
+        @endif
     </script>
     @endif
     <meta name="heleket" content="9701089f" />
@@ -898,5 +901,6 @@
         });
 
     </script>
+    @include('components.google-ads-purchase-conversion')
 </body>
 </html>

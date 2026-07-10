@@ -151,7 +151,12 @@ class BalanceController extends Controller
         }
 
         return redirect()->route('balance.index')
-            ->with('success', 'Balance topped up: $'.number_format($tx->amount, 2));
+            ->with('success', 'Balance topped up: $'.number_format($tx->amount, 2))
+            ->with('google_ads_conversion', [
+                'value' => (float) $tx->amount,
+                'transaction_id' => $tx->order_id,
+                'currency' => 'USD',
+            ]);
     }
 
     public function initiateYookassaTopup(Request $request): RedirectResponse

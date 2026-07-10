@@ -27,6 +27,9 @@
         gtag('js', new Date());
 
         gtag('config', @json(config('services.google_analytics.measurement_id')));
+        @if (config('services.google_ads.id'))
+        gtag('config', @json(config('services.google_ads.id')));
+        @endif
     </script>
     @endif
     @if (config('services.yandex_metrika.id'))
@@ -99,6 +102,7 @@
     </main>
     @include('components.footer')
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    @include('components.google-ads-purchase-conversion')
     @stack('scripts')
 </body>
 </html>

@@ -78,4 +78,9 @@ return [
         'measurement_id' => env('GOOGLE_ANALYTICS_MEASUREMENT_ID'),
     ],
 
+    'google_ads' => [
+        'id' => env('GOOGLE_ADS_ID', 'AW-18288473192'),
+        'purchase_send_to' => env('GOOGLE_ADS_PURCHASE_SEND_TO', 'AW-18288473192/ZrCrCLCNyMgcEOjoz5BE'),
+    ],
+
 ];

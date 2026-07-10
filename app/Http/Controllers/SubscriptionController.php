@@ -171,8 +171,10 @@ class SubscriptionController extends Controller
 
         $basePrice = (float) $plan->price_usd;
 
+        $conversion = null;
+
         try {
-            DB::transaction(function () use ($user, $plan, $basePrice, $data) {
+            DB::transaction(function () use ($user, $plan, $basePrice, $data, &$conversion) {
                 $quote = $this->promoCodeService->quoteLocked(
                     $data['promo_code'] ?? null,
                     $user,
@@ -227,6 +229,12 @@ class SubscriptionController extends Controller
                         'final_amount' => $quote->finalAmount,
                     ]);
                 }
+
+                $conversion = [
+                    'value' => $quote->finalAmount,
+                    'transaction_id' => $orderId,
+                    'currency' => 'USD',
+                ];
             });
         } catch (InsufficientBalanceException) {
             return redirect()
@@ -244,7 +252,8 @@ class SubscriptionController extends Controller
             ->with('success', __('messages.subscription.purchase_success', [
                 'name' => $plan->getTranslatedName(),
                 'date' => now()->addDays((int) $plan->duration_days)->format('M j, Y'),
-            ]));
+            ]))
+            ->with('google_ads_conversion', $conversion);
     }
 
     public function upgrade(Request $request): RedirectResponse
@@ -274,8 +283,10 @@ class SubscriptionController extends Controller
             return redirect()->route('subscription.index')->with('error', __('messages.subscription.promo.errors.upgrade_not_allowed'));
         }
 
+        $conversion = null;
+
         try {
-            DB::transaction(function () use ($user, $activeSubscription, $newPlan, $priceDiff, $data) {
+            DB::transaction(function () use ($user, $activeSubscription, $newPlan, $priceDiff, $data, &$conversion) {
                 $quote = $this->promoCodeService->quoteLocked(
                     $data['promo_code'] ?? null,
                     $user,
@@ -326,6 +337,12 @@ class SubscriptionController extends Controller
                         'final_amount' => $quote->finalAmount,
                     ]);
                 }
+
+                $conversion = [
+                    'value' => $quote->finalAmount,
+                    'transaction_id' => $orderId,
+                    'currency' => 'USD',
+                ];
             });
         } catch (InsufficientBalanceException) {
             return redirect()
@@ -345,7 +362,8 @@ class SubscriptionController extends Controller
             ->with('success', __('messages.subscription.upgrade_success', [
                 'name' => $newPlan->getTranslatedName(),
                 'date' => $endsAt?->format('M j, Y') ?? '',
-            ]));
+            ]))
+            ->with('google_ads_conversion', $conversion);
     }
 
     private function assertQuotePayable(SubscriptionPromoQuote $quote, float $basePrice): void
