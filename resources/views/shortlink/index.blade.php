@@ -560,8 +560,9 @@
         <div class="container">
             <div class="d-flex flex-wrap align-items-center justify-content-center justify-content-md-between gap-3">
                 <span class="small" style="color: rgba(255,255,255,0.5);">&copy; {{ date('Y') }} {{ config('app.name') }}</span>
-                <div class="d-flex align-items-center gap-4 flex-wrap">
-                    <a href="{{ route('contact.index') }}" class="small text-decoration-none d-inline-flex align-items-center gap-1" style="color: #a78bfa;">{{ __('messages.footer.contact') }}</a>
+                <div class="d-flex align-items-center gap-4 flex-wrap justify-content-center">
+                    <a href="{{ route('terms') }}" class="small text-decoration-none" style="color: rgba(255,255,255,0.75);">{{ __('messages.footer.terms') }}</a>
+                    <a href="{{ route('privacy') }}" class="small text-decoration-none" style="color: rgba(255,255,255,0.75);">{{ __('messages.footer.privacy') }}</a>                     <a href="{{ route('contact.index') }}" class="small text-decoration-none d-inline-flex align-items-center gap-1" style="color: #a78bfa;">{{ __('messages.footer.contact') }}</a>
                     <a href="mailto:{{ config('app.support_email') }}" class="small text-decoration-none d-inline-flex align-items-center gap-1" style="color: rgba(255,255,255,0.6);">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
                         {{ config('app.support_email') }}
@@ -574,6 +575,7 @@
                     @endif
                 </div>
             </div>
+            <p class="small text-center mb-0 mt-3 px-2" style="color: rgba(255,255,255,0.45);">{{ __('messages.footer.legal_note') }}</p>
         </div>
     </footer>
 

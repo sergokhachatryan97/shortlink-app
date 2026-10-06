@@ -45,6 +45,12 @@
                 <li class="nav-item">
                     <a class="nav-link {{ request()->routeIs('contact.index') ? 'active fw-600' : '' }}" href="{{ route('contact.index') }}">{{ __('messages.nav.contact') }}</a>
                 </li>
+                <li class="nav-item">
+                    <a class="nav-link {{ request()->routeIs('terms') ? 'active fw-600' : '' }}" href="{{ route('terms') }}">Terms</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {{ request()->routeIs('privacy') ? 'active fw-600' : '' }}" href="{{ route('privacy') }}">Privacy</a>
+                </li>
                 @endguest
             </ul>
             <ul class="navbar-nav align-items-center gap-2 navbar-wallet-logout">
